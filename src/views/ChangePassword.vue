@@ -83,7 +83,7 @@ const successMessage = ref('')
 
 const handleChangePassword = async () => {
   if (newPassword.value !== confirmPassword.value) {
-    authStore.error = 'Passwords do not match'
+    authStore.setError('Passwords do not match')
     return
   }
 

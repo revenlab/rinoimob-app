@@ -62,7 +62,6 @@ const router = createRouter({
 // Route guards
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
-  authStore.initializeAuth()
 
   const isPublic = to.meta.public
   const requiresAuth = to.meta.requiresAuth

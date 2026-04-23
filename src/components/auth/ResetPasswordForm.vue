@@ -70,12 +70,12 @@ const token = ref(route.query.token as string)
 
 const handleReset = async () => {
   if (!token.value) {
-    authStore.error = 'Invalid reset token'
+    authStore.setError('Invalid reset token')
     return
   }
 
   if (password.value !== confirmPassword.value) {
-    authStore.error = 'Passwords do not match'
+    authStore.setError('Passwords do not match')
     return
   }
 

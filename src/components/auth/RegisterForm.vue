@@ -111,7 +111,7 @@ const confirmPassword = ref('')
 
 const handleRegister = async () => {
   if (password.value !== confirmPassword.value) {
-    authStore.error = 'Passwords do not match'
+    authStore.setError('Passwords do not match')
     return
   }
 

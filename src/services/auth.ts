@@ -20,8 +20,14 @@ class AuthService {
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Registration failed')
+      let message = 'Registration failed'
+      try {
+        const error = await response.json()
+        message = error.message || message
+      } catch {
+        // server returned non-JSON, use default message
+      }
+      throw new Error(message)
     }
   }
 
@@ -35,32 +41,54 @@ class AuthService {
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Login failed')
+      let message = 'Login failed'
+      try {
+        const error = await response.json()
+        message = error.message || message
+      } catch {
+        // server returned non-JSON, use default message
+      }
+      throw new Error(message)
     }
 
     return response.json()
   }
 
   async verifyEmail(token: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/auth/verify-email?token=${token}`, {
-      method: 'POST'
+    const response = await fetch(`${this.baseUrl}/auth/verify-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token })
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Email verification failed')
+      let message = 'Email verification failed'
+      try {
+        const error = await response.json()
+        message = error.message || message
+      } catch {
+        // server returned non-JSON, use default message
+      }
+      throw new Error(message)
     }
   }
 
   async forgotPassword(email: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/auth/forgot-password?email=${email}`, {
-      method: 'POST'
+    const response = await fetch(`${this.baseUrl}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Password reset request failed')
+      let message = 'Password reset request failed'
+      try {
+        const error = await response.json()
+        message = error.message || message
+      } catch {
+        // server returned non-JSON, use default message
+      }
+      throw new Error(message)
     }
   }
 
@@ -74,8 +102,14 @@ class AuthService {
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Password reset failed')
+      let message = 'Password reset failed'
+      try {
+        const error = await response.json()
+        message = error.message || message
+      } catch {
+        // server returned non-JSON, use default message
+      }
+      throw new Error(message)
     }
   }
 
@@ -95,11 +129,13 @@ class AuthService {
   }
 
   async updateProfile(token: string, firstName: string, lastName: string) {
-    const response = await fetch(`${this.baseUrl}/users/profile?firstName=${firstName}&lastName=${lastName}`, {
+    const response = await fetch(`${this.baseUrl}/users/profile`, {
       method: 'PUT',
       headers: {
+        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
-      }
+      },
+      body: JSON.stringify({ firstName, lastName })
     })
 
     if (!response.ok) {
@@ -110,15 +146,14 @@ class AuthService {
   }
 
   async changePassword(token: string, currentPassword: string, newPassword: string, confirmPassword: string) {
-    const response = await fetch(
-      `${this.baseUrl}/users/change-password?currentPassword=${currentPassword}&newPassword=${newPassword}&confirmPassword=${confirmPassword}`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      }
-    )
+    const response = await fetch(`${this.baseUrl}/users/change-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
+    })
 
     if (!response.ok) {
       throw new Error('Failed to change password')

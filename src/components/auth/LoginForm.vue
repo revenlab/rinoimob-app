@@ -61,10 +61,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
 const email = ref('')
@@ -73,7 +74,12 @@ const password = ref('')
 const handleLogin = async () => {
   const success = await authStore.login({ email: email.value, password: password.value })
   if (success) {
-    router.push({ name: 'Dashboard' })
+    const redirect = route.query.redirect as string
+    if (redirect && redirect.startsWith('/')) {
+      router.push(redirect)
+    } else {
+      router.push({ name: 'Dashboard' })
+    }
   }
 }
 </script>

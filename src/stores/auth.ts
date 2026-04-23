@@ -186,6 +186,11 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
   }
 
+  // Set error
+  const setError = (message: string | null) => {
+    error.value = message
+  }
+
   return {
     accessToken,
     refreshToken,
@@ -203,6 +208,7 @@ export const useAuthStore = defineStore('auth', () => {
     resetPassword,
     updateProfile,
     changePassword,
-    clearError
+    clearError,
+    setError
   }
 })
