@@ -27,6 +27,16 @@ export interface RegisterRequest {
   confirmPassword: string
 }
 
+export interface TenantRegistrationRequest {
+  tenantName: string
+  subdomain: string
+  firstName: string
+  lastName: string
+  email: string
+  password: string
+  confirmPassword: string
+}
+
 export interface PasswordResetRequest {
   token: string
   password: string

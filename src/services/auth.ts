@@ -1,6 +1,6 @@
-import type { LoginRequest, LoginResponse, RegisterRequest, PasswordResetRequest } from '@/types/auth'
+import type { LoginRequest, LoginResponse, RegisterRequest, TenantRegistrationRequest, PasswordResetRequest } from '@/types/auth'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:39000'
+const API_BASE_URL = import.meta.env.VITE_API_URL || ''
 const API_VERSION = '/api/v1'
 
 class AuthService {
@@ -8,6 +8,27 @@ class AuthService {
 
   constructor() {
     this.baseUrl = `${API_BASE_URL}${API_VERSION}`
+  }
+
+  async signup(data: TenantRegistrationRequest): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/auth/signup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+
+    if (!response.ok) {
+      let message = 'Sign up failed'
+      try {
+        const error = await response.json()
+        message = error.message || message
+      } catch {
+        // server returned non-JSON, use default message
+      }
+      throw new Error(message)
+    }
   }
 
   async register(data: RegisterRequest): Promise<void> {

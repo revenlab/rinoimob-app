@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { User, LoginRequest, RegisterRequest, LoginResponse } from '@/types/auth'
+import type { User, LoginRequest, RegisterRequest, TenantRegistrationRequest, LoginResponse } from '@/types/auth'
 import authService from '@/services/auth'
 
 const TOKEN_KEY = 'auth_token'
@@ -36,6 +36,21 @@ export const useAuthStore = defineStore('auth', () => {
       } catch {
         localStorage.removeItem(USER_KEY)
       }
+    }
+  }
+
+  // Sign up as new tenant owner
+  const signup = async (data: TenantRegistrationRequest) => {
+    try {
+      isLoading.value = true
+      error.value = null
+      await authService.signup(data)
+      return true
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Sign up failed'
+      return false
+    } finally {
+      isLoading.value = false
     }
   }
 
@@ -200,6 +215,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     currentUser,
     initializeAuth,
+    signup,
     register,
     login,
     logout,
