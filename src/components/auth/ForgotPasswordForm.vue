@@ -2,15 +2,15 @@
   <div class="min-h-screen flex items-center justify-center bg-[#f2f4f8] py-12 px-4 sm:px-6 lg:px-8">
     <div class="w-full max-w-md">
       <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-700 shadow-lg shadow-violet-400/40 mb-4">
-          <svg class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M3 11 12 3l9 8" />
-            <path d="M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10" />
-            <path d="M9 21v-6h6v6" />
-          </svg>
+        <div class="inline-flex items-center justify-center">
+          <img
+            src="/logo_rinoimob.svg"
+            alt="Rinoimob"
+            class="h-14 w-auto object-contain"
+          />
         </div>
         <h1 class="text-4xl font-bold text-slate-950 tracking-tight mb-2">Recuperar senha</h1>
-        <p class="text-slate-500">Informe seu email para receber o link de redefinicao.</p>
+        <p class="text-slate-500">Informe seu email para receber o link de redefinição.</p>
       </div>
 
       <form @submit.prevent="handleForgot" class="bg-white/75 border border-slate-200 rounded-[2rem] shadow-[0_20px_40px_rgba(15,23,42,0.08)] p-8 space-y-5">
@@ -20,8 +20,9 @@
             v-model="email"
             type="email"
             required
+            autofocus
             class="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
-            placeholder="you@example.com"
+            placeholder="voce@exemplo.com"
             :disabled="authStore.isLoading"
           />
         </div>

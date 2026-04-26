@@ -33,6 +33,12 @@ const router = createRouter({
       meta: { public: true }
     },
     {
+      path: '/verify-email',
+      name: 'VerifyEmail',
+      component: () => import('@/views/VerifyEmail.vue'),
+      meta: { public: true }
+    },
+    {
       path: '/verification-pending',
       name: 'VerificationPending',
       component: () => import('@/views/VerificationPending.vue'),

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { User, LoginRequest, RegisterRequest, TenantRegistrationRequest, LoginResponse } from '@/types/auth'
+import type { User, TenantInfo, LoginRequest, RegisterRequest, TenantRegistrationRequest, LoginResponse } from '@/types/auth'
 import authService from '@/services/auth'
 
 const TOKEN_KEY = 'auth_token'
@@ -14,22 +14,21 @@ export const useAuthStore = defineStore('auth', () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
-  // Computed properties
+  // Workspace-selector state
+  const availableTenants = ref<TenantInfo[]>([])
+  const preAuthToken = ref<string | null>(null)
+
   const isAuthenticated = computed(() => !!accessToken.value)
   const currentUser = computed(() => user.value)
+  const hasPendingWorkspaceSelection = computed(() => preAuthToken.value !== null && availableTenants.value.length > 0)
 
-  // Initialize from localStorage
   const initializeAuth = () => {
     const storedToken = localStorage.getItem(TOKEN_KEY)
     const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY)
     const storedUser = localStorage.getItem(USER_KEY)
 
-    if (storedToken) {
-      accessToken.value = storedToken
-    }
-    if (storedRefreshToken) {
-      refreshToken.value = storedRefreshToken
-    }
+    if (storedToken) accessToken.value = storedToken
+    if (storedRefreshToken) refreshToken.value = storedRefreshToken
     if (storedUser) {
       try {
         user.value = JSON.parse(storedUser)
@@ -39,7 +38,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // Sign up as new tenant owner
   const signup = async (data: TenantRegistrationRequest) => {
     try {
       isLoading.value = true
@@ -47,14 +45,13 @@ export const useAuthStore = defineStore('auth', () => {
       await authService.signup(data)
       return true
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Sign up failed'
+      error.value = err instanceof Error ? err.message : 'Cadastro falhou'
       return false
     } finally {
       isLoading.value = false
     }
   }
 
-  // Register user
   const register = async (data: RegisterRequest) => {
     try {
       isLoading.value = true
@@ -62,53 +59,87 @@ export const useAuthStore = defineStore('auth', () => {
       await authService.register(data)
       return true
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Registration failed'
+      error.value = err instanceof Error ? err.message : 'Registro falhou'
       return false
     } finally {
       isLoading.value = false
     }
   }
 
-  // Login user
+  /**
+   * Step 1: validate credentials and load workspace list.
+   * Returns true if workspaces were loaded (even just one).
+   */
+  const identify = async (email: string, password: string) => {
+    try {
+      isLoading.value = true
+      error.value = null
+      const response = await authService.identify({ email, password })
+      preAuthToken.value = response.preAuthToken
+      availableTenants.value = response.tenants
+      return true
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Credenciais inválidas'
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Step 2: select a workspace and obtain a full JWT.
+   */
+  const selectWorkspace = async (tenantId: string) => {
+    if (!preAuthToken.value) {
+      error.value = 'Sessão expirada. Faça login novamente.'
+      return false
+    }
+    try {
+      isLoading.value = true
+      error.value = null
+      const response: LoginResponse = await authService.selectTenant({
+        preAuthToken: preAuthToken.value,
+        tenantId
+      })
+      _applyLoginResponse(response)
+      preAuthToken.value = null
+      availableTenants.value = []
+      return true
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Falha ao entrar no workspace'
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   const login = async (credentials: LoginRequest) => {
     try {
       isLoading.value = true
       error.value = null
-
       const response: LoginResponse = await authService.login(credentials)
-
-      accessToken.value = response.accessToken
-      refreshToken.value = response.refreshToken
-      user.value = response.user
-
-      // Persist to localStorage
-      localStorage.setItem(TOKEN_KEY, response.accessToken)
-      localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken)
-      localStorage.setItem(USER_KEY, JSON.stringify(response.user))
-
+      _applyLoginResponse(response)
       return true
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Login failed'
+      error.value = err instanceof Error ? err.message : 'Login falhou'
       return false
     } finally {
       isLoading.value = false
     }
   }
 
-  // Logout user
   const logout = () => {
     accessToken.value = null
     refreshToken.value = null
     user.value = null
     error.value = null
-
-    // Clear localStorage
+    preAuthToken.value = null
+    availableTenants.value = []
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(REFRESH_TOKEN_KEY)
     localStorage.removeItem(USER_KEY)
   }
 
-  // Verify email
   const verifyEmail = async (token: string) => {
     try {
       isLoading.value = true
@@ -116,29 +147,27 @@ export const useAuthStore = defineStore('auth', () => {
       await authService.verifyEmail(token)
       return true
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Email verification failed'
+      error.value = err instanceof Error ? err.message : 'Verificação de email falhou'
       return false
     } finally {
       isLoading.value = false
     }
   }
 
-  // Request password reset
   const requestPasswordReset = async (email: string) => {
     try {
       isLoading.value = true
       error.value = null
-      await authService.forgotPassword(email)
+      await authService.forgotPassword({ email })
       return true
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to request password reset'
+      error.value = err instanceof Error ? err.message : 'Falha ao solicitar redefinição de senha'
       return false
     } finally {
       isLoading.value = false
     }
   }
 
-  // Reset password
   const resetPassword = async (token: string, password: string, confirmPassword: string) => {
     try {
       isLoading.value = true
@@ -146,64 +175,55 @@ export const useAuthStore = defineStore('auth', () => {
       await authService.resetPassword({ token, password, confirmPassword })
       return true
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Password reset failed'
+      error.value = err instanceof Error ? err.message : 'Redefinição de senha falhou'
       return false
     } finally {
       isLoading.value = false
     }
   }
 
-  // Update user profile
   const updateProfile = async (firstName: string, lastName: string) => {
     try {
       isLoading.value = true
       error.value = null
-
-      if (!accessToken.value) {
-        throw new Error('Not authenticated')
-      }
-
+      if (!accessToken.value) throw new Error('Não autenticado')
       const updatedUser = await authService.updateProfile(accessToken.value, firstName, lastName)
       user.value = updatedUser
       localStorage.setItem(USER_KEY, JSON.stringify(updatedUser))
-
       return true
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to update profile'
+      error.value = err instanceof Error ? err.message : 'Falha ao atualizar perfil'
       return false
     } finally {
       isLoading.value = false
     }
   }
 
-  // Change password
   const changePassword = async (currentPassword: string, newPassword: string, confirmPassword: string) => {
     try {
       isLoading.value = true
       error.value = null
-
-      if (!accessToken.value) {
-        throw new Error('Not authenticated')
-      }
-
+      if (!accessToken.value) throw new Error('Não autenticado')
       await authService.changePassword(accessToken.value, currentPassword, newPassword, confirmPassword)
       return true
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to change password'
+      error.value = err instanceof Error ? err.message : 'Falha ao alterar senha'
       return false
     } finally {
       isLoading.value = false
     }
   }
 
-  // Clear error
-  const clearError = () => {
-    error.value = null
-  }
+  const clearError = () => { error.value = null }
+  const setError = (message: string | null) => { error.value = message }
 
-  // Set error
-  const setError = (message: string | null) => {
-    error.value = message
+  function _applyLoginResponse(response: LoginResponse) {
+    accessToken.value = response.accessToken
+    refreshToken.value = response.refreshToken
+    user.value = response.user
+    localStorage.setItem(TOKEN_KEY, response.accessToken)
+    localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken)
+    localStorage.setItem(USER_KEY, JSON.stringify(response.user))
   }
 
   return {
@@ -212,11 +232,16 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     isLoading,
     error,
+    availableTenants,
+    preAuthToken,
     isAuthenticated,
     currentUser,
+    hasPendingWorkspaceSelection,
     initializeAuth,
     signup,
     register,
+    identify,
+    selectWorkspace,
     login,
     logout,
     verifyEmail,

@@ -1,75 +1,86 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-    <div class="max-w-2xl mx-auto px-6 py-12">
-      <div class="backdrop-blur-md bg-white/10 rounded-2xl border border-white/20 p-8">
-        <div class="flex justify-between items-center mb-8">
-          <h1 class="text-3xl font-bold text-white">Change Password</h1>
-          <RouterLink to="/dashboard" class="text-white/60 hover:text-white text-sm">← Back</RouterLink>
+  <AppLayout>
+    <template #header>
+      <div>
+        <h1 class="text-lg font-bold text-slate-900">Alterar senha</h1>
+        <p class="text-xs text-slate-400">Escolha uma senha forte para proteger seu acesso.</p>
+      </div>
+    </template>
+
+    <div class="max-w-lg">
+      <form @submit.prevent="handleChangePassword" class="bg-white/75 border border-slate-200 rounded-[2rem] shadow-[0_20px_40px_rgba(15,23,42,0.08)] p-8 space-y-5">
+        <div>
+          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Senha atual</label>
+          <input
+            v-model="currentPassword"
+            type="password"
+            required
+            class="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
+            placeholder="••••••••"
+            :disabled="isLoading"
+          />
         </div>
 
-        <form @submit.prevent="handleChangePassword" class="space-y-6">
-          <div>
-            <label class="block text-sm font-medium text-white/90 mb-2">Current Password</label>
-            <input
-              v-model="currentPassword"
-              type="password"
-              required
-              class="w-full px-4 py-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent"
-              placeholder="••••••••"
-              :disabled="isLoading"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-white/90 mb-2">New Password</label>
-            <input
-              v-model="newPassword"
-              type="password"
-              required
-              minlength="8"
-              class="w-full px-4 py-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent"
-              placeholder="••••••••"
-              :disabled="isLoading"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-white/90 mb-2">Confirm New Password</label>
-            <input
-              v-model="confirmPassword"
-              type="password"
-              required
-              minlength="8"
-              class="w-full px-4 py-2 bg-white/10 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent"
-              placeholder="••••••••"
-              :disabled="isLoading"
-            />
-          </div>
-
-          <div v-if="authStore.error" class="p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
-            {{ authStore.error }}
-          </div>
-
-          <div v-if="successMessage" class="p-3 bg-green-500/20 border border-green-500/50 rounded-lg text-green-200 text-sm">
-            {{ successMessage }}
-          </div>
-
-          <button
-            type="submit"
+        <div>
+          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Nova senha</label>
+          <input
+            v-model="newPassword"
+            type="password"
+            required
+            class="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
+            :class="{ 'border-red-300': newPassword && !strengthNew.isValid.value }"
+            placeholder="••••••••"
             :disabled="isLoading"
-            class="w-full py-2 px-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {{ isLoading ? 'Changing...' : 'Change Password' }}
-          </button>
-        </form>
-      </div>
+          />
+          <PasswordStrength
+            :password="newPassword"
+            :score="strengthNew.score.value"
+            :strength-label="strengthNew.strengthLabel.value"
+            :strength-color="strengthNew.strengthColor.value"
+            :checks="strengthNew.checks.value"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Confirmar nova senha</label>
+          <input
+            v-model="confirmPassword"
+            type="password"
+            required
+            class="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
+            placeholder="••••••••"
+            :disabled="isLoading"
+          />
+          <p v-if="confirmPassword && newPassword !== confirmPassword" class="mt-1.5 text-xs text-red-500">
+            As senhas não coincidem.
+          </p>
+        </div>
+
+        <div v-if="authStore.error" class="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
+          {{ authStore.error }}
+        </div>
+        <div v-if="successMessage" class="px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm">
+          {{ successMessage }}
+        </div>
+
+        <button
+          type="submit"
+          :disabled="isLoading || !strengthNew.isValid.value || newPassword !== confirmPassword"
+          class="w-full h-14 bg-gradient-to-r from-violet-700 to-indigo-700 text-white text-lg font-semibold rounded-2xl shadow-[0_12px_28px_rgba(79,70,229,0.35)] hover:translate-y-[-1px] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {{ isLoading ? 'Alterando...' : 'Alterar senha' }}
+        </button>
+      </form>
     </div>
-  </div>
+  </AppLayout>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import AppLayout from '@/layouts/AppLayout.vue'
+import PasswordStrength from '@/components/ui/PasswordStrength.vue'
+import { usePasswordStrength } from '@/composables/usePasswordStrength'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
@@ -81,9 +92,16 @@ const confirmPassword = ref('')
 const isLoading = ref(false)
 const successMessage = ref('')
 
+const strengthNew = usePasswordStrength(newPassword)
+
 const handleChangePassword = async () => {
   if (newPassword.value !== confirmPassword.value) {
-    authStore.setError('Passwords do not match')
+    authStore.setError('As senhas não coincidem')
+    return
+  }
+
+  if (!strengthNew.isValid.value) {
+    authStore.setError('A nova senha não atende aos requisitos mínimos de segurança')
     return
   }
 
@@ -93,7 +111,7 @@ const handleChangePassword = async () => {
 
   const success = await authStore.changePassword(currentPassword.value, newPassword.value, confirmPassword.value)
   if (success) {
-    successMessage.value = 'Password changed successfully'
+    successMessage.value = 'Senha alterada com sucesso!'
     setTimeout(() => {
       router.push({ name: 'Dashboard' })
     }, 1500)

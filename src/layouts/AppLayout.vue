@@ -1,0 +1,198 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { RouterLink, useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+const router = useRouter()
+const route = useRoute()
+
+const collapsed = ref(false)
+
+const navItems = [
+  {
+    label: 'Dashboard',
+    to: '/dashboard',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>`,
+  },
+  {
+    label: 'Imóveis',
+    to: '/imoveis',
+    soon: true,
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>`,
+  },
+  {
+    label: 'Clientes',
+    to: '/clientes',
+    soon: true,
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2h5m6 0v-2a2 2 0 10-4 0v2m4 0H9" /><circle cx="12" cy="7" r="4" stroke-linecap="round" stroke-linejoin="round" /></svg>`,
+  },
+  {
+    label: 'Negociações',
+    to: '/negociacoes',
+    soon: true,
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>`,
+  },
+]
+
+const accountItems = [
+  {
+    label: 'Perfil',
+    to: '/profile',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>`,
+  },
+  {
+    label: 'Alterar Senha',
+    to: '/change-password',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>`,
+  },
+]
+
+const isActive = (to: string) => route.path === to
+
+const handleLogout = () => {
+  authStore.logout()
+  router.push({ name: 'Login' })
+}
+</script>
+
+<template>
+  <div class="min-h-screen bg-[#f2f4f8] flex">
+    <!-- Sidebar -->
+    <aside
+      class="h-screen sticky top-0 flex flex-col bg-white border-r border-slate-200 transition-all duration-300 ease-in-out z-40"
+      :class="collapsed ? 'w-[72px]' : 'w-60'"
+    >
+      <!-- Logo + toggle -->
+      <div class="flex items-center justify-between px-4 py-4 border-b border-slate-100 min-h-[68px]">
+        <RouterLink v-if="!collapsed" to="/dashboard" class="flex items-center">
+          <img src="/logo_rinoimob.svg" alt="Rinoimob" class="h-8 w-auto object-contain" />
+        </RouterLink>
+        <RouterLink v-else to="/dashboard" class="mx-auto">
+          <img src="/logo_rinoimob.svg" alt="R" class="h-7 w-7 object-contain" />
+        </RouterLink>
+        <button
+          @click="collapsed = !collapsed"
+          :class="collapsed ? 'mx-auto' : ''"
+          class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors ml-1"
+          :title="collapsed ? 'Expandir' : 'Recolher'"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+            <path v-if="!collapsed" stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            <path v-else stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Nav -->
+      <nav class="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto">
+        <!-- Section label -->
+        <p v-if="!collapsed" class="px-3 mb-2 text-[10px] font-bold tracking-[0.18em] uppercase text-slate-400">
+          Principal
+        </p>
+
+        <template v-for="item in navItems" :key="item.to">
+          <component
+            :is="item.soon ? 'div' : RouterLink"
+            v-bind="item.soon ? {} : { to: item.to }"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group"
+            :class="[
+              item.soon
+                ? 'text-slate-300 cursor-default'
+                : isActive(item.to)
+                  ? 'bg-indigo-50 text-indigo-700'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+              collapsed ? 'justify-center' : '',
+            ]"
+            :title="collapsed ? item.label : undefined"
+          >
+            <span v-html="item.icon" class="shrink-0" />
+            <span v-if="!collapsed" class="flex-1 truncate">{{ item.label }}</span>
+            <span
+              v-if="!collapsed && item.soon"
+              class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-400"
+            >em breve</span>
+          </component>
+        </template>
+
+        <!-- Divider -->
+        <div class="my-3 border-t border-slate-100" />
+
+        <!-- Account section -->
+        <p v-if="!collapsed" class="px-3 mb-2 text-[10px] font-bold tracking-[0.18em] uppercase text-slate-400">
+          Conta
+        </p>
+
+        <RouterLink
+          v-for="item in accountItems"
+          :key="item.to"
+          :to="item.to"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150"
+          :class="[
+            isActive(item.to)
+              ? 'bg-indigo-50 text-indigo-700'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+            collapsed ? 'justify-center' : '',
+          ]"
+          :title="collapsed ? item.label : undefined"
+        >
+          <span v-html="item.icon" class="shrink-0" />
+          <span v-if="!collapsed" class="truncate">{{ item.label }}</span>
+        </RouterLink>
+      </nav>
+
+      <!-- User footer -->
+      <div class="border-t border-slate-100 p-3">
+        <div
+          class="flex items-center gap-3 px-2 py-2 rounded-xl"
+          :class="collapsed ? 'justify-center' : ''"
+        >
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+            {{ authStore.currentUser?.firstName?.charAt(0) ?? '?' }}{{ authStore.currentUser?.lastName?.charAt(0) ?? '' }}
+          </div>
+          <div v-if="!collapsed" class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-slate-800 truncate">
+              {{ authStore.currentUser?.firstName }} {{ authStore.currentUser?.lastName }}
+            </p>
+            <p class="text-xs text-slate-400 truncate">{{ authStore.currentUser?.email }}</p>
+          </div>
+          <button
+            v-if="!collapsed"
+            @click="handleLogout"
+            class="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0"
+            title="Sair"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+            </svg>
+          </button>
+          <button
+            v-else
+            @click="handleLogout"
+            class="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+            title="Sair"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <div class="flex-1 flex flex-col min-w-0">
+      <!-- Top header -->
+      <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30 h-[68px] flex items-center px-6">
+        <slot name="header">
+          <h1 class="text-lg font-bold text-slate-900">{{ $route.meta.title as string ?? '' }}</h1>
+        </slot>
+      </header>
+
+      <!-- Page content -->
+      <main class="flex-1 p-6 lg:p-8">
+        <slot />
+      </main>
+    </div>
+  </div>
+</template>
