@@ -9,19 +9,19 @@
     "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
-    "vue": "^3.3.4",
-    "vue-router": "^4.2.4",
+    "axios": "^1.5.0",
     "pinia": "^2.1.4",
-    "axios": "^1.5.0"
+    "vue": "^3.3.4",
+    "vue-router": "^4.2.4"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^4.3.4",
-    "vite": "^4.4.9",
-    "typescript": "^5.2.2",
-    "vue-tsc": "^1.8.17",
-    "tailwindcss": "^3.3.3",
     "@tailwindcss/forms": "^0.5.5",
+    "@vitejs/plugin-vue": "^4.3.4",
+    "autoprefixer": "^10.4.15",
     "postcss": "^8.4.30",
-    "autoprefixer": "^10.4.15"
+    "tailwindcss": "^3.3.3",
+    "typescript": "^5.2.2",
+    "vite": "^4.4.9",
+    "vue-tsc": "^3.2.7"
   }
 }

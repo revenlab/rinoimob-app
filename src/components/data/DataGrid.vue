@@ -18,11 +18,9 @@ interface Props {
   itemsPerPage?: number
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   itemsPerPage: 10,
 })
-
-const props = defineProps<Props>()
 
 const searchQuery = ref('')
 const sortKey = ref<string | null>(null)

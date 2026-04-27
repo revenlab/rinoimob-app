@@ -7,13 +7,11 @@ interface Props {
   defaultOpen?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   width: 'md',
   collapsible: true,
   defaultOpen: true,
 })
-
-const props = defineProps<Props>()
 const isOpen = ref(props.defaultOpen)
 
 const widthClasses = {
