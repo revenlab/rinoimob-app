@@ -44,12 +44,7 @@ const accountItems = [
     label: 'Perfil',
     to: '/profile',
     icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>`,
-  },
-  {
-    label: 'Alterar Senha',
-    to: '/change-password',
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>`,
-  },
+  }
 ]
 
 const isActive = (to: string) => route.path === to || (to !== '/dashboard' && route.path.startsWith(to))
@@ -73,7 +68,7 @@ const handleLogout = () => {
           <img src="/logo_rinoimob.svg" alt="Rinoimob" class="h-12 w-auto object-contain" />
         </RouterLink>
         <RouterLink v-else to="/dashboard" class="mx-auto">
-          <img src="/icon_rinoimob.svg" alt="R" class="h-10 w-10 object-contain" />
+          <img src="/icon_rinoimob.svg" alt="R" class="h-8 w-8 object-contain" />
         </RouterLink>
         <button
           @click="collapsed = !collapsed"

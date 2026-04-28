@@ -57,12 +57,6 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/change-password',
-      name: 'ChangePassword',
-      component: () => import('@/views/ChangePassword.vue'),
-      meta: { requiresAuth: true }
-    },
-    {
       path: '/imoveis',
       name: 'PropertiesList',
       component: () => import('@/views/properties/PropertiesList.vue'),

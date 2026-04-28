@@ -38,15 +38,9 @@
         <div class="space-y-3">
           <RouterLink
             to="/profile"
-            class="flex items-center justify-center w-full h-12 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-2xl font-medium text-sm transition"
-          >
-            Editar perfil
-          </RouterLink>
-          <RouterLink
-            to="/change-password"
             class="flex items-center justify-center w-full h-12 bg-gradient-to-r from-violet-700 to-indigo-700 text-white rounded-2xl font-medium text-sm shadow-[0_6px_16px_rgba(79,70,229,0.25)] hover:translate-y-[-1px] transition-all duration-200"
           >
-            Alterar senha
+            Editar perfil &amp; senha
           </RouterLink>
         </div>
       </div>
