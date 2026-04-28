@@ -10,34 +10,13 @@ import type {
   PropertyListParams,
   PageResponse,
 } from '@/types/property'
+import { apiFetch, API_BASE } from '@/lib/api'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || ''
-const BASE = `${API_BASE_URL}/api/v1/properties`
+const BASE = `${API_BASE}/properties`
 
 class PropertyService {
-  private getAuthHeader(): Record<string, string> {
-    const token = localStorage.getItem('auth_token')
-    return token ? { Authorization: `Bearer ${token}` } : {}
-  }
-
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
-    const response = await fetch(`${BASE}${path}`, {
-      ...options,
-      headers: {
-        ...this.getAuthHeader(),
-        ...(options.headers as Record<string, string> || {}),
-      },
-    })
-    if (!response.ok) {
-      let message = 'Request failed'
-      try {
-        const err = await response.json()
-        message = err.message || message
-      } catch { /* non-JSON */ }
-      throw new Error(message)
-    }
-    const text = await response.text()
-    return text ? JSON.parse(text) : undefined as T
+    return apiFetch<T>(`${BASE}${path}`, options)
   }
 
   async list(params: PropertyListParams = {}): Promise<PageResponse<PropertySummaryResponse>> {
