@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-[#f2f4f8] py-12 px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen flex items-center justify-center bg-[#f2f4f8] dark:bg-slate-900 py-12 px-4 sm:px-6 lg:px-8">
     <div class="w-full max-w-md">
       <div class="text-center mb-8">
         <div class="inline-flex items-center justify-center">
@@ -9,18 +9,18 @@
             class="h-14 w-auto object-contain"
           />
         </div>
-        <h1 class="text-4xl font-bold text-slate-950 tracking-tight mb-2">Nova senha</h1>
-        <p class="text-slate-500">Defina uma senha forte para proteger seu acesso.</p>
+        <h1 class="text-4xl font-bold text-slate-950 dark:text-white tracking-tight mb-2">Nova senha</h1>
+        <p class="text-slate-500 dark:text-slate-400">Defina uma senha forte para proteger seu acesso.</p>
       </div>
 
-      <form @submit.prevent="handleReset" class="bg-white/75 border border-slate-200 rounded-[2rem] shadow-[0_20px_40px_rgba(15,23,42,0.08)] p-8 space-y-5">
+      <form @submit.prevent="handleReset" class="bg-white/75 dark:bg-slate-800/75 border border-slate-200 dark:border-slate-700 rounded-[2rem] shadow-[0_20px_40px_rgba(15,23,42,0.08)] p-8 space-y-5">
         <div>
-          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Nova senha</label>
+          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Nova senha</label>
           <input
             v-model="password"
             type="password"
             required
-            class="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
+            class="w-full h-14 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
             placeholder="••••••••"
             :disabled="authStore.isLoading"
           />
@@ -34,12 +34,12 @@
         </div>
 
         <div>
-          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Confirmar senha</label>
+          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Confirmar senha</label>
           <input
             v-model="confirmPassword"
             type="password"
             required
-            class="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
+            class="w-full h-14 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
             placeholder="••••••••"
             :disabled="authStore.isLoading"
           />
@@ -62,7 +62,7 @@
       </form>
 
       <div class="mt-6 text-center">
-        <RouterLink to="/login" class="text-sm text-slate-500 hover:text-indigo-700 transition-colors">
+        <RouterLink to="/login" class="text-sm text-slate-500 dark:text-slate-400 hover:text-indigo-700 transition-colors">
           Voltar para login
         </RouterLink>
       </div>

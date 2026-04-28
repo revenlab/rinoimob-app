@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-[#f2f4f8] py-12 px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen flex items-center justify-center bg-[#f2f4f8] dark:bg-slate-900 py-12 px-4 sm:px-6 lg:px-8">
     <div class="w-full max-w-lg">
       <div class="text-center mb-8">
         <div class="inline-flex items-center justify-center">
@@ -9,23 +9,23 @@
             class="h-14 w-auto object-contain"
           />
         </div>
-        <h1 class="text-4xl font-bold text-slate-950 tracking-tight mb-2">Crie sua conta</h1>
-        <p class="text-slate-500">Comece a gerenciar seus imoveis em minutos.</p>
+        <h1 class="text-4xl font-bold text-slate-950 dark:text-white tracking-tight mb-2">Crie sua conta</h1>
+        <p class="text-slate-500 dark:text-slate-400">Comece a gerenciar seus imoveis em minutos.</p>
       </div>
 
-      <form @submit.prevent="handleSignup" class="bg-white/75 border border-slate-200 rounded-[2rem] shadow-[0_20px_40px_rgba(15,23,42,0.08)] p-8 space-y-5">
+      <form @submit.prevent="handleSignup" class="bg-white/75 dark:bg-slate-800/75 border border-slate-200 dark:border-slate-700 rounded-[2rem] shadow-[0_20px_40px_rgba(15,23,42,0.08)] p-8 space-y-5">
 
-        <div class="pb-1 border-b border-slate-100">
-          <p class="text-xs font-semibold tracking-[0.2em] uppercase text-slate-400">Sobre sua empresa</p>
+        <div class="pb-1 border-b border-slate-100 dark:border-slate-700">
+          <p class="text-xs font-semibold tracking-[0.2em] uppercase text-slate-400 dark:text-slate-500">Sobre sua empresa</p>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Nome da empresa</label>
+          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Nome da empresa</label>
           <input
             v-model="tenantName"
             type="text"
             required
-            class="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
+            class="w-full h-14 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
             placeholder="Imobiliaria Exemplo"
             :disabled="authStore.isLoading"
             @input="onTenantNameInput"
@@ -33,46 +33,46 @@
         </div>
 
         <div>
-          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Subdomínio</label>
-          <div class="flex items-center h-14 bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-violet-300 focus-within:border-transparent transition">
+          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Subdomínio</label>
+          <div class="flex items-center h-14 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-violet-300 focus-within:border-transparent transition">
             <input
               v-model="subdomain"
               type="text"
               required
               pattern="^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$"
-              class="flex-1 h-full px-4 bg-transparent text-slate-800 placeholder-slate-400 focus:outline-none"
+              class="flex-1 h-full px-4 bg-transparent text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none"
               placeholder="exemplo"
               :disabled="authStore.isLoading"
               @input="onSubdomainInput"
             />
-            <span class="pr-4 text-slate-400 text-sm select-none">.rinoimob.com</span>
+            <span class="pr-4 text-slate-400 dark:text-slate-500 text-sm select-none">.rinoimob.com</span>
           </div>
           <p v-if="subdomainError" class="mt-1 text-xs text-red-500">{{ subdomainError }}</p>
         </div>
 
-        <div class="pt-1 pb-1 border-b border-slate-100">
-          <p class="text-xs font-semibold tracking-[0.2em] uppercase text-slate-400">Seu acesso</p>
+        <div class="pt-1 pb-1 border-b border-slate-100 dark:border-slate-700">
+          <p class="text-xs font-semibold tracking-[0.2em] uppercase text-slate-400 dark:text-slate-500">Seu acesso</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Nome</label>
+            <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Nome</label>
             <input
               v-model="firstName"
               type="text"
               required
-              class="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
+              class="w-full h-14 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
               placeholder="Joao"
               :disabled="authStore.isLoading"
             />
           </div>
           <div>
-            <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Sobrenome</label>
+            <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Sobrenome</label>
             <input
               v-model="lastName"
               type="text"
               required
-              class="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
+              class="w-full h-14 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
               placeholder="Silva"
               :disabled="authStore.isLoading"
             />
@@ -80,24 +80,24 @@
         </div>
 
         <div>
-          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Email</label>
+          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Email</label>
           <input
             v-model="email"
             type="email"
             required
-            class="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
+            class="w-full h-14 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
             placeholder="you@example.com"
             :disabled="authStore.isLoading"
           />
         </div>
 
         <div>
-          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Senha</label>
+          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Senha</label>
           <input
             v-model="password"
             type="password"
             required
-            class="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
+            class="w-full h-14 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
             placeholder="••••••••"
             :disabled="authStore.isLoading"
           />
@@ -111,12 +111,12 @@
         </div>
 
         <div>
-          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Confirmar senha</label>
+          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Confirmar senha</label>
           <input
             v-model="confirmPassword"
             type="password"
             required
-            class="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
+            class="w-full h-14 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
             placeholder="••••••••"
             :disabled="authStore.isLoading"
           />
@@ -139,7 +139,7 @@
       </form>
 
       <div class="mt-6 text-center">
-        <p class="text-slate-500 text-sm">
+        <p class="text-slate-500 dark:text-slate-400 text-sm">
           Ja possui conta?
           <RouterLink to="/login" class="font-semibold text-indigo-700 hover:text-indigo-800">
             Entrar

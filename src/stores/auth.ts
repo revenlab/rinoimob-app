@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { User, TenantInfo, LoginRequest, RegisterRequest, TenantRegistrationRequest, LoginResponse } from '@/types/auth'
+import type { User, TenantInfo, LoginRequest, RegisterRequest, TenantRegistrationRequest, LoginResponse, MeResponse } from '@/types/auth'
 import authService from '@/services/auth'
 
 const TOKEN_KEY = 'auth_token'
@@ -17,6 +17,11 @@ export const useAuthStore = defineStore('auth', () => {
   // Workspace-selector state
   const availableTenants = ref<TenantInfo[]>([])
   const preAuthToken = ref<string | null>(null)
+
+  // Active tenant info populated from /me
+  const currentTenantId = ref<string | null>(null)
+  const currentTenantName = ref<string | null>(null)
+  const currentTenantSubdomain = ref<string | null>(null)
 
   const isAuthenticated = computed(() => !!accessToken.value)
   const currentUser = computed(() => user.value)
@@ -135,6 +140,9 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     preAuthToken.value = null
     availableTenants.value = []
+    currentTenantId.value = null
+    currentTenantName.value = null
+    currentTenantSubdomain.value = null
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(REFRESH_TOKEN_KEY)
     localStorage.removeItem(USER_KEY)
@@ -182,12 +190,39 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  /**
+   * Validates the current session by calling /me.
+   * Refreshes user and tenant data. On 401/403, apiFetch handles logout automatically.
+   */
+  const fetchMe = async (): Promise<MeResponse | null> => {
+    if (!accessToken.value) return null
+    try {
+      const me = await authService.me()
+      user.value = {
+        id: me.id,
+        email: me.email,
+        firstName: me.firstName,
+        lastName: me.lastName,
+        active: me.active,
+        createdAt: me.createdAt,
+      }
+      currentTenantId.value = me.tenantId
+      currentTenantName.value = me.tenantName
+      currentTenantSubdomain.value = me.tenantSubdomain
+      localStorage.setItem(USER_KEY, JSON.stringify(user.value))
+      return me
+    } catch {
+      // apiFetch already handles 401/403 — other errors are silently ignored here
+      return null
+    }
+  }
+
   const updateProfile = async (firstName: string, lastName: string) => {
     try {
       isLoading.value = true
       error.value = null
       if (!accessToken.value) throw new Error('Não autenticado')
-      const updatedUser = await authService.updateProfile(accessToken.value, firstName, lastName)
+      const updatedUser = await authService.updateProfile(firstName, lastName)
       user.value = updatedUser
       localStorage.setItem(USER_KEY, JSON.stringify(updatedUser))
       return true
@@ -204,7 +239,7 @@ export const useAuthStore = defineStore('auth', () => {
       isLoading.value = true
       error.value = null
       if (!accessToken.value) throw new Error('Não autenticado')
-      await authService.changePassword(accessToken.value, currentPassword, newPassword, confirmPassword)
+      await authService.changePassword(currentPassword, newPassword, confirmPassword)
       return true
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Falha ao alterar senha'
@@ -234,10 +269,14 @@ export const useAuthStore = defineStore('auth', () => {
     error,
     availableTenants,
     preAuthToken,
+    currentTenantId,
+    currentTenantName,
+    currentTenantSubdomain,
     isAuthenticated,
     currentUser,
     hasPendingWorkspaceSelection,
     initializeAuth,
+    fetchMe,
     signup,
     register,
     identify,

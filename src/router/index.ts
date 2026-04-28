@@ -57,9 +57,33 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/change-password',
-      name: 'ChangePassword',
-      component: () => import('@/views/ChangePassword.vue'),
+      path: '/imoveis',
+      name: 'PropertiesList',
+      component: () => import('@/views/properties/PropertiesList.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/imoveis/novo',
+      name: 'PropertyNew',
+      component: () => import('@/views/properties/PropertyForm.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/imoveis/:id',
+      name: 'PropertyDetail',
+      component: () => import('@/views/properties/PropertyDetail.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/imoveis/:id/editar',
+      name: 'PropertyEdit',
+      component: () => import('@/views/properties/PropertyForm.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/categorias',
+      name: 'CategoriesManagement',
+      component: () => import('@/views/CategoriesManagement.vue'),
       meta: { requiresAuth: true }
     }
   ]

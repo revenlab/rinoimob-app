@@ -72,3 +72,15 @@ export interface AuthError {
   message: string
   field?: string
 }
+
+export interface MeResponse {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  active: boolean
+  createdAt: string
+  tenantId: string | null
+  tenantName: string | null
+  tenantSubdomain: string | null
+}

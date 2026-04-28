@@ -1,14 +1,14 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-[#f2f4f8] py-12 px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen flex items-center justify-center bg-[#f2f4f8] dark:bg-slate-900 py-12 px-4 sm:px-6 lg:px-8">
     <div class="w-full max-w-md">
       <div class="text-center mb-8">
         <div class="inline-flex items-center justify-center">
           <img src="/logo_rinoimob.svg" alt="Rinoimob" class="h-14 w-auto object-contain" />
         </div>
-        <h1 class="text-4xl font-bold text-slate-950 tracking-tight mb-2">
+        <h1 class="text-4xl font-bold text-slate-950 dark:text-white tracking-tight mb-2">
           {{ step === 'credentials' ? 'Bem-vindo de volta' : 'Selecione o workspace' }}
         </h1>
-        <p class="text-slate-500">
+        <p class="text-slate-500 dark:text-slate-400">
           {{ step === 'credentials'
             ? 'Acesse sua conta para gerenciar seus imóveis e leads.'
             : 'Escolha o workspace que deseja acessar.' }}
@@ -19,10 +19,10 @@
       <form
         v-if="step === 'credentials'"
         @submit.prevent="handleIdentify"
-        class="bg-white/75 border border-slate-200 rounded-[2rem] shadow-[0_20px_40px_rgba(15,23,42,0.08)] p-8 space-y-5"
+        class="bg-white/75 dark:bg-slate-800/75 border border-slate-200 dark:border-slate-700 rounded-[2rem] shadow-[0_20px_40px_rgba(15,23,42,0.08)] p-8 space-y-5"
       >
         <div>
-          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Email</label>
+          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Email</label>
           <div class="relative">
             <span class="absolute inset-y-0 left-4 flex items-center text-slate-400">
               <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -35,7 +35,7 @@
               type="email"
               required
               autofocus
-              class="w-full h-14 pl-12 pr-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
+              class="w-full h-14 pl-12 pr-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
               placeholder="voce@exemplo.com"
               :disabled="authStore.isLoading"
             />
@@ -43,7 +43,7 @@
         </div>
 
         <div>
-          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Senha</label>
+          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Senha</label>
           <div class="relative">
             <span class="absolute inset-y-0 left-4 flex items-center text-slate-400">
               <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -55,7 +55,7 @@
               v-model="password"
               type="password"
               required
-              class="w-full h-14 pl-12 pr-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
+              class="w-full h-14 pl-12 pr-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
               placeholder="••••••••"
               :disabled="authStore.isLoading"
             />
@@ -74,7 +74,7 @@
           {{ authStore.isLoading ? 'Verificando...' : 'Continuar' }}
         </button>
 
-        <div class="pt-5 border-t border-slate-200 text-center text-sm text-slate-400">
+        <div class="pt-5 border-t border-slate-200 dark:border-slate-700 text-center text-sm text-slate-400 dark:text-slate-500">
           Acesso restrito a corretores e administradores
         </div>
       </form>
@@ -82,7 +82,7 @@
       <!-- Step 2: Workspace selector -->
       <div
         v-else
-        class="bg-white/75 border border-slate-200 rounded-[2rem] shadow-[0_20px_40px_rgba(15,23,42,0.08)] p-8 space-y-3"
+        class="bg-white/75 dark:bg-slate-800/75 border border-slate-200 dark:border-slate-700 rounded-[2rem] shadow-[0_20px_40px_rgba(15,23,42,0.08)] p-8 space-y-3"
       >
         <button
           v-for="tenant in authStore.availableTenants"
@@ -90,16 +90,16 @@
           type="button"
           :disabled="authStore.isLoading"
           @click="handleSelectWorkspace(tenant.id)"
-          class="w-full flex items-center gap-4 p-4 rounded-2xl border border-slate-200 bg-slate-50 hover:border-violet-400 hover:bg-violet-50 transition-all duration-150 text-left group disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full flex items-center gap-4 p-4 rounded-2xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all duration-150 text-left group disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <div class="flex-shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-700 flex items-center justify-center text-white font-bold text-lg">
             {{ tenant.name.charAt(0).toUpperCase() }}
           </div>
           <div class="min-w-0 flex-1">
-            <p class="font-semibold text-slate-800 truncate group-hover:text-violet-700 transition-colors">{{ tenant.name }}</p>
-            <p class="text-xs text-slate-400 truncate">{{ tenant.subdomain }}.rinoimob.com</p>
+            <p class="font-semibold text-slate-800 dark:text-slate-200 truncate group-hover:text-violet-700 dark:group-hover:text-violet-400 transition-colors">{{ tenant.name }}</p>
+            <p class="text-xs text-slate-400 dark:text-slate-500 truncate">{{ tenant.subdomain }}.rinoimob.com</p>
           </div>
-          <svg class="h-5 w-5 text-slate-300 group-hover:text-violet-500 transition-colors flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <svg class="h-5 w-5 text-slate-300 dark:text-slate-500 group-hover:text-violet-500 transition-colors flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="m9 18 6-6-6-6" />
           </svg>
         </button>
@@ -110,7 +110,7 @@
 
         <button
           type="button"
-          class="w-full pt-3 text-sm text-slate-400 hover:text-indigo-700 transition-colors"
+          class="w-full pt-3 text-sm text-slate-400 dark:text-slate-500 hover:text-indigo-700 dark:hover:text-indigo-400 transition-colors"
           @click="backToCredentials"
         >
           ← Usar outra conta
@@ -118,13 +118,13 @@
       </div>
 
       <div class="mt-8 text-center space-y-2">
-        <p class="text-slate-500 text-sm">
+        <p class="text-slate-500 dark:text-slate-400 text-sm">
           Não tem conta?
           <RouterLink to="/register" class="font-semibold text-indigo-700 hover:text-indigo-800">
             Criar conta
           </RouterLink>
         </p>
-        <RouterLink to="/forgot-password" class="text-sm text-slate-500 hover:text-indigo-700 transition-colors">
+        <RouterLink to="/forgot-password" class="text-sm text-slate-500 dark:text-slate-400 hover:text-indigo-700 transition-colors">
           Esqueceu sua senha?
         </RouterLink>
       </div>
@@ -171,4 +171,3 @@ const backToCredentials = () => {
   step.value = 'credentials'
 }
 </script>
-

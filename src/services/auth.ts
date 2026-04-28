@@ -1,4 +1,5 @@
-import type { User, LoginRequest, LoginResponse, RegisterRequest, TenantRegistrationRequest, PasswordResetRequest, ForgotPasswordRequest, IdentifyRequest, IdentifyResponse, SelectTenantRequest } from '@/types/auth'
+import type { User, LoginRequest, LoginResponse, RegisterRequest, TenantRegistrationRequest, PasswordResetRequest, ForgotPasswordRequest, IdentifyRequest, IdentifyResponse, SelectTenantRequest, MeResponse } from '@/types/auth'
+import { apiFetch, API_BASE } from '@/lib/api'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || ''
 const API_VERSION = '/api/v1'
@@ -10,6 +11,7 @@ class AuthService {
     this.baseUrl = `${API_BASE_URL}${API_VERSION}`
   }
 
+  /** Unauthenticated POST (login, signup, etc.) */
   private async post<T>(path: string, body?: unknown, token?: string): Promise<T> {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
     if (token) headers['Authorization'] = `Bearer ${token}`
@@ -28,35 +30,6 @@ class AuthService {
     }
     const text = await response.text()
     return text ? JSON.parse(text) : undefined as T
-  }
-
-  private async put<T>(path: string, body: unknown, token: string): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(body)
-    })
-    if (!response.ok) {
-      let message = 'Request failed'
-      try {
-        const error = await response.json()
-        message = error.message || message
-      } catch { /* non-JSON response */ }
-      throw new Error(message)
-    }
-    return response.json()
-  }
-
-  private async get<T>(path: string, token: string): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      method: 'GET',
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    if (!response.ok) throw new Error('Request failed')
-    return response.json()
   }
 
   async signup(data: TenantRegistrationRequest): Promise<void> {
@@ -101,16 +74,29 @@ class AuthService {
     return this.post('/auth/reset-password', data)
   }
 
-  async getProfile(token: string) {
-    return this.get('/users/profile', token)
+  /** Returns the current authenticated user + tenant info. Triggers logout on 401/403. */
+  async me(): Promise<MeResponse> {
+    return apiFetch<MeResponse>(`${API_BASE}/auth/me`)
   }
 
-  async updateProfile(token: string, firstName: string, lastName: string): Promise<User> {
-    return this.put<User>('/users/profile', { firstName, lastName }, token)
+  async getProfile(): Promise<User> {
+    return apiFetch<User>(`${API_BASE}/users/profile`)
   }
 
-  async changePassword(token: string, currentPassword: string, newPassword: string, confirmPassword: string) {
-    return this.post('/users/change-password', { currentPassword, newPassword, confirmPassword }, token)
+  async updateProfile(firstName: string, lastName: string): Promise<User> {
+    return apiFetch<User>(`${API_BASE}/users/profile`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ firstName, lastName }),
+    })
+  }
+
+  async changePassword(currentPassword: string, newPassword: string, confirmPassword: string): Promise<void> {
+    return apiFetch<void>(`${API_BASE}/users/change-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+    })
   }
 }
 
