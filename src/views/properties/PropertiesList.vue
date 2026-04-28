@@ -10,6 +10,13 @@ const store = usePropertyStore()
 
 const params = ref<PropertyListParams>({ page: 0, size: 20 })
 const deleteConfirmId = ref<string | null>(null)
+const viewMode = ref<'card' | 'list'>(
+  (localStorage.getItem('propertiesViewMode') as 'card' | 'list') ?? 'card',
+)
+function setViewMode(m: 'card' | 'list') {
+  viewMode.value = m
+  localStorage.setItem('propertiesViewMode', m)
+}
 
 onMounted(() => store.fetchProperties(params.value))
 
@@ -51,6 +58,31 @@ const typeLabel: Record<string, string> = {
           <h1 class="text-lg font-bold text-slate-900">Imóveis</h1>
           <p class="text-xs text-slate-400">Gerencie o portfólio de imóveis do seu tenant</p>
         </div>
+      <div class="flex items-center gap-3">
+        <!-- View toggle -->
+        <div class="flex items-center rounded-xl border border-slate-200 overflow-hidden">
+          <button
+            @click="setViewMode('card')"
+            :class="viewMode === 'card' ? 'bg-indigo-50 text-indigo-700' : 'bg-white text-slate-400 hover:text-slate-600'"
+            class="px-3 py-2 transition"
+            title="Visualização em cards"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+              <path d="M3 3h7v7H3V3zm0 11h7v7H3v-7zm11-11h7v7h-7V3zm0 11h7v7h-7v-7z" />
+            </svg>
+          </button>
+          <button
+            @click="setViewMode('list')"
+            :class="viewMode === 'list' ? 'bg-indigo-50 text-indigo-700' : 'bg-white text-slate-400 hover:text-slate-600'"
+            class="px-3 py-2 border-l border-slate-200 transition"
+            title="Visualização em lista"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5M3.75 12h16.5M3.75 18.75h16.5" />
+            </svg>
+          </button>
+        </div>
+
         <RouterLink
           to="/imoveis/novo"
           class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-700 to-indigo-700 text-white rounded-xl font-medium text-sm shadow-[0_4px_12px_rgba(79,70,229,0.25)] hover:-translate-y-px transition-all duration-200"
@@ -60,6 +92,7 @@ const typeLabel: Record<string, string> = {
           </svg>
           Novo Imóvel
         </RouterLink>
+      </div>
       </div>
     </template>
 
@@ -141,8 +174,8 @@ const typeLabel: Record<string, string> = {
       </RouterLink>
     </div>
 
-    <!-- Grid -->
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+    <!-- Card Grid -->
+    <div v-else-if="viewMode === 'card'" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
       <div
         v-for="p in store.properties!.content"
         :key="p.id"
@@ -223,6 +256,122 @@ const typeLabel: Record<string, string> = {
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- List Table -->
+    <div v-else class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-slate-100 bg-slate-50 text-[11px] font-bold tracking-widest text-slate-400 uppercase">
+            <th class="px-4 py-3 text-left">Imóvel</th>
+            <th class="px-4 py-3 text-left hidden md:table-cell">Tipo / Operação</th>
+            <th class="px-4 py-3 text-left hidden lg:table-cell">Localização</th>
+            <th class="px-4 py-3 text-left hidden sm:table-cell">Preço</th>
+            <th class="px-4 py-3 text-left">Status</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="p in store.properties!.content"
+            :key="p.id"
+            class="border-b border-slate-50 hover:bg-slate-50/60 transition-colors"
+          >
+            <!-- Imóvel -->
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-10 rounded-lg bg-slate-100 overflow-hidden shrink-0">
+                  <img
+                    v-if="p.coverPhotoUrl"
+                    :src="p.coverPhotoUrl"
+                    :alt="p.title"
+                    class="w-full h-full object-cover"
+                  />
+                  <div v-else class="w-full h-full flex items-center justify-center text-slate-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 21l6.75-6.75 1.5 1.5M21 3l-9 9" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="min-w-0">
+                  <p class="font-semibold text-slate-900 truncate max-w-[180px]">{{ p.title }}</p>
+                  <div v-if="p.categories?.length" class="flex flex-wrap gap-1 mt-0.5">
+                    <span
+                      v-for="cat in p.categories"
+                      :key="cat.id"
+                      class="text-[9px] font-medium px-1.5 py-px rounded-full bg-violet-50 text-violet-700"
+                    >{{ cat.name }}</span>
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Tipo / Operação -->
+            <td class="px-4 py-3 hidden md:table-cell">
+              <p class="text-slate-700">{{ typeLabel[p.propertyType] }}</p>
+              <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600">{{ operationLabel[p.operation] }}</span>
+            </td>
+
+            <!-- Localização -->
+            <td class="px-4 py-3 hidden lg:table-cell text-slate-500">
+              <span v-if="p.addressCity">{{ p.addressCity }}, {{ p.addressState }}</span>
+              <span v-else class="text-slate-300">—</span>
+              <div class="flex gap-2 text-[11px] text-slate-400 mt-0.5">
+                <span v-if="p.bedrooms">🛏 {{ p.bedrooms }}</span>
+                <span v-if="p.bathrooms">🚿 {{ p.bathrooms }}</span>
+                <span v-if="p.areaTotal">📐 {{ p.areaTotal }}m²</span>
+              </div>
+            </td>
+
+            <!-- Preço -->
+            <td class="px-4 py-3 hidden sm:table-cell font-bold text-slate-900">
+              {{ formatPrice(p.price, p.currency) }}
+            </td>
+
+            <!-- Status -->
+            <td class="px-4 py-3">
+              <span
+                class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                :class="statusClass[p.status] || 'bg-slate-100 text-slate-500'"
+              >{{ statusLabel[p.status] }}</span>
+            </td>
+
+            <!-- Actions -->
+            <td class="px-4 py-3">
+              <div class="flex items-center justify-end gap-1">
+                <RouterLink
+                  :to="`/imoveis/${p.id}`"
+                  class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+                  title="Ver"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.641 0-8.573-3.007-9.964-7.178z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </RouterLink>
+                <RouterLink
+                  :to="`/imoveis/${p.id}/editar`"
+                  class="p-1.5 rounded-lg text-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition"
+                  title="Editar"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+                  </svg>
+                </RouterLink>
+                <button
+                  @click="deleteConfirmId = p.id"
+                  class="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition"
+                  title="Remover"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- Pagination -->
