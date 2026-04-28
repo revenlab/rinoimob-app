@@ -37,6 +37,31 @@ const typeLabel: Record<string, string> = {
   HOUSE: 'Casa', APARTMENT: 'Apartamento', LAND: 'Terreno', COMMERCIAL: 'Comercial', RURAL: 'Rural',
 }
 
+const AMENITY_LABELS: Record<string, string> = {
+  piscina: 'Piscina',
+  varanda: 'Varanda',
+  academia: 'Academia',
+  churrasqueira: 'Churrasqueira',
+  mobiliado: 'Mobiliado',
+  aceita_pets: 'Aceita Pets',
+  quintal: 'Quintal',
+  sacada: 'Sacada',
+  deposito: 'Depósito',
+  elevador: 'Elevador',
+}
+
+const conditionLabel: Record<string, string> = {
+  NEW: 'Novo',
+  USED: 'Usado',
+  UNDER_CONSTRUCTION: 'Em construção',
+}
+
+function activeAmenities(attrs: Record<string, unknown>): string[] {
+  return Object.entries(attrs)
+    .filter(([k, v]) => v === true && k in AMENITY_LABELS)
+    .map(([k]) => AMENITY_LABELS[k])
+}
+
 function formatPrice(price: number | null, currency: string) {
   if (!price) return '—'
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency }).format(price)
@@ -185,6 +210,46 @@ async function deleteFloorPlan(planId: string) {
                 <span v-if="store.currentProperty.addressState"> - {{ store.currentProperty.addressState }}</span>
                 <span v-if="store.currentProperty.addressZip"> · {{ store.currentProperty.addressZip }}</span>
               </p>
+            </div>
+
+            <!-- Extra info -->
+            <div class="pt-2 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div v-if="store.currentProperty.condition">
+                <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Condição</p>
+                <p class="text-slate-800 font-semibold">{{ conditionLabel[store.currentProperty.condition] ?? store.currentProperty.condition }}</p>
+              </div>
+              <div v-if="store.currentProperty.floorNumber != null">
+                <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Andar</p>
+                <p class="text-slate-800 font-semibold">{{ store.currentProperty.floorNumber }}º</p>
+              </div>
+              <div v-if="store.currentProperty.referenceCode">
+                <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Código</p>
+                <p class="text-slate-800 font-semibold font-mono">{{ store.currentProperty.referenceCode }}</p>
+              </div>
+            </div>
+
+            <!-- Categories -->
+            <div v-if="store.currentProperty.categories?.length" class="pt-2 border-t border-slate-100">
+              <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Categorias</p>
+              <div class="flex flex-wrap gap-2">
+                <span
+                  v-for="cat in store.currentProperty.categories"
+                  :key="cat.id"
+                  class="text-xs font-medium px-3 py-1 rounded-full bg-violet-50 text-violet-700"
+                >{{ cat.name }}</span>
+              </div>
+            </div>
+
+            <!-- Amenities -->
+            <div v-if="activeAmenities(store.currentProperty.attributes).length" class="pt-2 border-t border-slate-100">
+              <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Comodidades</p>
+              <div class="flex flex-wrap gap-2">
+                <span
+                  v-for="label in activeAmenities(store.currentProperty.attributes)"
+                  :key="label"
+                  class="text-xs font-medium px-3 py-1 rounded-full bg-emerald-50 text-emerald-700"
+                >{{ label }}</span>
+              </div>
             </div>
           </div>
 
