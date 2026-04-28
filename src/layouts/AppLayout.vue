@@ -70,10 +70,10 @@ const handleLogout = () => {
       <!-- Logo + toggle -->
       <div class="flex items-center justify-between px-4 py-4 border-b border-slate-100 min-h-[68px]">
         <RouterLink v-if="!collapsed" to="/dashboard" class="flex items-center">
-          <img src="/logo_rinoimob.svg" alt="Rinoimob" class="h-8 w-auto object-contain" />
+          <img src="/logo_rinoimob.svg" alt="Rinoimob" class="h-12 w-auto object-contain" />
         </RouterLink>
         <RouterLink v-else to="/dashboard" class="mx-auto">
-          <img src="/logo_rinoimob.svg" alt="R" class="h-7 w-7 object-contain" />
+          <img src="/icon_rinoimob.svg" alt="R" class="h-10 w-10 object-contain" />
         </RouterLink>
         <button
           @click="collapsed = !collapsed"

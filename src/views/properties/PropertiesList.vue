@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { usePropertyStore } from '@/stores/property'
-import type { PropertyListParams, PropertyOperation, PropertyStatus, PropertyType } from '@/types/property'
+import type { PropertyListParams } from '@/types/property'
 
-const router = useRouter()
 const store = usePropertyStore()
 
 const params = ref<PropertyListParams>({ page: 0, size: 20 })

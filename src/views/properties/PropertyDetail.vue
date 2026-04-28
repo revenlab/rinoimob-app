@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { usePropertyStore } from '@/stores/property'
 import propertyService from '@/services/property'
 
 const route = useRoute()
-const router = useRouter()
 const store = usePropertyStore()
 const propertyId = route.params.id as string
 
