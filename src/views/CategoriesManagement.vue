@@ -114,11 +114,18 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-
           <tr
             v-for="cat in store.categories"
             :key="cat.id"
-            class="border-b border-slate-50 hover:bg-slate-50/60 transition-colors"
+            :class="cat.isGlobal ? 'border-b border-slate-50 bg-slate-50/50' : 'border-b border-slate-50 hover:bg-slate-50/60 transition-colors'"
           >
-            <td class="px-6 py-3.5 font-medium text-slate-900">{{ cat.name }}</td>
-            <td class="px-6 py-3.5 text-slate-500 font-mono text-xs">{{ cat.slug }}</td>
-            <td class="px-6 py-3.5 text-slate-400 max-w-xs truncate">{{ cat.description || '—' }}</td>
+            <td class="px-6 py-3.5 font-medium" :class="cat.isGlobal ? 'text-slate-500' : 'text-slate-900'">
+              <div class="flex items-center gap-2">
+                <svg v-if="cat.isGlobal" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 text-slate-300 shrink-0" title="Categoria do sistema — não editável">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+                {{ cat.name }}
+              </div>
+            </td>
+            <td class="px-6 py-3.5 font-mono text-xs" :class="cat.isGlobal ? 'text-slate-400' : 'text-slate-500'">{{ cat.slug }}</td>
+            <td class="px-6 py-3.5 max-w-xs truncate" :class="cat.isGlobal ? 'text-slate-300' : 'text-slate-400'">{{ cat.description || '—' }}</td>
             <td class="px-6 py-3.5">
               <span
                 :class="cat.isGlobal
@@ -149,7 +156,9 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-
                   <button @click="deleteConfirmId = null" class="text-xs text-slate-400 px-2 py-1 rounded-lg hover:bg-slate-100 transition">Cancelar</button>
                 </div>
               </div>
-              <span v-else class="block text-center text-slate-200 text-xs">—</span>
+              <div v-else class="flex items-center justify-end">
+                <span class="text-[10px] text-slate-300 italic">somente leitura</span>
+              </div>
             </td>
           </tr>
           <tr v-if="!store.categories.length">
