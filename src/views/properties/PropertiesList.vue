@@ -180,6 +180,15 @@ const typeLabel: Record<string, string> = {
 
           <p class="text-base font-bold text-slate-900 mb-2">{{ formatPrice(p.price, p.currency) }}</p>
 
+          <!-- Category badges -->
+          <div v-if="p.categories?.length" class="flex flex-wrap gap-1 mb-2">
+            <span
+              v-for="cat in p.categories"
+              :key="cat.id"
+              class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-violet-50 text-violet-700"
+            >{{ cat.name }}</span>
+          </div>
+
           <div class="flex items-center gap-3 text-xs text-slate-400 mb-3">
             <span v-if="p.bedrooms">🛏 {{ p.bedrooms }}</span>
             <span v-if="p.bathrooms">🚿 {{ p.bathrooms }}</span>

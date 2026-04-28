@@ -85,6 +85,12 @@ const router = createRouter({
       name: 'PropertyEdit',
       component: () => import('@/views/properties/PropertyForm.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/categorias',
+      name: 'CategoriesManagement',
+      component: () => import('@/views/CategoriesManagement.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })

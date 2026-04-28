@@ -1,6 +1,10 @@
 export type PropertyOperation = 'SALE' | 'RENT' | 'SEASONAL'
 export type PropertyType = 'HOUSE' | 'APARTMENT' | 'LAND' | 'COMMERCIAL' | 'RURAL'
 export type PropertyStatus = 'DRAFT' | 'ACTIVE' | 'RESERVED' | 'SOLD' | 'ARCHIVED'
+export type PropertyCondition = 'NEW' | 'USED' | 'UNDER_CONSTRUCTION'
+
+import type { CategoryResponse } from '@/types/category'
+export type { CategoryResponse }
 
 export interface PropertyPhotoResponse {
   id: string
@@ -32,6 +36,8 @@ export interface PropertySummaryResponse {
   operation: PropertyOperation
   propertyType: PropertyType
   status: PropertyStatus
+  condition: PropertyCondition | null
+  referenceCode: string | null
   price: number | null
   currency: string
   areaTotal: number | null
@@ -42,6 +48,7 @@ export interface PropertySummaryResponse {
   addressCountry: string
   coverPhotoId: string | null
   coverPhotoUrl: string | null
+  categories: CategoryResponse[]
   createdAt: string
 }
 
@@ -52,6 +59,8 @@ export interface PropertyResponse {
   operation: PropertyOperation
   propertyType: PropertyType
   status: PropertyStatus
+  condition: PropertyCondition | null
+  referenceCode: string | null
   price: number | null
   currency: string
   taxes: number | null
@@ -62,6 +71,7 @@ export interface PropertyResponse {
   suites: number | null
   bathrooms: number | null
   parking: number | null
+  floorNumber: number | null
   addressStreet: string | null
   addressNumber: string | null
   addressComplement: string | null
@@ -74,6 +84,7 @@ export interface PropertyResponse {
   lng: number | null
   coverPhotoId: string | null
   attributes: Record<string, unknown>
+  categories: CategoryResponse[]
   publishedAt: string | null
   createdAt: string
   updatedAt: string
@@ -87,6 +98,8 @@ export interface CreatePropertyRequest {
   operation: PropertyOperation
   propertyType: PropertyType
   status?: PropertyStatus
+  condition?: PropertyCondition
+  referenceCode?: string
   price?: number
   currency?: string
   taxes?: number
@@ -97,6 +110,7 @@ export interface CreatePropertyRequest {
   suites?: number
   bathrooms?: number
   parking?: number
+  floorNumber?: number
   addressStreet?: string
   addressNumber?: string
   addressComplement?: string
@@ -108,6 +122,7 @@ export interface CreatePropertyRequest {
   lat?: number
   lng?: number
   attributes?: Record<string, unknown>
+  categoryIds?: string[]
 }
 
 export type UpdatePropertyRequest = Partial<CreatePropertyRequest & { status: PropertyStatus }>

@@ -3,11 +3,13 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { usePropertyStore } from '@/stores/property'
-import type { CreatePropertyRequest, PropertyOperation, PropertyStatus, PropertyType } from '@/types/property'
+import { useCategoryStore } from '@/stores/category'
+import type { CreatePropertyRequest, PropertyCondition, PropertyOperation, PropertyStatus, PropertyType } from '@/types/property'
 
 const router = useRouter()
 const route = useRoute()
 const store = usePropertyStore()
+const catStore = useCategoryStore()
 
 const isEdit = computed(() => !!route.params.id)
 const propertyId = computed(() => route.params.id as string | undefined)
@@ -20,12 +22,12 @@ const form = ref<CreatePropertyRequest & { status?: PropertyStatus }>({
   status: 'DRAFT',
   currency: 'BRL',
   addressCountry: 'BR',
+  attributes: {},
+  categoryIds: [],
 })
 
-const isSaving = ref(false)
-const formError = ref<string | null>(null)
-
 onMounted(async () => {
+  catStore.fetchCategories()
   if (isEdit.value && propertyId.value) {
     await store.fetchProperty(propertyId.value)
     const p = store.currentProperty
@@ -36,6 +38,8 @@ onMounted(async () => {
         operation: p.operation,
         propertyType: p.propertyType,
         status: p.status,
+        condition: p.condition ?? undefined,
+        referenceCode: p.referenceCode ?? '',
         price: p.price ?? undefined,
         currency: p.currency,
         taxes: p.taxes ?? undefined,
@@ -46,6 +50,7 @@ onMounted(async () => {
         suites: p.suites ?? undefined,
         bathrooms: p.bathrooms ?? undefined,
         parking: p.parking ?? undefined,
+        floorNumber: p.floorNumber ?? undefined,
         addressStreet: p.addressStreet ?? '',
         addressNumber: p.addressNumber ?? '',
         addressComplement: p.addressComplement ?? '',
@@ -56,10 +61,47 @@ onMounted(async () => {
         addressZip: p.addressZip ?? '',
         lat: p.lat ?? undefined,
         lng: p.lng ?? undefined,
+        attributes: p.attributes ?? {},
+        categoryIds: p.categories?.map(c => c.id) ?? [],
       }
     }
   }
 })
+
+const isSaving = ref(false)
+const formError = ref<string | null>(null)
+
+const AMENITIES = [
+  { key: 'piscina', label: 'Piscina' },
+  { key: 'varanda', label: 'Varanda' },
+  { key: 'academia', label: 'Academia' },
+  { key: 'churrasqueira', label: 'Churrasqueira' },
+  { key: 'mobiliado', label: 'Mobiliado' },
+  { key: 'aceita_pets', label: 'Aceita Pets' },
+  { key: 'quintal', label: 'Quintal' },
+  { key: 'sacada', label: 'Sacada' },
+  { key: 'deposito', label: 'Depósito' },
+  { key: 'elevador', label: 'Elevador' },
+]
+
+function toggleAmenity(key: string) {
+  const attrs = form.value.attributes ?? {}
+  if (attrs[key]) {
+    const { [key]: _, ...rest } = attrs
+    form.value.attributes = rest
+  } else {
+    form.value.attributes = { ...attrs, [key]: true }
+  }
+}
+
+function toggleCategory(id: string) {
+  const ids = form.value.categoryIds ?? []
+  if (ids.includes(id)) {
+    form.value.categoryIds = ids.filter(i => i !== id)
+  } else {
+    form.value.categoryIds = [...ids, id]
+  }
+}
 
 async function handleSubmit() {
   if (!form.value.title.trim()) { formError.value = 'Título é obrigatório'; return }
@@ -207,6 +249,65 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-
             <label :class="labelClass">Vagas</label>
             <input v-model.number="form.parking" type="number" min="0" :class="inputClass" />
           </div>
+          <div>
+            <label :class="labelClass">Andar</label>
+            <input v-model.number="form.floorNumber" type="number" min="0" :class="inputClass" placeholder="Ex.: 5" />
+          </div>
+          <div>
+            <label :class="labelClass">Condição</label>
+            <select v-model="form.condition" :class="inputClass">
+              <option value="">Não informado</option>
+              <option value="NEW">Novo</option>
+              <option value="USED">Usado</option>
+              <option value="UNDER_CONSTRUCTION">Em construção</option>
+            </select>
+          </div>
+          <div>
+            <label :class="labelClass">Código de referência</label>
+            <input v-model="form.referenceCode" type="text" :class="inputClass" placeholder="Ex.: AP-001" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Amenities -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
+        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 mb-5">Comodidades</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <label
+            v-for="a in AMENITIES"
+            :key="a.key"
+            class="flex items-center gap-2 cursor-pointer select-none"
+          >
+            <input
+              type="checkbox"
+              :checked="!!(form.attributes ?? {})[a.key]"
+              @change="toggleAmenity(a.key)"
+              class="w-4 h-4 accent-indigo-600 rounded"
+            />
+            <span class="text-sm text-slate-600">{{ a.label }}</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <div v-if="catStore.categories.length" class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
+        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 mb-5">Categorias</h2>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="cat in catStore.categories"
+            :key="cat.id"
+            type="button"
+            @click="toggleCategory(cat.id)"
+            :class="[
+              'px-3 py-1.5 rounded-full text-xs font-medium border transition',
+              (form.categoryIds ?? []).includes(cat.id)
+                ? 'bg-indigo-600 text-white border-indigo-600'
+                : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-400'
+            ]"
+          >
+            {{ cat.name }}
+            <span v-if="cat.isGlobal" class="ml-1 opacity-60 text-[10px]">Sistema</span>
+          </button>
         </div>
       </div>
 
