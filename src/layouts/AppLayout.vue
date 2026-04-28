@@ -67,7 +67,8 @@ const handleLogout = () => {
       <!-- Logo + toggle -->
       <div class="flex items-center justify-between px-4 py-4 border-b border-slate-100 dark:border-slate-700 min-h-[68px]">
         <RouterLink v-if="!collapsed" to="/dashboard" class="flex items-center">
-          <img src="/logo_rinoimob.svg" alt="Rinoimob" class="h-12 w-auto object-contain" />
+          <img v-if="!isDark" src="/logo_rinoimob.svg" alt="Rinoimob" class="h-12 w-auto object-contain" />
+          <img v-else src="/logo_rinoimob_white.svg" alt="Rinoimob" class="h-12 w-auto object-contain" />
         </RouterLink>
         <RouterLink v-else to="/dashboard" class="mx-auto">
           <img src="/icon_rinoimob.svg" alt="R" class="h-8 w-8 object-contain" />
