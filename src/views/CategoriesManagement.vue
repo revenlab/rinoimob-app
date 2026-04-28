@@ -66,8 +66,8 @@ async function confirmDelete(id: string) {
   deleteConfirmId.value = null
 }
 
-const inputClass = 'w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:bg-white transition'
-const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-1'
+const inputClass = 'w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:bg-white dark:focus:bg-slate-600 transition'
+const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dark:text-slate-400 mb-1'
 </script>
 
 <template>
@@ -75,8 +75,8 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-
     <template #header>
       <div class="flex items-center justify-between w-full">
         <div>
-          <h1 class="text-lg font-bold text-slate-900">Categorias</h1>
-          <p class="text-xs text-slate-400">Gerencie as categorias de imóveis do seu tenant</p>
+          <h1 class="text-lg font-bold text-slate-900 dark:text-white">Categorias</h1>
+          <p class="text-xs text-slate-400 dark:text-slate-500">Gerencie as categorias de imóveis do seu tenant</p>
         </div>
         <button
           @click="openCreate"
@@ -99,14 +99,14 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-
     </div>
 
     <!-- Table -->
-    <div v-else class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] overflow-hidden">
+    <div v-else class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] overflow-hidden">
       <table class="w-full text-sm">
         <thead>
-          <tr class="border-b border-slate-100">
-            <th class="text-left px-6 py-3.5 text-xs font-semibold tracking-wide text-slate-400 uppercase">Nome</th>
-            <th class="text-left px-6 py-3.5 text-xs font-semibold tracking-wide text-slate-400 uppercase">Slug</th>
-            <th class="text-left px-6 py-3.5 text-xs font-semibold tracking-wide text-slate-400 uppercase">Descrição</th>
-            <th class="text-left px-6 py-3.5 text-xs font-semibold tracking-wide text-slate-400 uppercase">Origem</th>
+          <tr class="border-b border-slate-100 dark:border-slate-700">
+            <th class="text-left px-6 py-3.5 text-xs font-semibold tracking-wide text-slate-400 dark:text-slate-500 uppercase">Nome</th>
+            <th class="text-left px-6 py-3.5 text-xs font-semibold tracking-wide text-slate-400 dark:text-slate-500 uppercase">Slug</th>
+            <th class="text-left px-6 py-3.5 text-xs font-semibold tracking-wide text-slate-400 dark:text-slate-500 uppercase">Descrição</th>
+            <th class="text-left px-6 py-3.5 text-xs font-semibold tracking-wide text-slate-400 dark:text-slate-500 uppercase">Origem</th>
             <th class="px-6 py-3.5"></th>
           </tr>
         </thead>
@@ -114,9 +114,9 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-
           <tr
             v-for="cat in store.categories"
             :key="cat.id"
-            :class="cat.isGlobal ? 'border-b border-slate-50 bg-slate-50/50' : 'border-b border-slate-50 hover:bg-slate-50/60 transition-colors'"
+            :class="cat.isGlobal ? 'border-b border-slate-50 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-700/30' : 'border-b border-slate-50 dark:border-slate-700 hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition-colors'"
           >
-            <td class="px-6 py-3.5 font-medium" :class="cat.isGlobal ? 'text-slate-500' : 'text-slate-900'">
+            <td class="px-6 py-3.5 font-medium" :class="cat.isGlobal ? 'text-slate-500 dark:text-slate-400' : 'text-slate-900 dark:text-white'">
               <div class="flex items-center gap-2">
                 <svg v-if="cat.isGlobal" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 text-slate-300 shrink-0" title="Categoria do sistema — não editável">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
@@ -124,13 +124,13 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-
                 {{ cat.name }}
               </div>
             </td>
-            <td class="px-6 py-3.5 font-mono text-xs" :class="cat.isGlobal ? 'text-slate-400' : 'text-slate-500'">{{ cat.slug }}</td>
-            <td class="px-6 py-3.5 max-w-xs truncate" :class="cat.isGlobal ? 'text-slate-300' : 'text-slate-400'">{{ cat.description || '—' }}</td>
+            <td class="px-6 py-3.5 font-mono text-xs" :class="cat.isGlobal ? 'text-slate-400 dark:text-slate-500' : 'text-slate-500 dark:text-slate-400'">{{ cat.slug }}</td>
+            <td class="px-6 py-3.5 max-w-xs truncate" :class="cat.isGlobal ? 'text-slate-300 dark:text-slate-600' : 'text-slate-400 dark:text-slate-500'">{{ cat.description || '—' }}</td>
             <td class="px-6 py-3.5">
               <span
                 :class="cat.isGlobal
-                  ? 'bg-violet-50 text-violet-700'
-                  : 'bg-emerald-50 text-emerald-700'"
+                  ? 'bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300'
+                  : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'"
                 class="text-[10px] font-bold px-2 py-0.5 rounded-full"
               >
                 {{ cat.isGlobal ? 'Sistema' : 'Tenant' }}
@@ -140,29 +140,29 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-
               <div v-if="!cat.isGlobal" class="flex items-center justify-end gap-2">
                 <button
                   @click="openEdit(cat.id)"
-                  class="text-xs text-slate-400 hover:text-indigo-600 transition px-2 py-1 rounded-lg hover:bg-indigo-50"
+                  class="text-xs text-slate-400 hover:text-indigo-600 transition px-2 py-1 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
                 >
                   Editar
                 </button>
                 <button
                   v-if="deleteConfirmId !== cat.id"
                   @click="deleteConfirmId = cat.id"
-                  class="text-xs text-slate-400 hover:text-red-600 transition px-2 py-1 rounded-lg hover:bg-red-50"
+                  class="text-xs text-slate-400 hover:text-red-600 transition px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                 >
                   Excluir
                 </button>
                 <div v-else class="flex items-center gap-1">
-                  <button @click="confirmDelete(cat.id)" class="text-xs font-semibold text-red-600 px-2 py-1 rounded-lg bg-red-50 hover:bg-red-100 transition">Confirmar</button>
-                  <button @click="deleteConfirmId = null" class="text-xs text-slate-400 px-2 py-1 rounded-lg hover:bg-slate-100 transition">Cancelar</button>
+                  <button @click="confirmDelete(cat.id)" class="text-xs font-semibold text-red-600 px-2 py-1 rounded-lg bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition">Confirmar</button>
+                  <button @click="deleteConfirmId = null" class="text-xs text-slate-400 px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition">Cancelar</button>
                 </div>
               </div>
               <div v-else class="flex items-center justify-end">
-                <span class="text-[10px] text-slate-300 italic">somente leitura</span>
+                <span class="text-[10px] text-slate-300 dark:text-slate-600 italic">somente leitura</span>
               </div>
             </td>
           </tr>
           <tr v-if="!store.categories.length">
-            <td colspan="5" class="px-6 py-12 text-center text-slate-400 text-sm">Nenhuma categoria cadastrada</td>
+            <td colspan="5" class="px-6 py-12 text-center text-slate-400 dark:text-slate-500 text-sm">Nenhuma categoria cadastrada</td>
           </tr>
         </tbody>
       </table>
@@ -172,8 +172,8 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-
     <Teleport to="body">
       <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" @click="closeModal" />
-        <div class="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-          <h2 class="text-base font-bold text-slate-900 mb-5">
+        <div class="relative z-10 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-6">
+          <h2 class="text-base font-bold text-slate-900 dark:text-white mb-5">
             {{ editId ? 'Editar Categoria' : 'Nova Categoria' }}
           </h2>
 
@@ -197,7 +197,7 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-
           </div>
 
           <div class="flex items-center justify-end gap-3 mt-6">
-            <button @click="closeModal" type="button" class="px-4 py-2 rounded-xl text-sm text-slate-500 hover:bg-slate-100 transition">
+            <button @click="closeModal" type="button" class="px-4 py-2 rounded-xl text-sm text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition">
               Cancelar
             </button>
             <button

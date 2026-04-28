@@ -23,11 +23,11 @@ const statusLabel: Record<string, string> = {
   DRAFT: 'Rascunho', ACTIVE: 'Ativo', RESERVED: 'Reservado', SOLD: 'Vendido', ARCHIVED: 'Arquivado',
 }
 const statusClass: Record<string, string> = {
-  DRAFT: 'bg-slate-100 text-slate-500',
-  ACTIVE: 'bg-emerald-50 text-emerald-700',
-  RESERVED: 'bg-amber-50 text-amber-700',
-  SOLD: 'bg-indigo-50 text-indigo-700',
-  ARCHIVED: 'bg-red-50 text-red-400',
+  DRAFT: 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400',
+  ACTIVE: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+  RESERVED: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  SOLD: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+  ARCHIVED: 'bg-red-50 text-red-400 dark:bg-red-900/30 dark:text-red-400',
 }
 const operationLabel: Record<string, string> = {
   SALE: 'Venda', RENT: 'Aluguel', SEASONAL: 'Temporada',
@@ -123,24 +123,24 @@ async function deleteFloorPlan(planId: string) {
   <AppLayout>
     <template #header>
       <div class="flex items-center gap-3">
-        <RouterLink to="/imoveis" class="p-2 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition">
+        <RouterLink to="/imoveis" class="p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-600 dark:hover:text-slate-300 transition">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
             <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
           </svg>
         </RouterLink>
         <div class="flex-1 min-w-0">
-          <h1 class="text-lg font-bold text-slate-900 truncate">{{ store.currentProperty?.title ?? '...' }}</h1>
+          <h1 class="text-lg font-bold text-slate-900 dark:text-white truncate">{{ store.currentProperty?.title ?? '...' }}</h1>
           <div v-if="store.currentProperty" class="flex items-center gap-2 mt-0.5">
             <span class="text-xs px-2 py-0.5 rounded-full font-semibold" :class="statusClass[store.currentProperty.status]">
               {{ statusLabel[store.currentProperty.status] }}
             </span>
-            <span class="text-xs text-slate-400">{{ typeLabel[store.currentProperty.propertyType] }} · {{ operationLabel[store.currentProperty.operation] }}</span>
+            <span class="text-xs text-slate-400 dark:text-slate-500">{{ typeLabel[store.currentProperty.propertyType] }} · {{ operationLabel[store.currentProperty.operation] }}</span>
           </div>
         </div>
         <RouterLink
           v-if="store.currentProperty"
           :to="`/imoveis/${propertyId}/editar`"
-          class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 transition"
+          class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-100 dark:border-indigo-800 transition"
         >
           Editar
         </RouterLink>
@@ -163,47 +163,47 @@ async function deleteFloorPlan(planId: string) {
         <!-- Info grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <!-- Details -->
-          <div class="md:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6 space-y-5">
-            <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400">Detalhes</h2>
+          <div class="md:col-span-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6 space-y-5">
+            <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500">Detalhes</h2>
 
-            <div v-if="store.currentProperty.description" class="text-sm text-slate-600 leading-relaxed">
+            <div v-if="store.currentProperty.description" class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
               {{ store.currentProperty.description }}
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div v-if="store.currentProperty.bedrooms">
-                <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Quartos</p>
-                <p class="text-slate-800 font-semibold">{{ store.currentProperty.bedrooms }}</p>
+                <p class="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">Quartos</p>
+                <p class="text-slate-800 dark:text-slate-200 font-semibold">{{ store.currentProperty.bedrooms }}</p>
               </div>
               <div v-if="store.currentProperty.suites">
-                <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Suítes</p>
-                <p class="text-slate-800 font-semibold">{{ store.currentProperty.suites }}</p>
+                <p class="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">Suítes</p>
+                <p class="text-slate-800 dark:text-slate-200 font-semibold">{{ store.currentProperty.suites }}</p>
               </div>
               <div v-if="store.currentProperty.bathrooms">
-                <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Banheiros</p>
-                <p class="text-slate-800 font-semibold">{{ store.currentProperty.bathrooms }}</p>
+                <p class="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">Banheiros</p>
+                <p class="text-slate-800 dark:text-slate-200 font-semibold">{{ store.currentProperty.bathrooms }}</p>
               </div>
               <div v-if="store.currentProperty.parking">
-                <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Vagas</p>
-                <p class="text-slate-800 font-semibold">{{ store.currentProperty.parking }}</p>
+                <p class="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">Vagas</p>
+                <p class="text-slate-800 dark:text-slate-200 font-semibold">{{ store.currentProperty.parking }}</p>
               </div>
               <div v-if="store.currentProperty.areaTotal">
-                <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Área total</p>
-                <p class="text-slate-800 font-semibold">{{ store.currentProperty.areaTotal }}m²</p>
+                <p class="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">Área total</p>
+                <p class="text-slate-800 dark:text-slate-200 font-semibold">{{ store.currentProperty.areaTotal }}m²</p>
               </div>
               <div v-if="store.currentProperty.areaUseful">
-                <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Área útil</p>
-                <p class="text-slate-800 font-semibold">{{ store.currentProperty.areaUseful }}m²</p>
+                <p class="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">Área útil</p>
+                <p class="text-slate-800 dark:text-slate-200 font-semibold">{{ store.currentProperty.areaUseful }}m²</p>
               </div>
             </div>
 
-            <div v-if="store.currentProperty.addressStreet" class="pt-2 border-t border-slate-100">
-              <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-1">Endereço</p>
-              <p class="text-sm text-slate-700">
+            <div v-if="store.currentProperty.addressStreet" class="pt-2 border-t border-slate-100 dark:border-slate-700">
+              <p class="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-1">Endereço</p>
+              <p class="text-sm text-slate-700 dark:text-slate-300">
                 {{ store.currentProperty.addressStreet }}{{ store.currentProperty.addressNumber ? `, ${store.currentProperty.addressNumber}` : '' }}
                 <span v-if="store.currentProperty.addressComplement"> — {{ store.currentProperty.addressComplement }}</span>
               </p>
-              <p class="text-sm text-slate-500">
+              <p class="text-sm text-slate-500 dark:text-slate-400">
                 {{ store.currentProperty.addressNeighborhood }}
                 <span v-if="store.currentProperty.addressCity">, {{ store.currentProperty.addressCity }}</span>
                 <span v-if="store.currentProperty.addressState"> - {{ store.currentProperty.addressState }}</span>
@@ -212,70 +212,70 @@ async function deleteFloorPlan(planId: string) {
             </div>
 
             <!-- Extra info -->
-            <div class="pt-2 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-700 grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div v-if="store.currentProperty.condition">
-                <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Condição</p>
-                <p class="text-slate-800 font-semibold">{{ conditionLabel[store.currentProperty.condition] ?? store.currentProperty.condition }}</p>
+                <p class="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">Condição</p>
+                <p class="text-slate-800 dark:text-slate-200 font-semibold">{{ conditionLabel[store.currentProperty.condition] ?? store.currentProperty.condition }}</p>
               </div>
               <div v-if="store.currentProperty.floorNumber != null">
-                <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Andar</p>
-                <p class="text-slate-800 font-semibold">{{ store.currentProperty.floorNumber }}º</p>
+                <p class="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">Andar</p>
+                <p class="text-slate-800 dark:text-slate-200 font-semibold">{{ store.currentProperty.floorNumber }}º</p>
               </div>
               <div v-if="store.currentProperty.referenceCode">
-                <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Código</p>
-                <p class="text-slate-800 font-semibold font-mono">{{ store.currentProperty.referenceCode }}</p>
+                <p class="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">Código</p>
+                <p class="text-slate-800 dark:text-slate-200 font-semibold font-mono">{{ store.currentProperty.referenceCode }}</p>
               </div>
             </div>
 
             <!-- Categories -->
-            <div v-if="store.currentProperty.categories?.length" class="pt-2 border-t border-slate-100">
-              <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Categorias</p>
+            <div v-if="store.currentProperty.categories?.length" class="pt-2 border-t border-slate-100 dark:border-slate-700">
+              <p class="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-2">Categorias</p>
               <div class="flex flex-wrap gap-2">
                 <span
                   v-for="cat in store.currentProperty.categories"
                   :key="cat.id"
-                  class="text-xs font-medium px-3 py-1 rounded-full bg-violet-50 text-violet-700"
+                  class="text-xs font-medium px-3 py-1 rounded-full bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300"
                 >{{ cat.name }}</span>
               </div>
             </div>
 
             <!-- Amenities -->
-            <div v-if="activeAmenities(store.currentProperty.attributes).length" class="pt-2 border-t border-slate-100">
-              <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Comodidades</p>
+            <div v-if="activeAmenities(store.currentProperty.attributes).length" class="pt-2 border-t border-slate-100 dark:border-slate-700">
+              <p class="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-2">Comodidades</p>
               <div class="flex flex-wrap gap-2">
                 <span
                   v-for="label in activeAmenities(store.currentProperty.attributes)"
                   :key="label"
-                  class="text-xs font-medium px-3 py-1 rounded-full bg-emerald-50 text-emerald-700"
+                  class="text-xs font-medium px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
                 >{{ label }}</span>
               </div>
             </div>
           </div>
 
           <!-- Price card -->
-          <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
-            <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 mb-4">Valores</h2>
-            <p class="text-2xl font-bold text-slate-900 mb-4">
+          <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
+            <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500 mb-4">Valores</h2>
+            <p class="text-2xl font-bold text-slate-900 dark:text-white mb-4">
               {{ formatPrice(store.currentProperty.price, store.currentProperty.currency) }}
             </p>
             <div class="space-y-2">
               <div v-if="store.currentProperty.condoFee" class="flex justify-between text-sm">
-                <span class="text-slate-500">Condomínio</span>
-                <span class="font-medium text-slate-700">{{ formatPrice(store.currentProperty.condoFee, store.currentProperty.currency) }}</span>
+                <span class="text-slate-500 dark:text-slate-400">Condomínio</span>
+                <span class="font-medium text-slate-700 dark:text-slate-300">{{ formatPrice(store.currentProperty.condoFee, store.currentProperty.currency) }}</span>
               </div>
               <div v-if="store.currentProperty.taxes" class="flex justify-between text-sm">
-                <span class="text-slate-500">IPTU/mês</span>
-                <span class="font-medium text-slate-700">{{ formatPrice(store.currentProperty.taxes, store.currentProperty.currency) }}</span>
+                <span class="text-slate-500 dark:text-slate-400">IPTU/mês</span>
+                <span class="font-medium text-slate-700 dark:text-slate-300">{{ formatPrice(store.currentProperty.taxes, store.currentProperty.currency) }}</span>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Photos -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
+        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
           <div class="flex items-center justify-between mb-5">
-            <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400">Fotos</h2>
-            <label class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 cursor-pointer transition">
+            <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500">Fotos</h2>
+            <label class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-100 dark:border-indigo-800 cursor-pointer transition">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
@@ -287,7 +287,7 @@ async function deleteFloorPlan(planId: string) {
 
           <div v-if="photoError" class="mb-4 text-sm text-red-600 bg-red-50 rounded-xl p-3">{{ photoError }}</div>
 
-          <div v-if="!store.currentProperty.photos.length" class="flex flex-col items-center justify-center py-10 text-slate-300">
+          <div v-if="!store.currentProperty.photos.length" class="flex flex-col items-center justify-center py-10 text-slate-300 dark:text-slate-600">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor" class="w-12 h-12 mb-2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 21l6.75-6.75 1.5 1.5M21 3l-9 9" />
             </svg>
@@ -299,7 +299,7 @@ async function deleteFloorPlan(planId: string) {
               v-for="photo in store.currentProperty.photos"
               :key="photo.id"
               class="relative group rounded-xl overflow-hidden border-2 transition"
-              :class="photo.isCover ? 'border-indigo-400' : 'border-slate-200'"
+              :class="photo.isCover ? 'border-indigo-400' : 'border-slate-200 dark:border-slate-600'"
             >
               <img :src="photo.url" :alt="photo.altText ?? ''" class="w-full h-28 object-cover" />
               <div class="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
@@ -332,12 +332,12 @@ async function deleteFloorPlan(planId: string) {
         </div>
 
         <!-- Floor Plans -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
+        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
           <div class="flex items-center justify-between mb-5">
-            <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400">Plantas</h2>
+            <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500">Plantas</h2>
             <button
               @click="showFloorPlanModal = true"
-              class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 transition"
+              class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-100 dark:border-indigo-800 transition"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -346,7 +346,7 @@ async function deleteFloorPlan(planId: string) {
             </button>
           </div>
 
-          <div v-if="!store.currentProperty.floorPlans.length" class="text-center text-sm text-slate-300 py-8">
+          <div v-if="!store.currentProperty.floorPlans.length" class="text-center text-sm text-slate-300 dark:text-slate-600 py-8">
             Nenhuma planta adicionada
           </div>
 
@@ -354,15 +354,15 @@ async function deleteFloorPlan(planId: string) {
             <div
               v-for="plan in store.currentProperty.floorPlans"
               :key="plan.id"
-              class="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50"
+              class="flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50"
             >
               <div>
-                <p class="text-sm font-semibold text-slate-800">{{ plan.name }}</p>
-                <p v-if="plan.area" class="text-xs text-slate-400">{{ plan.area }}m²</p>
+                <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ plan.name }}</p>
+                <p v-if="plan.area" class="text-xs text-slate-400 dark:text-slate-500">{{ plan.area }}m²</p>
               </div>
               <button
                 @click="deleteFloorPlan(plan.id)"
-                class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition"
+                class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -381,33 +381,33 @@ async function deleteFloorPlan(planId: string) {
         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm"
         @click.self="showFloorPlanModal = false"
       >
-        <div class="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4">
-          <h3 class="text-base font-bold text-slate-900 mb-4">Nova planta</h3>
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4">
+          <h3 class="text-base font-bold text-slate-900 dark:text-white mb-4">Nova planta</h3>
           <div class="space-y-3 mb-6">
             <div>
-              <label class="block text-xs font-semibold text-slate-500 mb-1">Nome *</label>
+              <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Nome *</label>
               <input
                 v-model="floorPlanName"
                 type="text"
                 placeholder="Ex.: Térreo, 1º Andar..."
-                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
               />
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-500 mb-1">Área (m²)</label>
+              <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Área (m²)</label>
               <input
                 v-model.number="floorPlanArea"
                 type="number"
                 min="0"
                 step="0.01"
-                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
               />
             </div>
           </div>
           <div class="flex gap-3">
             <button
               @click="showFloorPlanModal = false"
-              class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition"
+              class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition"
             >
               Cancelar
             </button>

@@ -19,7 +19,7 @@ defineProps<{
           v-for="i in 5"
           :key="i"
           class="h-1.5 flex-1 rounded-full transition-all duration-300"
-          :class="i <= score ? strengthColor : 'bg-slate-200'"
+          :class="i <= score ? strengthColor : 'bg-slate-200 dark:bg-slate-600'"
         />
       </div>
       <span
@@ -40,7 +40,7 @@ defineProps<{
         v-for="check in checks"
         :key="check.label"
         class="flex items-center gap-1.5 text-xs transition-colors"
-        :class="check.valid ? 'text-emerald-600' : 'text-slate-400'"
+        :class="check.valid ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'"
       >
         <svg v-if="check.valid" class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />

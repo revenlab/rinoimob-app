@@ -6,6 +6,12 @@ import { useAuthStore } from '@/stores/auth'
 import { setLogoutHandler } from '@/lib/api'
 import './index.css'
 
+// Apply theme before mount to prevent flash
+const savedTheme = localStorage.getItem('theme')
+if (savedTheme === 'dark') {
+  document.documentElement.classList.add('dark')
+}
+
 const app = createApp(App)
 const pinia = createPinia()
 

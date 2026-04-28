@@ -2,48 +2,48 @@
   <AppLayout>
     <template #header>
       <div>
-        <h1 class="text-lg font-bold text-slate-900">Meu perfil</h1>
+        <h1 class="text-lg font-bold text-slate-900 dark:text-white">Meu perfil</h1>
         <p class="text-xs text-slate-400">Informações pessoais e segurança da conta.</p>
       </div>
     </template>
 
     <div class="max-w-2xl space-y-6">
       <!-- Personal info -->
-      <form @submit.prevent="handleUpdateProfile" class="bg-white/75 border border-slate-200 rounded-[2rem] shadow-[0_20px_40px_rgba(15,23,42,0.08)] p-8 space-y-5">
-        <div class="pb-1 border-b border-slate-100">
-          <p class="text-xs font-semibold tracking-[0.2em] uppercase text-slate-400">Informações pessoais</p>
+      <form @submit.prevent="handleUpdateProfile" class="bg-white/75 dark:bg-slate-800/75 border border-slate-200 dark:border-slate-700 rounded-[2rem] shadow-[0_20px_40px_rgba(15,23,42,0.08)] p-8 space-y-5">
+        <div class="pb-1 border-b border-slate-100 dark:border-slate-700">
+          <p class="text-xs font-semibold tracking-[0.2em] uppercase text-slate-400 dark:text-slate-500">Informações pessoais</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Nome</label>
+            <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Nome</label>
             <input
               v-model="firstName"
               type="text"
               required
-              class="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
+              class="w-full h-14 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
               :disabled="profileLoading"
             />
           </div>
           <div>
-            <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Sobrenome</label>
+            <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Sobrenome</label>
             <input
               v-model="lastName"
               type="text"
               required
-              class="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
+              class="w-full h-14 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
               :disabled="profileLoading"
             />
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Email (somente leitura)</label>
+          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Email (somente leitura)</label>
           <input
             :value="authStore.currentUser?.email"
             type="email"
             disabled
-            class="w-full h-14 px-4 bg-slate-100 border border-slate-200 rounded-2xl text-slate-400 cursor-not-allowed"
+            class="w-full h-14 px-4 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-400 dark:text-slate-500 cursor-not-allowed"
           />
         </div>
 
@@ -64,30 +64,30 @@
       </form>
 
       <!-- Change password -->
-      <form @submit.prevent="handleChangePassword" class="bg-white/75 border border-slate-200 rounded-[2rem] shadow-[0_20px_40px_rgba(15,23,42,0.08)] p-8 space-y-5">
-        <div class="pb-1 border-b border-slate-100">
-          <p class="text-xs font-semibold tracking-[0.2em] uppercase text-slate-400">Alterar senha</p>
+      <form @submit.prevent="handleChangePassword" class="bg-white/75 dark:bg-slate-800/75 border border-slate-200 dark:border-slate-700 rounded-[2rem] shadow-[0_20px_40px_rgba(15,23,42,0.08)] p-8 space-y-5">
+        <div class="pb-1 border-b border-slate-100 dark:border-slate-700">
+          <p class="text-xs font-semibold tracking-[0.2em] uppercase text-slate-400 dark:text-slate-500">Alterar senha</p>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Senha atual</label>
+          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Senha atual</label>
           <input
             v-model="currentPassword"
             type="password"
             required
-            class="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
+            class="w-full h-14 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
             placeholder="••••••••"
             :disabled="pwLoading"
           />
         </div>
 
         <div>
-          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Nova senha</label>
+          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Nova senha</label>
           <input
             v-model="newPassword"
             type="password"
             required
-            class="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
+            class="w-full h-14 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
             :class="{ 'border-red-300': newPassword && !strengthNew.isValid.value }"
             placeholder="••••••••"
             :disabled="pwLoading"
@@ -102,12 +102,12 @@
         </div>
 
         <div>
-          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">Confirmar nova senha</label>
+          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Confirmar nova senha</label>
           <input
             v-model="confirmPassword"
             type="password"
             required
-            class="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
+            class="w-full h-14 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent transition"
             placeholder="••••••••"
             :disabled="pwLoading"
           />

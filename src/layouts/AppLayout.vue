@@ -2,10 +2,12 @@
 import { ref } from 'vue'
 import { RouterLink, useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useTheme } from '@/composables/useTheme'
 
 const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
+const { isDark, toggle } = useTheme()
 
 const collapsed = ref(false)
 
@@ -56,14 +58,14 @@ const handleLogout = () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#f2f4f8] flex">
+  <div class="min-h-screen bg-[#f2f4f8] dark:bg-slate-900 flex">
     <!-- Sidebar -->
     <aside
-      class="h-screen sticky top-0 flex flex-col bg-white border-r border-slate-200 transition-all duration-300 ease-in-out z-40"
+      class="h-screen sticky top-0 flex flex-col bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transition-all duration-300 ease-in-out z-40"
       :class="collapsed ? 'w-[72px]' : 'w-60'"
     >
       <!-- Logo + toggle -->
-      <div class="flex items-center justify-between px-4 py-4 border-b border-slate-100 min-h-[68px]">
+      <div class="flex items-center justify-between px-4 py-4 border-b border-slate-100 dark:border-slate-700 min-h-[68px]">
         <RouterLink v-if="!collapsed" to="/dashboard" class="flex items-center">
           <img src="/logo_rinoimob.svg" alt="Rinoimob" class="h-12 w-auto object-contain" />
         </RouterLink>
@@ -73,7 +75,7 @@ const handleLogout = () => {
         <button
           @click="collapsed = !collapsed"
           :class="collapsed ? 'mx-auto' : ''"
-          class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors ml-1"
+          class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-600 dark:hover:text-slate-300 transition-colors ml-1"
           :title="collapsed ? 'Expandir' : 'Recolher'"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
@@ -86,7 +88,7 @@ const handleLogout = () => {
       <!-- Nav -->
       <nav class="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto">
         <!-- Section label -->
-        <p v-if="!collapsed" class="px-3 mb-2 text-[10px] font-bold tracking-[0.18em] uppercase text-slate-400">
+        <p v-if="!collapsed" class="px-3 mb-2 text-[10px] font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500">
           Principal
         </p>
 
@@ -99,8 +101,8 @@ const handleLogout = () => {
               item.soon
                 ? 'text-slate-300 cursor-default'
                 : isActive(item.to)
-                  ? 'bg-indigo-50 text-indigo-700'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+                  ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-200',
               collapsed ? 'justify-center' : '',
             ]"
             :title="collapsed ? item.label : undefined"
@@ -109,16 +111,16 @@ const handleLogout = () => {
             <span v-if="!collapsed" class="flex-1 truncate">{{ item.label }}</span>
             <span
               v-if="!collapsed && item.soon"
-              class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-400"
+              class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500"
             >em breve</span>
           </component>
         </template>
 
         <!-- Divider -->
-        <div class="my-3 border-t border-slate-100" />
+        <div class="my-3 border-t border-slate-100 dark:border-slate-700" />
 
         <!-- Account section -->
-        <p v-if="!collapsed" class="px-3 mb-2 text-[10px] font-bold tracking-[0.18em] uppercase text-slate-400">
+        <p v-if="!collapsed" class="px-3 mb-2 text-[10px] font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500">
           Conta
         </p>
 
@@ -129,8 +131,8 @@ const handleLogout = () => {
           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150"
           :class="[
             isActive(item.to)
-              ? 'bg-indigo-50 text-indigo-700'
-              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+              ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-200',
             collapsed ? 'justify-center' : '',
           ]"
           :title="collapsed ? item.label : undefined"
@@ -141,7 +143,7 @@ const handleLogout = () => {
       </nav>
 
       <!-- User footer -->
-      <div class="border-t border-slate-100 p-3">
+      <div class="border-t border-slate-100 dark:border-slate-700 p-3">
         <div
           class="flex items-center gap-3 px-2 py-2 rounded-xl"
           :class="collapsed ? 'justify-center' : ''"
@@ -150,7 +152,7 @@ const handleLogout = () => {
             {{ authStore.currentUser?.firstName?.charAt(0) ?? '?' }}{{ authStore.currentUser?.lastName?.charAt(0) ?? '' }}
           </div>
           <div v-if="!collapsed" class="flex-1 min-w-0">
-            <p class="text-sm font-semibold text-slate-800 truncate">
+            <p class="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
               {{ authStore.currentUser?.firstName }} {{ authStore.currentUser?.lastName }}
             </p>
             <p class="text-xs text-slate-400 truncate">{{ authStore.currentUser?.email }}</p>
@@ -158,7 +160,7 @@ const handleLogout = () => {
           <button
             v-if="!collapsed"
             @click="handleLogout"
-            class="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0"
+            class="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 transition-colors shrink-0"
             title="Sair"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
@@ -168,7 +170,7 @@ const handleLogout = () => {
           <button
             v-else
             @click="handleLogout"
-            class="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+            class="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 transition-colors"
             title="Sair"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
@@ -182,10 +184,23 @@ const handleLogout = () => {
     <!-- Main content -->
     <div class="flex-1 flex flex-col min-w-0">
       <!-- Top header -->
-      <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30 h-[68px] flex items-center px-6">
-        <slot name="header">
-          <h1 class="text-lg font-bold text-slate-900">{{ $route.meta.title as string ?? '' }}</h1>
-        </slot>
+      <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm sticky top-0 z-30 h-[68px] flex items-center px-6 gap-4">
+        <div class="flex-1 min-w-0">
+          <slot name="header">
+            <h1 class="text-lg font-bold text-slate-900 dark:text-white">{{ $route.meta.title as string ?? '' }}</h1>
+          </slot>
+        </div>
+        <!-- Theme toggle -->
+        <button @click="toggle" class="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700 transition shrink-0" :title="isDark ? 'Tema claro' : 'Tema escuro'">
+          <!-- Moon icon when light -->
+          <svg v-if="!isDark" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+          </svg>
+          <!-- Sun icon when dark -->
+          <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+          </svg>
+        </button>
       </header>
 
       <!-- Page content -->

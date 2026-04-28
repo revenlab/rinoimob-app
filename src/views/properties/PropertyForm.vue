@@ -122,22 +122,22 @@ async function handleSubmit() {
   }
 }
 
-const inputClass = 'w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:bg-white transition'
-const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-1'
+const inputClass = 'w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:bg-white dark:focus:bg-slate-600 transition'
+const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dark:text-slate-400 mb-1'
 </script>
 
 <template>
   <AppLayout>
     <template #header>
       <div class="flex items-center gap-3">
-        <RouterLink to="/imoveis" class="p-2 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition">
+        <RouterLink to="/imoveis" class="p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-600 dark:hover:text-slate-300 transition">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
             <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
           </svg>
         </RouterLink>
         <div>
-          <h1 class="text-lg font-bold text-slate-900">{{ isEdit ? 'Editar Imóvel' : 'Novo Imóvel' }}</h1>
-          <p class="text-xs text-slate-400">{{ isEdit ? 'Atualize as informações do imóvel' : 'Preencha os dados do novo imóvel' }}</p>
+          <h1 class="text-lg font-bold text-slate-900 dark:text-white">{{ isEdit ? 'Editar Imóvel' : 'Novo Imóvel' }}</h1>
+          <p class="text-xs text-slate-400 dark:text-slate-500">{{ isEdit ? 'Atualize as informações do imóvel' : 'Preencha os dados do novo imóvel' }}</p>
         </div>
       </div>
     </template>
@@ -150,8 +150,8 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-
       </div>
 
       <!-- Basic info -->
-      <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
-        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 mb-5">Informações básicas</h2>
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
+        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500 mb-5">Informações básicas</h2>
         <div class="grid grid-cols-1 gap-4">
           <div>
             <label :class="labelClass">Título *</label>
@@ -195,8 +195,8 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-
       </div>
 
       <!-- Pricing -->
-      <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
-        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 mb-5">Valores</h2>
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
+        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500 mb-5">Valores</h2>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div>
             <label :class="labelClass">Preço</label>
@@ -222,8 +222,8 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-
       </div>
 
       <!-- Characteristics -->
-      <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
-        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 mb-5">Características</h2>
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
+        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500 mb-5">Características</h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <div>
             <label :class="labelClass">Área total (m²)</label>
@@ -270,8 +270,8 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-
       </div>
 
       <!-- Amenities -->
-      <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
-        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 mb-5">Comodidades</h2>
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
+        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500 mb-5">Comodidades</h2>
         <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
           <label
             v-for="a in AMENITIES"
@@ -284,14 +284,14 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-
               @change="toggleAmenity(a.key)"
               class="w-4 h-4 accent-indigo-600 rounded"
             />
-            <span class="text-sm text-slate-600">{{ a.label }}</span>
+            <span class="text-sm text-slate-600 dark:text-slate-300">{{ a.label }}</span>
           </label>
         </div>
       </div>
 
       <!-- Categories -->
-      <div v-if="catStore.categories.length" class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
-        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 mb-5">Categorias</h2>
+      <div v-if="catStore.categories.length" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
+        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500 mb-5">Categorias</h2>
         <div class="flex flex-wrap gap-2">
           <button
             v-for="cat in catStore.categories"
@@ -302,7 +302,7 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-
               'px-3 py-1.5 rounded-full text-xs font-medium border transition',
               (form.categoryIds ?? []).includes(cat.id)
                 ? 'bg-indigo-600 text-white border-indigo-600'
-                : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-400'
+                : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:border-indigo-400 dark:hover:border-indigo-500'
             ]"
           >
             {{ cat.name }}
@@ -312,8 +312,8 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-
       </div>
 
       <!-- Address -->
-      <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
-        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 mb-5">Endereço</h2>
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
+        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500 mb-5">Endereço</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div class="sm:col-span-2">
             <label :class="labelClass">Rua / Av.</label>
@@ -350,7 +350,7 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 mb-
       <div class="flex items-center gap-3 pb-8">
         <RouterLink
           to="/imoveis"
-          class="px-6 py-3 rounded-xl text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition"
+          class="px-6 py-3 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition"
         >
           Cancelar
         </RouterLink>

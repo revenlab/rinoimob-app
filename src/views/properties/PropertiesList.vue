@@ -34,11 +34,11 @@ const statusLabel: Record<string, string> = {
   DRAFT: 'Rascunho', ACTIVE: 'Ativo', RESERVED: 'Reservado', SOLD: 'Vendido', ARCHIVED: 'Arquivado',
 }
 const statusClass: Record<string, string> = {
-  DRAFT: 'bg-slate-100 text-slate-500',
-  ACTIVE: 'bg-emerald-50 text-emerald-700',
-  RESERVED: 'bg-amber-50 text-amber-700',
-  SOLD: 'bg-indigo-50 text-indigo-700',
-  ARCHIVED: 'bg-red-50 text-red-400',
+  DRAFT: 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400',
+  ACTIVE: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+  RESERVED: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  SOLD: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+  ARCHIVED: 'bg-red-50 text-red-400 dark:bg-red-900/30 dark:text-red-400',
 }
 const operationLabel: Record<string, string> = {
   SALE: 'Venda', RENT: 'Aluguel', SEASONAL: 'Temporada',
@@ -53,15 +53,15 @@ const typeLabel: Record<string, string> = {
     <template #header>
       <div class="flex items-center justify-between w-full">
         <div>
-          <h1 class="text-lg font-bold text-slate-900">Imóveis</h1>
-          <p class="text-xs text-slate-400">Gerencie o portfólio de imóveis do seu tenant</p>
+          <h1 class="text-lg font-bold text-slate-900 dark:text-white">Imóveis</h1>
+          <p class="text-xs text-slate-400 dark:text-slate-500">Gerencie o portfólio de imóveis do seu tenant</p>
         </div>
       <div class="flex items-center gap-3">
         <!-- View toggle -->
-        <div class="flex items-center rounded-xl border border-slate-200 overflow-hidden">
+        <div class="flex items-center rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
           <button
             @click="setViewMode('card')"
-            :class="viewMode === 'card' ? 'bg-indigo-50 text-indigo-700' : 'bg-white text-slate-400 hover:text-slate-600'"
+            :class="viewMode === 'card' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300' : 'bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'"
             class="px-3 py-2 transition"
             title="Visualização em cards"
           >
@@ -71,8 +71,8 @@ const typeLabel: Record<string, string> = {
           </button>
           <button
             @click="setViewMode('list')"
-            :class="viewMode === 'list' ? 'bg-indigo-50 text-indigo-700' : 'bg-white text-slate-400 hover:text-slate-600'"
-            class="px-3 py-2 border-l border-slate-200 transition"
+            :class="viewMode === 'list' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300' : 'bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'"
+            class="px-3 py-2 border-l border-slate-200 dark:border-slate-700 transition"
             title="Visualização em lista"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
@@ -95,11 +95,11 @@ const typeLabel: Record<string, string> = {
     </template>
 
     <!-- Filters -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-4 mb-6">
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-4 mb-6">
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <select
           v-model="params.status"
-          class="col-span-1 px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          class="col-span-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
         >
           <option value="">Todos os status</option>
           <option v-for="(label, val) in statusLabel" :key="val" :value="val">{{ label }}</option>
@@ -107,7 +107,7 @@ const typeLabel: Record<string, string> = {
 
         <select
           v-model="params.operation"
-          class="col-span-1 px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          class="col-span-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
         >
           <option value="">Operação</option>
           <option v-for="(label, val) in operationLabel" :key="val" :value="val">{{ label }}</option>
@@ -115,7 +115,7 @@ const typeLabel: Record<string, string> = {
 
         <select
           v-model="params.propertyType"
-          class="col-span-1 px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          class="col-span-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
         >
           <option value="">Tipo</option>
           <option v-for="(label, val) in typeLabel" :key="val" :value="val">{{ label }}</option>
@@ -125,7 +125,7 @@ const typeLabel: Record<string, string> = {
           v-model="params.city"
           type="text"
           placeholder="Cidade..."
-          class="col-span-1 px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          class="col-span-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
         />
 
         <input
@@ -133,12 +133,12 @@ const typeLabel: Record<string, string> = {
           type="number"
           min="0"
           placeholder="Quartos"
-          class="col-span-1 px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          class="col-span-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
         />
 
         <button
           @click="() => { params = { page: 0, size: 20 }; store.fetchProperties(params) }"
-          class="col-span-1 px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-500 bg-slate-50 hover:bg-slate-100 transition"
+          class="col-span-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-sm text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 transition"
         >
           Limpar filtros
         </button>
@@ -177,10 +177,10 @@ const typeLabel: Record<string, string> = {
       <div
         v-for="p in store.properties!.content"
         :key="p.id"
-        class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] overflow-hidden flex flex-col group"
+        class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] overflow-hidden flex flex-col group"
       >
         <!-- Cover image -->
-        <div class="h-40 bg-slate-100 overflow-hidden relative">
+        <div class="h-40 bg-slate-100 dark:bg-slate-700 overflow-hidden relative">
           <img
             v-if="p.coverPhotoUrl"
             :src="p.coverPhotoUrl"
@@ -201,45 +201,45 @@ const typeLabel: Record<string, string> = {
         <!-- Content -->
         <div class="p-4 flex-1 flex flex-col">
           <div class="flex items-start justify-between gap-2 mb-1">
-            <p class="text-sm font-semibold text-slate-900 line-clamp-2 flex-1">{{ p.title }}</p>
-            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 shrink-0">
+            <p class="text-sm font-semibold text-slate-900 dark:text-white line-clamp-2 flex-1">{{ p.title }}</p>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 shrink-0 dark:bg-indigo-900/30 dark:text-indigo-300">
               {{ operationLabel[p.operation] }}
             </span>
           </div>
 
-          <p class="text-xs text-slate-400 mb-2">{{ typeLabel[p.propertyType] }}</p>
+          <p class="text-xs text-slate-400 dark:text-slate-500 mb-2">{{ typeLabel[p.propertyType] }}</p>
 
-          <p class="text-base font-bold text-slate-900 mb-2">{{ formatPrice(p.price, p.currency) }}</p>
+          <p class="text-base font-bold text-slate-900 dark:text-white mb-2">{{ formatPrice(p.price, p.currency) }}</p>
 
           <!-- Category badges -->
           <div v-if="p.categories?.length" class="flex flex-wrap gap-1 mb-2">
             <span
               v-for="cat in p.categories"
               :key="cat.id"
-              class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-violet-50 text-violet-700"
+              class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300"
             >{{ cat.name }}</span>
           </div>
 
-          <div class="flex items-center gap-3 text-xs text-slate-400 mb-3">
+          <div class="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500 mb-3">
             <span v-if="p.bedrooms">🛏 {{ p.bedrooms }}</span>
             <span v-if="p.bathrooms">🚿 {{ p.bathrooms }}</span>
             <span v-if="p.areaTotal">📐 {{ p.areaTotal }}m²</span>
           </div>
 
-          <p v-if="p.addressCity" class="text-xs text-slate-400 mb-4">
+          <p v-if="p.addressCity" class="text-xs text-slate-400 dark:text-slate-500 mb-4">
             📍 {{ p.addressCity }}, {{ p.addressState }}
           </p>
 
           <div class="mt-auto flex gap-2">
             <RouterLink
               :to="`/imoveis/${p.id}`"
-              class="flex-1 text-center py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition"
+              class="flex-1 text-center py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 transition"
             >
               Ver
             </RouterLink>
             <RouterLink
               :to="`/imoveis/${p.id}/editar`"
-              class="flex-1 text-center py-2 rounded-xl text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 transition"
+              class="flex-1 text-center py-2 rounded-xl text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-100 dark:border-indigo-800 transition"
             >
               Editar
             </RouterLink>
@@ -257,10 +257,10 @@ const typeLabel: Record<string, string> = {
     </div>
 
     <!-- List Table -->
-    <div v-else class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] overflow-hidden">
+    <div v-else class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] overflow-hidden">
       <table class="w-full text-sm">
         <thead>
-          <tr class="border-b border-slate-100 bg-slate-50 text-[11px] font-bold tracking-widest text-slate-400 uppercase">
+          <tr class="border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-700 text-[11px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
             <th class="px-4 py-3 text-left">Imóvel</th>
             <th class="px-4 py-3 text-left hidden md:table-cell">Tipo / Operação</th>
             <th class="px-4 py-3 text-left hidden lg:table-cell">Localização</th>
@@ -273,12 +273,12 @@ const typeLabel: Record<string, string> = {
           <tr
             v-for="p in store.properties!.content"
             :key="p.id"
-            class="border-b border-slate-50 hover:bg-slate-50/60 transition-colors"
+            class="border-b border-slate-50 dark:border-slate-700 hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition-colors"
           >
             <!-- Imóvel -->
             <td class="px-4 py-3">
               <div class="flex items-center gap-3">
-                <div class="w-12 h-10 rounded-lg bg-slate-100 overflow-hidden shrink-0">
+                <div class="w-12 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 overflow-hidden shrink-0">
                   <img
                     v-if="p.coverPhotoUrl"
                     :src="p.coverPhotoUrl"
@@ -292,12 +292,12 @@ const typeLabel: Record<string, string> = {
                   </div>
                 </div>
                 <div class="min-w-0">
-                  <p class="font-semibold text-slate-900 truncate max-w-[180px]">{{ p.title }}</p>
+                  <p class="font-semibold text-slate-900 dark:text-white truncate max-w-[180px]">{{ p.title }}</p>
                   <div v-if="p.categories?.length" class="flex flex-wrap gap-1 mt-0.5">
                     <span
                       v-for="cat in p.categories"
                       :key="cat.id"
-                      class="text-[9px] font-medium px-1.5 py-px rounded-full bg-violet-50 text-violet-700"
+                      class="text-[9px] font-medium px-1.5 py-px rounded-full bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300"
                     >{{ cat.name }}</span>
                   </div>
                 </div>
@@ -306,15 +306,15 @@ const typeLabel: Record<string, string> = {
 
             <!-- Tipo / Operação -->
             <td class="px-4 py-3 hidden md:table-cell">
-              <p class="text-slate-700">{{ typeLabel[p.propertyType] }}</p>
-              <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600">{{ operationLabel[p.operation] }}</span>
+              <p class="text-slate-700 dark:text-slate-300">{{ typeLabel[p.propertyType] }}</p>
+              <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300">{{ operationLabel[p.operation] }}</span>
             </td>
 
             <!-- Localização -->
-            <td class="px-4 py-3 hidden lg:table-cell text-slate-500">
+            <td class="px-4 py-3 hidden lg:table-cell text-slate-500 dark:text-slate-400">
               <span v-if="p.addressCity">{{ p.addressCity }}, {{ p.addressState }}</span>
-              <span v-else class="text-slate-300">—</span>
-              <div class="flex gap-2 text-[11px] text-slate-400 mt-0.5">
+              <span v-else class="text-slate-300 dark:text-slate-600">—</span>
+              <div class="flex gap-2 text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
                 <span v-if="p.bedrooms">🛏 {{ p.bedrooms }}</span>
                 <span v-if="p.bathrooms">🚿 {{ p.bathrooms }}</span>
                 <span v-if="p.areaTotal">📐 {{ p.areaTotal }}m²</span>
@@ -322,7 +322,7 @@ const typeLabel: Record<string, string> = {
             </td>
 
             <!-- Preço -->
-            <td class="px-4 py-3 hidden sm:table-cell font-bold text-slate-900">
+            <td class="px-4 py-3 hidden sm:table-cell font-bold text-slate-900 dark:text-white">
               {{ formatPrice(p.price, p.currency) }}
             </td>
 
@@ -339,7 +339,7 @@ const typeLabel: Record<string, string> = {
               <div class="flex items-center justify-end gap-1">
                 <RouterLink
                   :to="`/imoveis/${p.id}`"
-                  class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+                  class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
                   title="Ver"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
@@ -349,7 +349,7 @@ const typeLabel: Record<string, string> = {
                 </RouterLink>
                 <RouterLink
                   :to="`/imoveis/${p.id}/editar`"
-                  class="p-1.5 rounded-lg text-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition"
+                  class="p-1.5 rounded-lg text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition"
                   title="Editar"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
@@ -380,17 +380,17 @@ const typeLabel: Record<string, string> = {
       <button
         :disabled="params.page === 0"
         @click="params.page = (params.page ?? 0) - 1"
-        class="px-4 py-2 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+        class="px-4 py-2 rounded-xl text-sm font-medium border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
       >
         ← Anterior
       </button>
-      <span class="text-sm text-slate-500">
+      <span class="text-sm text-slate-500 dark:text-slate-400">
         Página {{ (params.page ?? 0) + 1 }} de {{ store.properties.totalPages }}
       </span>
       <button
         :disabled="(params.page ?? 0) + 1 >= (store.properties?.totalPages ?? 1)"
         @click="params.page = (params.page ?? 0) + 1"
-        class="px-4 py-2 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+        class="px-4 py-2 rounded-xl text-sm font-medium border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
       >
         Próxima →
       </button>
@@ -403,13 +403,13 @@ const typeLabel: Record<string, string> = {
         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm"
         @click.self="deleteConfirmId = null"
       >
-        <div class="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4">
-          <h3 class="text-base font-bold text-slate-900 mb-2">Remover imóvel?</h3>
-          <p class="text-sm text-slate-500 mb-6">Esta ação marca o imóvel como removido. Você poderá recuperá-lo depois.</p>
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4">
+          <h3 class="text-base font-bold text-slate-900 dark:text-white mb-2">Remover imóvel?</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Esta ação marca o imóvel como removido. Você poderá recuperá-lo depois.</p>
           <div class="flex gap-3">
             <button
               @click="deleteConfirmId = null"
-              class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition"
+              class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition"
             >
               Cancelar
             </button>

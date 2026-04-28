@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-[#f2f4f8] py-12 px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen flex items-center justify-center bg-[#f2f4f8] dark:bg-slate-900 py-12 px-4 sm:px-6 lg:px-8">
     <div class="w-full max-w-md">
       <div class="text-center mb-8">
         <div class="inline-flex items-center justify-center h-12 w-12 mb-4">
@@ -9,10 +9,10 @@
             class="h-12 w-auto object-contain"
           />
         </div>
-        <h1 class="text-4xl font-bold text-slate-950 tracking-tight mb-2">Verificação de email</h1>
+        <h1 class="text-4xl font-bold text-slate-950 dark:text-white tracking-tight mb-2">Verificação de email</h1>
       </div>
 
-      <div class="bg-white/75 border border-slate-200 rounded-[2rem] shadow-[0_20px_40px_rgba(15,23,42,0.08)] p-8 text-center space-y-4">
+      <div class="bg-white/75 dark:bg-slate-800/75 border border-slate-200 dark:border-slate-700 rounded-[2rem] shadow-[0_20px_40px_rgba(15,23,42,0.08)] p-8 text-center space-y-4">
 
         <!-- Carregando -->
         <template v-if="status === 'loading'">
@@ -22,20 +22,20 @@
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
             </svg>
           </div>
-          <p class="text-slate-500">Verificando seu email...</p>
+          <p class="text-slate-500 dark:text-slate-400">Verificando seu email...</p>
         </template>
 
         <!-- Sucesso -->
         <template v-else-if="status === 'success'">
           <div class="flex justify-center">
-            <div class="inline-flex items-center justify-center h-14 w-14 rounded-full bg-emerald-50 border border-emerald-200">
-              <svg class="h-7 w-7 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <div class="inline-flex items-center justify-center h-14 w-14 rounded-full bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-700">
+              <svg class="h-7 w-7 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 6 9 17l-5-5" />
               </svg>
             </div>
           </div>
-          <p class="text-slate-800 font-semibold text-lg">Email verificado com sucesso!</p>
-          <p class="text-slate-500 text-sm">Sua conta está ativa. Você já pode acessar a plataforma.</p>
+          <p class="text-slate-800 dark:text-slate-100 font-semibold text-lg">Email verificado com sucesso!</p>
+          <p class="text-slate-500 dark:text-slate-400 text-sm">Sua conta está ativa. Você já pode acessar a plataforma.</p>
           <RouterLink
             to="/login"
             class="inline-flex items-center justify-center w-full h-14 bg-gradient-to-r from-violet-700 to-indigo-700 text-white text-lg font-semibold rounded-2xl shadow-[0_12px_28px_rgba(79,70,229,0.35)] hover:translate-y-[-1px] transition-all duration-200 mt-2"
@@ -47,15 +47,15 @@
         <!-- Erro -->
         <template v-else-if="status === 'error'">
           <div class="flex justify-center">
-            <div class="inline-flex items-center justify-center h-14 w-14 rounded-full bg-red-50 border border-red-200">
-              <svg class="h-7 w-7 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <div class="inline-flex items-center justify-center h-14 w-14 rounded-full bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700">
+              <svg class="h-7 w-7 text-red-500 dark:text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 8v4m0 4h.01" />
               </svg>
             </div>
           </div>
-          <p class="text-slate-800 font-semibold text-lg">Verificação falhou</p>
-          <p class="text-red-600 text-sm">{{ errorMessage }}</p>
+          <p class="text-slate-800 dark:text-slate-100 font-semibold text-lg">Verificação falhou</p>
+          <p class="text-red-600 dark:text-red-400 text-sm">{{ errorMessage }}</p>
           <RouterLink
             to="/login"
             class="inline-block text-sm font-semibold text-indigo-700 hover:text-indigo-800 mt-2"
@@ -66,8 +66,8 @@
 
         <!-- Token ausente -->
         <template v-else-if="status === 'missing'">
-          <p class="text-slate-800 font-semibold">Link inválido</p>
-          <p class="text-slate-500 text-sm">O token de verificação está ausente ou foi corrompido.</p>
+          <p class="text-slate-800 dark:text-slate-100 font-semibold">Link inválido</p>
+          <p class="text-slate-500 dark:text-slate-400 text-sm">O token de verificação está ausente ou foi corrompido.</p>
           <RouterLink
             to="/login"
             class="inline-block text-sm font-semibold text-indigo-700 hover:text-indigo-800"
