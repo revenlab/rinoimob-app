@@ -1,6 +1,32 @@
 export type LeadStatus = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'LOST' | 'WON'
 export type LeadEventType = 'CREATED' | 'STATUS_CHANGED' | 'ASSIGNED' | 'UNASSIGNED' | 'NOTE_ADDED' | 'PROPERTY_LINKED' | 'PROPERTY_UNLINKED'
 
+export type InterestLevel = 'UNDEFINED' | 'LOW' | 'MEDIUM' | 'HIGH'
+
+export interface LeadPropertyResponse {
+  id: string
+  leadId: string
+  propertyId: string
+  interestLevel: InterestLevel
+  createdAt: string
+  propertyTitle: string | null
+  propertyOperation: string | null
+  propertyPrice: number | null
+  propertyCurrency: string | null
+  addressCity: string | null
+  addressState: string | null
+  coverPhotoUrl: string | null
+}
+
+export interface AddLeadPropertyRequest {
+  propertyId: string
+  interestLevel?: InterestLevel
+}
+
+export interface UpdateLeadPropertyRequest {
+  interestLevel: InterestLevel
+}
+
 export interface UserSummary {
   id: string
   email: string
@@ -41,6 +67,7 @@ export interface LeadResponse {
   createdAt: string
   updatedAt: string
   notes: LeadNoteResponse[]
+  properties: LeadPropertyResponse[]
 }
 
 export interface CreateLeadRequest {

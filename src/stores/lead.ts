@@ -3,6 +3,9 @@ import { ref } from 'vue'
 import type {
   LeadResponse,
   LeadEventResponse,
+  LeadPropertyResponse,
+  AddLeadPropertyRequest,
+  InterestLevel,
   CreateLeadRequest,
   UpdateLeadRequest,
   LeadNoteRequest,
@@ -115,6 +118,45 @@ export const useLeadStore = defineStore('lead', () => {
     }
   }
 
+  async function addLeadProperty(leadId: string, data: AddLeadPropertyRequest): Promise<LeadPropertyResponse> {
+    try {
+      const lp = await leadService.addProperty(leadId, data)
+      if (currentLead.value?.id === leadId) {
+        currentLead.value.properties = [...(currentLead.value.properties ?? []), lp]
+      }
+      return lp
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Erro ao adicionar imóvel'
+      throw e
+    }
+  }
+
+  async function updateLeadPropertyInterest(leadId: string, linkId: string, interestLevel: InterestLevel): Promise<LeadPropertyResponse> {
+    try {
+      const updated = await leadService.updatePropertyInterest(leadId, linkId, { interestLevel })
+      if (currentLead.value?.id === leadId) {
+        const idx = (currentLead.value.properties ?? []).findIndex(lp => lp.id === linkId)
+        if (idx !== -1) currentLead.value.properties[idx] = updated
+      }
+      return updated
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Erro ao atualizar interesse'
+      throw e
+    }
+  }
+
+  async function removeLeadProperty(leadId: string, linkId: string): Promise<void> {
+    try {
+      await leadService.removeProperty(leadId, linkId)
+      if (currentLead.value?.id === leadId) {
+        currentLead.value.properties = (currentLead.value.properties ?? []).filter(lp => lp.id !== linkId)
+      }
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Erro ao remover imóvel'
+      throw e
+    }
+  }
+
   return {
     leads,
     currentLead,
@@ -128,5 +170,8 @@ export const useLeadStore = defineStore('lead', () => {
     updateLead,
     deleteLead,
     addNote,
+    addLeadProperty,
+    updateLeadPropertyInterest,
+    removeLeadProperty,
   }
 })

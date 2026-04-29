@@ -1,6 +1,9 @@
 import type {
   LeadResponse,
   LeadEventResponse,
+  LeadPropertyResponse,
+  AddLeadPropertyRequest,
+  UpdateLeadPropertyRequest,
   CreateLeadRequest,
   UpdateLeadRequest,
   LeadNoteRequest,
@@ -60,6 +63,26 @@ class LeadService {
 
   async getEvents(leadId: string): Promise<LeadEventResponse[]> {
     return this.request<LeadEventResponse[]>(`/${leadId}/events`)
+  }
+
+  async addProperty(leadId: string, data: AddLeadPropertyRequest): Promise<LeadPropertyResponse> {
+    return this.request<LeadPropertyResponse>(`/${leadId}/properties`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updatePropertyInterest(leadId: string, linkId: string, data: UpdateLeadPropertyRequest): Promise<LeadPropertyResponse> {
+    return this.request<LeadPropertyResponse>(`/${leadId}/properties/${linkId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+  }
+
+  async removeProperty(leadId: string, linkId: string): Promise<void> {
+    return this.request<void>(`/${leadId}/properties/${linkId}`, { method: 'DELETE' })
   }
 }
 

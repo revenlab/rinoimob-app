@@ -151,49 +151,94 @@
             </div>
           </div>
 
-          <!-- Card 2: Imóvel Vinculado -->
+          <!-- Card 2: Imóveis de Interesse -->
           <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm">
-            <h2 class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-4">Imóvel Vinculado</h2>
-
-            <div v-if="store.currentLead.propertyId" class="flex items-center gap-3 mb-4">
-              <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5 text-indigo-600 dark:text-indigo-400">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-                </svg>
-              </div>
-              <div class="min-w-0">
-                <p class="text-xs text-slate-400 mb-0.5">ID do imóvel</p>
-                <p class="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{{ store.currentLead.propertyId }}</p>
-              </div>
-              <button
-                @click="router.push('/imoveis/' + store.currentLead.propertyId)"
-                class="ml-auto flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-700 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors flex-shrink-0"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                </svg>
-                Ver imóvel
-              </button>
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400">Imóveis de Interesse</h2>
+              <span class="text-xs text-slate-400">{{ store.currentLead.properties?.length ?? 0 }} imóvel(is)</span>
             </div>
-            <p v-else class="text-sm text-slate-400 dark:text-slate-500 italic mb-4">Nenhum imóvel vinculado</p>
 
-            <!-- Link / change property -->
+            <!-- List of linked properties -->
+            <div class="space-y-3 mb-4">
+              <div v-for="lp in store.currentLead.properties" :key="lp.id"
+                class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700 group"
+              >
+                <!-- Cover photo thumbnail -->
+                <div class="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-slate-200 dark:bg-slate-600">
+                  <img v-if="lp.coverPhotoUrl" :src="lp.coverPhotoUrl" :alt="lp.propertyTitle ?? ''" class="w-full h-full object-cover" />
+                  <div v-else class="w-full h-full flex items-center justify-center text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                    </svg>
+                  </div>
+                </div>
+
+                <!-- Property info -->
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{{ lp.propertyTitle ?? 'Imóvel sem título' }}</p>
+                  <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <span v-if="lp.propertyOperation" :class="operationClass(lp.propertyOperation)" class="text-xs px-2 py-0.5 rounded-full font-medium">
+                      {{ operationLabel(lp.propertyOperation) }}
+                    </span>
+                    <span v-if="lp.addressCity" class="text-xs text-slate-400">{{ lp.addressCity }}</span>
+                    <span v-if="lp.propertyPrice" class="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                      {{ formatPrice(lp.propertyPrice, lp.propertyCurrency ?? 'BRL') }}
+                    </span>
+                  </div>
+                  <!-- Interest level selector -->
+                  <div class="flex items-center gap-1.5 mt-1.5">
+                    <span class="text-xs text-slate-400">Interesse:</span>
+                    <div class="flex gap-1">
+                      <button v-for="level in interestLevels" :key="level.value"
+                        @click="setInterestLevel(lp, level.value)"
+                        :class="[
+                          'px-2 py-0.5 rounded-full text-xs font-medium transition-colors',
+                          lp.interestLevel === level.value ? level.activeCls : 'bg-slate-100 dark:bg-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-500'
+                        ]"
+                      >{{ level.label }}</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-col gap-1 flex-shrink-0">
+                  <button @click="router.push('/imoveis/' + lp.propertyId)"
+                    class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
+                    title="Ver imóvel"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                  </button>
+                  <button @click="unlinkProperty(lp.id)"
+                    class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    title="Remover imóvel"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <p v-if="!store.currentLead.properties?.length" class="text-sm text-slate-400 dark:text-slate-500 italic text-center py-4">
+                Nenhum imóvel vinculado
+              </p>
+            </div>
+
+            <!-- Add property form -->
             <div class="flex items-center gap-2">
-              <select
-                v-model="selectedPropertyId"
+              <select v-model="selectedPropertyId"
                 class="flex-1 px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
               >
-                <option value="">Selecionar imóvel...</option>
-                <option v-for="p in properties" :key="p.id" :value="p.id">{{ p.title }}</option>
+                <option value="">Adicionar imóvel de interesse...</option>
+                <option v-for="p in availableProperties" :key="p.id" :value="p.id">{{ p.title }}</option>
               </select>
-              <button
-                @click="linkProperty"
-                :disabled="!selectedPropertyId || linkingProperty"
+              <button @click="addProperty" :disabled="!selectedPropertyId || addingProperty"
                 class="px-4 py-2.5 bg-gradient-to-r from-violet-700 to-indigo-700 text-white rounded-xl font-medium text-sm disabled:opacity-50 transition-all whitespace-nowrap"
               >
-                <span v-if="linkingProperty">Vinculando...</span>
-                <span v-else-if="store.currentLead.propertyId">Alterar imóvel</span>
-                <span v-else>Vincular imóvel</span>
+                <span v-if="addingProperty">Adicionando...</span>
+                <span v-else>+ Adicionar</span>
               </button>
             </div>
           </div>
@@ -401,13 +446,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useLeadStore } from '@/stores/lead'
 import userService from '@/services/user'
 import propertyService from '@/services/property'
-import type { LeadStatus, LeadEventType, UpdateLeadRequest, UserSummary } from '@/types/lead'
+import type { LeadStatus, LeadEventType, InterestLevel, LeadPropertyResponse, UpdateLeadRequest, UserSummary } from '@/types/lead'
 import type { PropertySummaryResponse } from '@/types/property'
 
 const route = useRoute()
@@ -544,17 +589,50 @@ const doReassign = async () => {
 // ── Property linking ───────────────────────────────────────────────────────
 const properties = ref<PropertySummaryResponse[]>([])
 const selectedPropertyId = ref('')
-const linkingProperty = ref(false)
+const addingProperty = ref(false)
 
-const linkProperty = async () => {
+const availableProperties = computed(() => {
+  const linkedIds = new Set((store.currentLead?.properties ?? []).map(lp => lp.propertyId))
+  return properties.value.filter(p => !linkedIds.has(p.id))
+})
+
+const interestLevels: { value: InterestLevel; label: string; activeCls: string }[] = [
+  { value: 'UNDEFINED', label: 'Indef.', activeCls: 'bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300' },
+  { value: 'LOW', label: 'Baixo', activeCls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' },
+  { value: 'MEDIUM', label: 'Médio', activeCls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+  { value: 'HIGH', label: 'Alto', activeCls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' },
+]
+
+const operationLabel = (op: string) => ({ SALE: 'Venda', RENT: 'Aluguel', SEASONAL: 'Temporada' }[op] ?? op)
+const operationClass = (op: string) => ({
+  SALE: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+  RENT: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+  SEASONAL: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+}[op] ?? 'bg-slate-100 text-slate-500')
+
+const formatPrice = (price: number, currency: string) =>
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(price)
+
+const addProperty = async () => {
   if (!selectedPropertyId.value) return
-  linkingProperty.value = true
+  addingProperty.value = true
   try {
-    await store.updateLead(leadId, { propertyId: selectedPropertyId.value })
+    await store.addLeadProperty(leadId, { propertyId: selectedPropertyId.value, interestLevel: 'UNDEFINED' })
     selectedPropertyId.value = ''
+  } catch (e) {
+    console.error('Erro ao adicionar imóvel', e)
   } finally {
-    linkingProperty.value = false
+    addingProperty.value = false
   }
+}
+
+const unlinkProperty = async (linkId: string) => {
+  await store.removeLeadProperty(leadId, linkId)
+}
+
+const setInterestLevel = async (lp: LeadPropertyResponse, level: InterestLevel) => {
+  if (lp.interestLevel === level) return
+  await store.updateLeadPropertyInterest(leadId, lp.id, level)
 }
 
 // ── Delete ─────────────────────────────────────────────────────────────────
