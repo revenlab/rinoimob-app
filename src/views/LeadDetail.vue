@@ -16,6 +16,9 @@
           <h1 v-if="store.currentLead" class="text-lg font-bold text-slate-900 dark:text-white truncate">
             {{ store.currentLead.name }}
           </h1>
+          <span v-if="store.currentLead" class="text-xs text-slate-400 flex-shrink-0">
+            criado {{ daysAgo(store.currentLead.createdAt) }}
+          </span>
           <span
             v-if="store.currentLead"
             :class="statusClass(store.currentLead.status)"
@@ -474,6 +477,13 @@ const statusClass = (status: LeadStatus): string => allStatuses.find(s => s.valu
 
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+
+const daysAgo = (date: string) => {
+  const days = Math.floor((Date.now() - new Date(date).getTime()) / 86_400_000)
+  if (days === 0) return 'hoje'
+  if (days === 1) return 'há 1 dia'
+  return `há ${days} dias`
+}
 
 const initials = (name: string) =>
   name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase()

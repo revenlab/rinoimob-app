@@ -70,6 +70,12 @@
           {{ tab.label }}
           <span v-if="tab.value === undefined" class="ml-1 text-xs opacity-70">({{ leadStore.leads?.totalElements ?? 0 }})</span>
         </button>
+        <input
+          v-model="search"
+          type="text"
+          placeholder="Buscar por nome ou email..."
+          class="px-4 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 w-64 ml-auto"
+        />
       </div>
 
       <!-- Loading -->
@@ -82,7 +88,7 @@
 
       <!-- Tabela de leads -->
       <div v-else class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[2rem] shadow-[0_4px_20px_rgba(15,23,42,0.06)] overflow-hidden">
-        <div v-if="!leads.length" class="flex flex-col items-center justify-center py-20 text-slate-400">
+        <div v-if="!filteredLeads.length" class="flex flex-col items-center justify-center py-20 text-slate-400">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 mb-3 opacity-30">
             <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
           </svg>
@@ -103,7 +109,7 @@
           </thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
             <tr
-              v-for="lead in leads"
+              v-for="lead in filteredLeads"
               :key="lead.id"
               class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer"
               @click="router.push('/leads/' + lead.id)"
@@ -193,7 +199,7 @@
           <div class="flex items-center gap-2 mb-3 px-1">
             <span :class="['w-2.5 h-2.5 rounded-full flex-shrink-0', col.dotColor]"></span>
             <span class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{{ col.label }}</span>
-            <span class="ml-auto bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-xs font-semibold rounded-full px-2 py-0.5">
+            <span class="ml-2 px-1.5 py-0.5 rounded-full text-xs font-bold bg-white/30 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
               {{ kanbanLeads(col.status).length }}
             </span>
           </div>
@@ -380,7 +386,15 @@ const brokers = ref<UserSummary[]>([])
 // ── Table view ─────────────────────────────────────────────────────────────
 const filterStatus = ref<LeadStatus | undefined>(undefined)
 const currentPage = ref(0)
+const search = ref('')
 const leads = computed(() => leadStore.leads?.content ?? [])
+const filteredLeads = computed(() => {
+  if (!search.value) return leads.value
+  const q = search.value.toLowerCase()
+  return leads.value.filter(
+    l => l.name.toLowerCase().includes(q) || l.email?.toLowerCase().includes(q)
+  )
+})
 
 const statusTabs = [
   { label: 'Todos', value: undefined },

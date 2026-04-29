@@ -9,6 +9,7 @@ import type {
   LeadNoteRequest,
   LeadNoteResponse,
   LeadListParams,
+  LeadStatsResponse,
   PageResponse,
 } from '@/types/lead'
 import { apiFetch, API_BASE } from '@/lib/api'
@@ -83,6 +84,10 @@ class LeadService {
 
   async removeProperty(leadId: string, linkId: string): Promise<void> {
     return this.request<void>(`/${leadId}/properties/${linkId}`, { method: 'DELETE' })
+  }
+
+  async getStats(): Promise<LeadStatsResponse> {
+    return this.request<LeadStatsResponse>('/stats')
   }
 }
 

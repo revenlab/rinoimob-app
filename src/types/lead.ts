@@ -107,3 +107,14 @@ export interface PageResponse<T> {
   number: number
   size: number
 }
+
+export interface LeadStatsResponse {
+  total: number
+  newLeads: number
+  contacted: number
+  qualified: number
+  won: number
+  lost: number
+  thisWeek: number
+  conversionRate: number
+}
