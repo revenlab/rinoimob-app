@@ -7,6 +7,30 @@
       </div>
     </template>
 
+    <!-- Métricas rápidas -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <RouterLink to="/imoveis" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-[0_2px_8px_rgba(15,23,42,0.04)] hover:shadow-md transition-shadow">
+        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2">Imóveis</p>
+        <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ metrics.totalProperties }}</p>
+        <p class="text-xs text-slate-400 mt-1">ativos</p>
+      </RouterLink>
+      <RouterLink to="/leads" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-[0_2px_8px_rgba(15,23,42,0.04)] hover:shadow-md transition-shadow">
+        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2">Leads novos</p>
+        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ metrics.newLeads }}</p>
+        <p class="text-xs text-slate-400 mt-1">aguardando</p>
+      </RouterLink>
+      <RouterLink to="/leads" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-[0_2px_8px_rgba(15,23,42,0.04)] hover:shadow-md transition-shadow">
+        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2">Em contato</p>
+        <p class="text-2xl font-bold text-amber-500">{{ metrics.contactedLeads }}</p>
+        <p class="text-xs text-slate-400 mt-1">em andamento</p>
+      </RouterLink>
+      <RouterLink to="/leads" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-[0_2px_8px_rgba(15,23,42,0.04)] hover:shadow-md transition-shadow">
+        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2">Ganhos</p>
+        <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ metrics.wonLeads }}</p>
+        <p class="text-xs text-slate-400 mt-1">fechamentos</p>
+      </RouterLink>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <!-- Perfil -->
       <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[2rem] shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
@@ -75,10 +99,15 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
+import leadService from '@/services/lead'
+import propertyService from '@/services/property'
 
 const authStore = useAuthStore()
+
+const metrics = ref({ totalProperties: 0, newLeads: 0, contactedLeads: 0, wonLeads: 0 })
 
 const formatDate = (date: string | undefined) => {
   if (!date) return 'N/A'
@@ -88,4 +117,19 @@ const formatDate = (date: string | undefined) => {
     day: 'numeric'
   })
 }
+
+onMounted(async () => {
+  try {
+    const [props, newLeads, contacted, won] = await Promise.allSettled([
+      propertyService.list({ status: 'ACTIVE', size: 1 }),
+      leadService.list({ status: 'NEW', size: 1 }),
+      leadService.list({ status: 'CONTACTED', size: 1 }),
+      leadService.list({ status: 'WON', size: 1 }),
+    ])
+    if (props.status === 'fulfilled') metrics.value.totalProperties = props.value.totalElements
+    if (newLeads.status === 'fulfilled') metrics.value.newLeads = newLeads.value.totalElements
+    if (contacted.status === 'fulfilled') metrics.value.contactedLeads = contacted.value.totalElements
+    if (won.status === 'fulfilled') metrics.value.wonLeads = won.value.totalElements
+  } catch { /* métricas são best-effort */ }
+})
 </script>
