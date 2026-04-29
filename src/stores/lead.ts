@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type {
   LeadResponse,
+  LeadEventResponse,
   CreateLeadRequest,
   UpdateLeadRequest,
   LeadNoteRequest,
@@ -14,6 +15,7 @@ import leadService from '@/services/lead'
 export const useLeadStore = defineStore('lead', () => {
   const leads = ref<PageResponse<LeadResponse> | null>(null)
   const currentLead = ref<LeadResponse | null>(null)
+  const events = ref<LeadEventResponse[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -38,6 +40,14 @@ export const useLeadStore = defineStore('lead', () => {
       error.value = e instanceof Error ? e.message : 'Lead não encontrado'
     } finally {
       isLoading.value = false
+    }
+  }
+
+  async function fetchEvents(leadId: string) {
+    try {
+      events.value = await leadService.getEvents(leadId)
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Erro ao carregar histórico'
     }
   }
 
@@ -108,10 +118,12 @@ export const useLeadStore = defineStore('lead', () => {
   return {
     leads,
     currentLead,
+    events,
     isLoading,
     error,
     fetchLeads,
     fetchLead,
+    fetchEvents,
     createLead,
     updateLead,
     deleteLead,

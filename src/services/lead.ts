@@ -1,5 +1,6 @@
 import type {
   LeadResponse,
+  LeadEventResponse,
   CreateLeadRequest,
   UpdateLeadRequest,
   LeadNoteRequest,
@@ -55,6 +56,10 @@ class LeadService {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     })
+  }
+
+  async getEvents(leadId: string): Promise<LeadEventResponse[]> {
+    return this.request<LeadEventResponse[]>(`/${leadId}/events`)
   }
 }
 
