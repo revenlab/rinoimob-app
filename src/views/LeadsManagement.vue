@@ -106,7 +106,7 @@
               v-for="lead in leads"
               :key="lead.id"
               class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer"
-              @click="openDetail(lead)"
+              @click="router.push('/leads/' + lead.id)"
             >
               <td class="px-6 py-4">
                 <p class="font-semibold text-slate-800 dark:text-slate-200">{{ lead.name }}</p>
@@ -129,7 +129,7 @@
               </td>
               <td class="px-4 py-4 text-right" @click.stop>
                 <button
-                  @click="openDetail(lead)"
+                  @click="router.push('/leads/' + lead.id)"
                   class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
                   title="Ver detalhes"
                 >
@@ -204,7 +204,7 @@
               :key="lead.id"
               draggable="true"
               @dragstart="onDragStart(lead)"
-              @click="openDetail(lead)"
+              @click="router.push('/leads/' + lead.id)"
               class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm hover:shadow-md cursor-pointer transition-all border border-slate-100 dark:border-slate-700 mb-3"
             >
               <p class="font-semibold text-slate-800 dark:text-slate-200 text-sm truncate">{{ lead.name }}</p>
@@ -226,168 +226,7 @@
       </div>
     </template>
 
-    <!-- Modal de detalhe / edição -->
     <Teleport to="body">
-      <div v-if="showDetail && selectedLead" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-800 rounded-[2rem] shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-          <div class="flex items-start justify-between p-6 border-b border-slate-100 dark:border-slate-700">
-            <div>
-              <h2 class="text-base font-bold text-slate-900 dark:text-white">{{ selectedLead.name }}</h2>
-              <span :class="statusClass(selectedLead.status)" class="mt-1 inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold">
-                {{ statusLabel(selectedLead.status) }}
-              </span>
-            </div>
-            <button @click="showDetail = false" class="p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <div class="p-6 space-y-5">
-            <!-- Info -->
-            <div class="grid grid-cols-2 gap-4 text-sm">
-              <div v-if="selectedLead.email">
-                <p class="text-xs font-semibold tracking-widest uppercase text-slate-400 mb-1">Email</p>
-                <p class="text-slate-700 dark:text-slate-300">{{ selectedLead.email }}</p>
-              </div>
-              <div v-if="selectedLead.phone">
-                <p class="text-xs font-semibold tracking-widest uppercase text-slate-400 mb-1">Telefone</p>
-                <p class="text-slate-700 dark:text-slate-300">{{ selectedLead.phone }}</p>
-              </div>
-              <div>
-                <p class="text-xs font-semibold tracking-widest uppercase text-slate-400 mb-1">Origem</p>
-                <p class="text-slate-700 dark:text-slate-300">{{ selectedLead.source === 'PORTAL' ? 'Portal' : 'Manual' }}</p>
-              </div>
-              <div>
-                <p class="text-xs font-semibold tracking-widest uppercase text-slate-400 mb-1">Data</p>
-                <p class="text-slate-700 dark:text-slate-300">{{ formatDate(selectedLead.createdAt) }}</p>
-              </div>
-            </div>
-
-            <div v-if="selectedLead.message">
-              <p class="text-xs font-semibold tracking-widest uppercase text-slate-400 mb-1">Mensagem</p>
-              <p class="text-slate-700 dark:text-slate-300 text-sm bg-slate-50 dark:bg-slate-700 rounded-xl p-3">{{ selectedLead.message }}</p>
-            </div>
-
-            <!-- Atribuído a -->
-            <div>
-              <p class="text-xs font-semibold tracking-widest uppercase text-slate-400 mb-2">Atribuído a</p>
-              <div class="flex items-center gap-2">
-                <span class="text-sm text-slate-700 dark:text-slate-300">{{ selectedLead.assignedToName ?? 'Sem corretor' }}</span>
-                <select
-                  v-model="reassignTo"
-                  @change="reassignLead"
-                  class="ml-auto text-xs border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-1.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                >
-                  <option value="">Reatribuir...</option>
-                  <option value="__unassign__">Remover atribuição</option>
-                  <option v-for="b in brokers" :key="b.id" :value="b.id">{{ b.firstName }} {{ b.lastName }} ({{ b.email }})</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Mudar status -->
-            <div>
-              <p class="text-xs font-semibold tracking-widest uppercase text-slate-400 mb-2">Mudar status</p>
-              <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="s in allStatuses"
-                  :key="s.value"
-                  @click="changeStatus(s.value)"
-                  :disabled="selectedLead.status === s.value || changingStatus"
-                  :class="[
-                    'px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors border',
-                    selectedLead.status === s.value
-                      ? 'opacity-50 cursor-default border-transparent ' + s.activeCls
-                      : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-indigo-300'
-                  ]"
-                >
-                  {{ s.label }}
-                </button>
-              </div>
-            </div>
-
-            <!-- Tabs: Notas | Histórico -->
-            <div>
-              <div class="flex border-b border-slate-100 dark:border-slate-700 mb-3">
-                <button
-                  @click="detailTab = 'notes'"
-                  :class="[
-                    'px-4 py-2 text-xs font-semibold transition-colors border-b-2 -mb-px',
-                    detailTab === 'notes'
-                      ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                      : 'border-transparent text-slate-400 hover:text-slate-600'
-                  ]"
-                >Notas</button>
-                <button
-                  @click="detailTab = 'history'"
-                  :class="[
-                    'px-4 py-2 text-xs font-semibold transition-colors border-b-2 -mb-px',
-                    detailTab === 'history'
-                      ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                      : 'border-transparent text-slate-400 hover:text-slate-600'
-                  ]"
-                >Histórico</button>
-              </div>
-
-              <!-- Notes tab -->
-              <div v-if="detailTab === 'notes'">
-                <div class="space-y-2 mb-3 max-h-40 overflow-y-auto">
-                  <div
-                    v-for="note in selectedLead.notes"
-                    :key="note.id"
-                    class="bg-slate-50 dark:bg-slate-700 rounded-xl p-3 text-sm"
-                  >
-                    <p class="text-slate-700 dark:text-slate-300">{{ note.content }}</p>
-                    <p class="text-xs text-slate-400 mt-1">{{ formatDate(note.createdAt) }}</p>
-                  </div>
-                  <p v-if="!selectedLead.notes.length" class="text-xs text-slate-400 italic">Nenhuma nota ainda</p>
-                </div>
-
-                <div class="flex gap-2">
-                  <input
-                    v-model="newNote"
-                    type="text"
-                    placeholder="Adicionar nota..."
-                    class="flex-1 px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                    @keydown.enter.prevent="submitNote"
-                  />
-                  <button
-                    @click="submitNote"
-                    :disabled="!newNote.trim() || addingNote"
-                    class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-                  >
-                    <svg v-if="addingNote" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    <span v-else>Enviar</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- History tab -->
-              <div v-else class="space-y-2 max-h-52 overflow-y-auto">
-                <div
-                  v-for="event in leadStore.events"
-                  :key="event.id"
-                  class="flex items-start gap-3 py-2 border-b border-slate-50 dark:border-slate-700/50 last:border-0"
-                >
-                  <span class="text-base mt-0.5 flex-shrink-0">{{ eventIcon(event.eventType) }}</span>
-                  <div class="min-w-0">
-                    <p class="font-medium text-slate-700 dark:text-slate-300 text-xs">{{ event.description ?? eventTypeLabel(event.eventType) }}</p>
-                    <span class="text-xs text-slate-400">{{ formatDate(event.createdAt) }}</span>
-                  </div>
-                </div>
-                <p v-if="!leadStore.events.length" class="text-xs text-slate-400 italic text-center py-4">Nenhum evento registrado</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Modal criar lead -->
       <div v-if="showCreate" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
         <div class="bg-white dark:bg-slate-800 rounded-[2rem] shadow-2xl w-full max-w-md">
           <div class="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-700">
@@ -470,13 +309,15 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useLeadStore } from '@/stores/lead'
 import leadService from '@/services/lead'
 import userService from '@/services/user'
-import type { LeadResponse, LeadStatus, LeadEventType, CreateLeadRequest, UserSummary } from '@/types/lead'
+import type { LeadResponse, LeadStatus, CreateLeadRequest, UserSummary } from '@/types/lead'
 
 const leadStore = useLeadStore()
+const router = useRouter()
 
 // ── View mode ──────────────────────────────────────────────────────────────
 const viewMode = ref<'table' | 'kanban'>('table')
@@ -572,93 +413,6 @@ const statusClass = (status: LeadStatus): string => {
 
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-
-// ── Event helpers ──────────────────────────────────────────────────────────
-const eventIcon = (type: LeadEventType): string => {
-  const icons: Record<LeadEventType, string> = {
-    CREATED: '🟢',
-    STATUS_CHANGED: '↔️',
-    ASSIGNED: '👤',
-    UNASSIGNED: '👤',
-    NOTE_ADDED: '💬',
-    PROPERTY_LINKED: 'ℹ️',
-    PROPERTY_UNLINKED: 'ℹ️',
-  }
-  return icons[type] ?? 'ℹ️'
-}
-
-const eventTypeLabel = (type: LeadEventType): string => {
-  const labels: Record<LeadEventType, string> = {
-    CREATED: 'Lead criado',
-    STATUS_CHANGED: 'Status alterado',
-    ASSIGNED: 'Corretor atribuído',
-    UNASSIGNED: 'Corretor removido',
-    NOTE_ADDED: 'Nota adicionada',
-    PROPERTY_LINKED: 'Imóvel vinculado',
-    PROPERTY_UNLINKED: 'Imóvel desvinculado',
-  }
-  return labels[type] ?? type
-}
-
-// ── Detail modal ───────────────────────────────────────────────────────────
-const showDetail = ref(false)
-const selectedLead = ref<LeadResponse | null>(null)
-const newNote = ref('')
-const addingNote = ref(false)
-const changingStatus = ref(false)
-const detailTab = ref<'notes' | 'history'>('notes')
-const reassignTo = ref('')
-
-const openDetail = async (lead: LeadResponse) => {
-  detailTab.value = 'notes'
-  reassignTo.value = ''
-  await leadStore.fetchLead(lead.id)
-  selectedLead.value = leadStore.currentLead
-  showDetail.value = true
-  leadStore.fetchEvents(lead.id)
-}
-
-const submitNote = async () => {
-  if (!newNote.value.trim() || !selectedLead.value) return
-  addingNote.value = true
-  try {
-    await leadStore.addNote(selectedLead.value.id, { content: newNote.value.trim() })
-    selectedLead.value = leadStore.currentLead
-    newNote.value = ''
-  } finally {
-    addingNote.value = false
-  }
-}
-
-const changeStatus = async (status: LeadStatus) => {
-  if (!selectedLead.value) return
-  changingStatus.value = true
-  try {
-    const updated = await leadStore.updateLead(selectedLead.value.id, { status })
-    selectedLead.value = updated
-    if (viewMode.value === 'kanban') {
-      const idx = kanbanAllLeads.value.findIndex(l => l.id === updated.id)
-      if (idx !== -1) kanbanAllLeads.value[idx] = updated
-    }
-  } finally {
-    changingStatus.value = false
-  }
-}
-
-const reassignLead = async () => {
-  if (!selectedLead.value || !reassignTo.value) return
-  const assignedTo = reassignTo.value === '__unassign__' ? '' : reassignTo.value
-  try {
-    const updated = await leadStore.updateLead(selectedLead.value.id, { assignedTo: assignedTo || undefined })
-    selectedLead.value = updated
-    if (viewMode.value === 'kanban') {
-      const idx = kanbanAllLeads.value.findIndex(l => l.id === updated.id)
-      if (idx !== -1) kanbanAllLeads.value[idx] = updated
-    }
-  } finally {
-    reassignTo.value = ''
-  }
-}
 
 // ── Create modal ───────────────────────────────────────────────────────────
 const showCreate = ref(false)
