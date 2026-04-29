@@ -85,6 +85,18 @@ const router = createRouter({
       name: 'CategoriesManagement',
       component: () => import('@/views/CategoriesManagement.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/leads',
+      name: 'LeadsManagement',
+      component: () => import('@/views/LeadsManagement.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/leads/:id',
+      name: 'LeadDetail',
+      component: () => import('@/views/LeadDetail.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })

@@ -7,6 +7,54 @@
       </div>
     </template>
 
+    <!-- Métricas rápidas -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+      <RouterLink to="/leads" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-[0_2px_8px_rgba(15,23,42,0.04)] hover:shadow-md transition-shadow">
+        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2">Leads</p>
+        <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ metrics.total }}</p>
+        <p class="text-xs text-slate-400 mt-1">total de leads</p>
+      </RouterLink>
+      <RouterLink to="/leads" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-[0_2px_8px_rgba(15,23,42,0.04)] hover:shadow-md transition-shadow">
+        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2">Novos leads</p>
+        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ metrics.newLeads }}</p>
+        <p class="text-xs text-slate-400 mt-1">{{ metrics.thisWeek }} esta semana</p>
+      </RouterLink>
+      <RouterLink to="/leads" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-[0_2px_8px_rgba(15,23,42,0.04)] hover:shadow-md transition-shadow">
+        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2">Em contato</p>
+        <p class="text-2xl font-bold text-amber-500">{{ metrics.contacted }}</p>
+        <p class="text-xs text-slate-400 mt-1">em andamento</p>
+      </RouterLink>
+      <RouterLink to="/leads" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-[0_2px_8px_rgba(15,23,42,0.04)] hover:shadow-md transition-shadow">
+        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2">Ganhos</p>
+        <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ metrics.won }}</p>
+        <p class="text-xs text-slate-400 mt-1">{{ metrics.conversionRate.toFixed(0) }}% conversão</p>
+      </RouterLink>
+    </div>
+
+    <!-- Pipeline strip -->
+    <RouterLink to="/leads" class="grid grid-cols-5 gap-2 mb-6">
+      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/40 rounded-xl p-3 text-center">
+        <p class="text-lg font-bold text-blue-600 dark:text-blue-400">{{ metrics.newLeads }}</p>
+        <p class="text-xs text-blue-500 dark:text-blue-400 font-medium mt-0.5">Novos</p>
+      </div>
+      <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/40 rounded-xl p-3 text-center">
+        <p class="text-lg font-bold text-amber-600 dark:text-amber-400">{{ metrics.contacted }}</p>
+        <p class="text-xs text-amber-500 dark:text-amber-400 font-medium mt-0.5">Contato</p>
+      </div>
+      <div class="bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-800/40 rounded-xl p-3 text-center">
+        <p class="text-lg font-bold text-violet-600 dark:text-violet-400">{{ metrics.qualified }}</p>
+        <p class="text-xs text-violet-500 dark:text-violet-400 font-medium mt-0.5">Qualif.</p>
+      </div>
+      <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/40 rounded-xl p-3 text-center">
+        <p class="text-lg font-bold text-emerald-600 dark:text-emerald-400">{{ metrics.won }}</p>
+        <p class="text-xs text-emerald-500 dark:text-emerald-400 font-medium mt-0.5">Ganhos</p>
+      </div>
+      <div class="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/40 rounded-xl p-3 text-center">
+        <p class="text-lg font-bold text-red-500 dark:text-red-400">{{ metrics.lost }}</p>
+        <p class="text-xs text-red-400 font-medium mt-0.5">Perdidos</p>
+      </div>
+    </RouterLink>
+
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <!-- Perfil -->
       <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[2rem] shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
@@ -75,10 +123,23 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
+import leadService from '@/services/lead'
 
 const authStore = useAuthStore()
+
+const metrics = ref({
+  total: 0,
+  newLeads: 0,
+  contacted: 0,
+  qualified: 0,
+  won: 0,
+  lost: 0,
+  thisWeek: 0,
+  conversionRate: 0,
+})
 
 const formatDate = (date: string | undefined) => {
   if (!date) return 'N/A'
@@ -88,4 +149,11 @@ const formatDate = (date: string | undefined) => {
     day: 'numeric'
   })
 }
+
+onMounted(async () => {
+  try {
+    const stats = await leadService.getStats()
+    metrics.value = stats
+  } catch { /* métricas são best-effort */ }
+})
 </script>
