@@ -103,6 +103,12 @@ const router = createRouter({
       name: 'TasksManagement',
       component: () => import('@/views/TasksManagement.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/whatsapp',
+      name: 'WhatsappSettings',
+      component: () => import('@/views/WhatsappSettings.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })
