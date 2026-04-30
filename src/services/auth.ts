@@ -98,6 +98,10 @@ class AuthService {
       body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
     })
   }
+
+  async logout(): Promise<void> {
+    return apiFetch<void>(`${API_BASE}/auth/logout`, { method: 'POST' })
+  }
 }
 
 export default new AuthService()

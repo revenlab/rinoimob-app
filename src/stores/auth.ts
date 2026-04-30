@@ -133,7 +133,10 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await authService.logout()
+    } catch { /* ignore — still clear local state */ }
     accessToken.value = null
     refreshToken.value = null
     user.value = null
