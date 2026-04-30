@@ -98,7 +98,12 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              <p class="text-sm text-slate-500 dark:text-slate-400">QR Code ainda não disponível. A instância está sendo iniciada...</p>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mb-3">Aguardando QR Code da Evolution API...</p>
+              <button
+                @click="refreshQr"
+                :disabled="loadingQr"
+                class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline disabled:opacity-50"
+              >Atualizar manualmente</button>
             </div>
           </div>
 
@@ -333,18 +338,22 @@ async function refreshQr() {
 
 function startQrPolling() {
   stopQrPolling()
-  qrPollInterval = setInterval(async () => {
+  // Poll every 3s while code is null (QR still generating), every 15s once we have it
+  const tick = async () => {
     if (!showQrModal.value || qrInstance.value?.status === 'CONNECTED') {
       stopQrPolling()
       return
     }
     await refreshQr()
-  }, 15000)
+    const interval = qrData.value?.code ? 15000 : 3000
+    qrPollInterval = setTimeout(tick, interval) as unknown as ReturnType<typeof setInterval>
+  }
+  qrPollInterval = setTimeout(tick, 3000) as unknown as ReturnType<typeof setInterval>
 }
 
 function stopQrPolling() {
   if (qrPollInterval) {
-    clearInterval(qrPollInterval)
+    clearTimeout(qrPollInterval as unknown as ReturnType<typeof setTimeout>)
     qrPollInterval = null
   }
 }
