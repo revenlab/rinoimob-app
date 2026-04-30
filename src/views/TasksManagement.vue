@@ -33,6 +33,10 @@
       >
         {{ tab.label }}
       </button>
+      <select v-model="filterType" class="px-3 py-2 text-xs border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 focus:outline-none">
+        <option value="">Todos os tipos</option>
+        <option v-for="t in taskTypes" :key="t.id" :value="t.id">{{ t.name }}</option>
+      </select>
       <input
         v-model="search"
         type="text"
@@ -91,6 +95,14 @@
             {{ task.title }}
           </p>
           <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+            <!-- Type badge -->
+            <span
+              v-if="task.taskTypeName"
+              :style="{ backgroundColor: (task.taskTypeColor ?? '#6366f1') + '20', color: task.taskTypeColor ?? '#6366f1' }"
+              class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+            >
+              {{ task.taskTypeName }}
+            </span>
             <!-- Lead badge -->
             <RouterLink
               v-if="task.leadId"
@@ -142,6 +154,91 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
               <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
             </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manage task types section -->
+    <div class="mt-10">
+      <button
+        @click="showManageTypes = !showManageTypes"
+        class="flex items-center gap-2 text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 transition-transform" :class="showManageTypes ? 'rotate-90' : ''">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+        Tipos de tarefa
+      </button>
+
+      <div v-if="showManageTypes" class="mt-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm space-y-3">
+        <!-- Existing types -->
+        <div
+          v-for="type in taskTypes"
+          :key="type.id"
+          class="flex items-center gap-3"
+        >
+          <span
+            class="w-3 h-3 rounded-full flex-shrink-0"
+            :style="{ backgroundColor: type.color }"
+          />
+          <!-- Inline edit for custom types -->
+          <input
+            v-if="!type.system && editingTypeName[type.id] !== undefined"
+            v-model="editingTypeName[type.id]"
+            @keydown.enter.prevent="saveTypeName(type)"
+            @keydown.escape="delete editingTypeName[type.id]"
+            @blur="saveTypeName(type)"
+            class="flex-1 px-2 py-1 text-xs border border-indigo-400 rounded-lg bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none"
+            autofocus
+          />
+          <span v-else class="flex-1 text-sm text-slate-700 dark:text-slate-300">{{ type.name }}</span>
+
+          <span v-if="type.system" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-400 font-medium">Sistema</span>
+
+          <template v-if="!type.system">
+            <button
+              @click="startEditTypeName(type)"
+              class="p-1 rounded text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
+              title="Renomear"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+              </svg>
+            </button>
+            <button
+              @click="deleteType(type.id)"
+              class="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              title="Remover"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </template>
+        </div>
+
+        <!-- New type form -->
+        <div class="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+          <input
+            v-model="newTypeName"
+            type="text"
+            placeholder="Novo tipo..."
+            class="flex-1 px-3 py-2 text-xs border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+            @keydown.enter.prevent="createType"
+          />
+          <input
+            v-model="newTypeColor"
+            type="color"
+            class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-600 cursor-pointer"
+            title="Cor"
+          />
+          <button
+            @click="createType"
+            :disabled="!newTypeName.trim() || creatingType"
+            class="px-3 py-2 bg-indigo-600 text-white rounded-xl text-xs font-medium disabled:opacity-50 transition-all hover:bg-indigo-700 whitespace-nowrap"
+          >
+            {{ creatingType ? '...' : '+ Criar' }}
           </button>
         </div>
       </div>
@@ -218,6 +315,25 @@
               />
             </div>
 
+            <!-- Type -->
+            <div v-if="taskTypes.length">
+              <label class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2 block">Tipo</label>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="type in taskTypes"
+                  :key="type.id"
+                  type="button"
+                  @click="form.taskTypeId = form.taskTypeId === type.id ? undefined : type.id"
+                  :style="form.taskTypeId === type.id
+                    ? { backgroundColor: type.color, color: '#fff', borderColor: type.color }
+                    : { borderColor: type.color + '40', color: type.color }"
+                  class="px-3 py-1 rounded-full text-xs font-medium border-2 transition-all"
+                >
+                  {{ type.name }}
+                </button>
+              </div>
+            </div>
+
             <!-- Error -->
             <p v-if="formError" class="text-xs text-red-500">{{ formError }}</p>
           </div>
@@ -252,12 +368,16 @@ import { ref, computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useTaskStore } from '@/stores/task'
-import type { TaskResponse } from '@/types/task'
+import type { TaskResponse, TaskTypeResponse } from '@/types/task'
 import type { UserSummary } from '@/types/lead'
 import userService from '@/services/user'
 import leadService from '@/services/lead'
+import taskTypeService from '@/services/taskType'
 
 const store = useTaskStore()
+
+// ── Task types ─────────────────────────────────────────────────────────────
+const taskTypes = ref<TaskTypeResponse[]>([])
 
 // ── Filters ────────────────────────────────────────────────────────────────
 const filterTabs: { label: string; value: 'all' | 'pending' | 'done' }[] = [
@@ -267,6 +387,7 @@ const filterTabs: { label: string; value: 'all' | 'pending' | 'done' }[] = [
 ]
 const activeTab = ref<'all' | 'pending' | 'done'>('all')
 const search = ref('')
+const filterType = ref('')
 
 const applyTabFilter = () => {
   if (activeTab.value === 'pending') {
@@ -283,6 +404,9 @@ const filteredTasks = computed(() => {
   if (search.value.trim()) {
     const q = search.value.toLowerCase()
     list = list.filter(t => t.title.toLowerCase().includes(q))
+  }
+  if (filterType.value) {
+    list = list.filter(t => t.taskTypeId === filterType.value)
   }
   return list
 })
@@ -315,9 +439,10 @@ interface TaskForm {
   leadId: string
   assignedTo: string
   dueAt: string
+  taskTypeId: string | undefined
 }
 
-const emptyForm = (): TaskForm => ({ title: '', description: '', leadId: '', assignedTo: '', dueAt: '' })
+const emptyForm = (): TaskForm => ({ title: '', description: '', leadId: '', assignedTo: '', dueAt: '', taskTypeId: undefined })
 const form = ref<TaskForm>(emptyForm())
 
 const users = ref<UserSummary[]>([])
@@ -338,6 +463,7 @@ const openEditModal = (task: TaskResponse) => {
     leadId: task.leadId ?? '',
     assignedTo: task.assignedTo ?? '',
     dueAt: task.dueAt ? task.dueAt.slice(0, 16) : '',
+    taskTypeId: task.taskTypeId ?? undefined,
   }
   formError.value = ''
   showModal.value = true
@@ -354,6 +480,7 @@ const submitForm = async () => {
       leadId: form.value.leadId || undefined,
       assignedTo: form.value.assignedTo || undefined,
       dueAt: form.value.dueAt || undefined,
+      taskTypeId: form.value.taskTypeId || undefined,
     }
     if (editingTask.value) {
       await store.updateTask(editingTask.value.id, payload)
@@ -368,14 +495,61 @@ const submitForm = async () => {
   }
 }
 
+// ── Manage task types ──────────────────────────────────────────────────────
+const showManageTypes = ref(false)
+const newTypeName = ref('')
+const newTypeColor = ref('#6366f1')
+const creatingType = ref(false)
+const editingTypeName = ref<Record<string, string>>({})
+
+const startEditTypeName = (type: TaskTypeResponse) => {
+  editingTypeName.value[type.id] = type.name
+}
+
+const saveTypeName = async (type: TaskTypeResponse) => {
+  const name = editingTypeName.value[type.id]?.trim()
+  if (!name || name === type.name) {
+    delete editingTypeName.value[type.id]
+    return
+  }
+  try {
+    const updated = await taskTypeService.update(type.id, { name })
+    const idx = taskTypes.value.findIndex(t => t.id === type.id)
+    if (idx !== -1) taskTypes.value[idx] = updated
+  } catch { /* best-effort */ }
+  delete editingTypeName.value[type.id]
+}
+
+const createType = async () => {
+  if (!newTypeName.value.trim()) return
+  creatingType.value = true
+  try {
+    const created = await taskTypeService.create({ name: newTypeName.value.trim(), color: newTypeColor.value })
+    taskTypes.value.push(created)
+    newTypeName.value = ''
+    newTypeColor.value = '#6366f1'
+  } catch { /* best-effort */ } finally {
+    creatingType.value = false
+  }
+}
+
+const deleteType = async (id: string) => {
+  try {
+    await taskTypeService.remove(id)
+    taskTypes.value = taskTypes.value.filter(t => t.id !== id)
+  } catch { /* best-effort */ }
+}
+
 // ── Mount ──────────────────────────────────────────────────────────────────
 onMounted(async () => {
   store.fetchTasks({ size: 100 })
-  const [usersRes, leadsRes] = await Promise.allSettled([
+  const [usersRes, leadsRes, typesRes] = await Promise.allSettled([
     userService.listActive(),
     leadService.list({ size: 200 }),
+    taskTypeService.list(),
   ])
   if (usersRes.status === 'fulfilled') users.value = usersRes.value
   if (leadsRes.status === 'fulfilled') leads.value = leadsRes.value.content.map(l => ({ id: l.id, name: l.name }))
+  if (typesRes.status === 'fulfilled') taskTypes.value = typesRes.value
 })
 </script>

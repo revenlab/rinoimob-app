@@ -318,13 +318,22 @@
                   <p class="text-xs font-medium text-slate-700 dark:text-slate-300 truncate" :class="{ 'line-through text-slate-400 dark:text-slate-500': task.completed }">
                     {{ task.title }}
                   </p>
-                  <p
-                    v-if="task.dueAt"
-                    class="text-xs mt-0.5"
-                    :class="task.overdue && !task.completed ? 'text-red-500' : 'text-slate-400'"
-                  >
-                    {{ formatDate(task.dueAt) }}
-                  </p>
+                  <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
+                    <span
+                      v-if="task.taskTypeName"
+                      :style="{ backgroundColor: (task.taskTypeColor ?? '#6366f1') + '20', color: task.taskTypeColor ?? '#6366f1' }"
+                      class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium"
+                    >
+                      {{ task.taskTypeName }}
+                    </span>
+                    <p
+                      v-if="task.dueAt"
+                      class="text-xs"
+                      :class="task.overdue && !task.completed ? 'text-red-500' : 'text-slate-400'"
+                    >
+                      {{ formatDate(task.dueAt) }}
+                    </p>
+                  </div>
                 </div>
               </div>
               <p v-if="!leadTasks.length" class="text-xs text-slate-400 dark:text-slate-500 italic text-center py-4">
@@ -341,6 +350,21 @@
                 class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                 @keydown.enter.prevent="submitLeadTask"
               />
+              <!-- Type pills -->
+              <div v-if="leadTaskTypes.length" class="flex flex-wrap gap-1.5">
+                <button
+                  v-for="type in leadTaskTypes"
+                  :key="type.id"
+                  type="button"
+                  @click="newTaskTypeId = newTaskTypeId === type.id ? undefined : type.id"
+                  :style="newTaskTypeId === type.id
+                    ? { backgroundColor: type.color, color: '#fff', borderColor: type.color }
+                    : { borderColor: type.color + '40', color: type.color }"
+                  class="px-2.5 py-0.5 rounded-full text-[10px] font-medium border-2 transition-all"
+                >
+                  {{ type.name }}
+                </button>
+              </div>
               <div class="flex items-center gap-2">
                 <input
                   v-model="newTaskDue"
@@ -524,6 +548,8 @@ import { useAuthStore } from '@/stores/auth'
 import userService from '@/services/user'
 import propertyService from '@/services/property'
 import taskService from '@/services/task'
+import taskTypeService from '@/services/taskType'
+import type { TaskTypeResponse } from '@/types/task'
 import type { TaskResponse } from '@/types/task'
 import type { LeadStatus, LeadEventType, InterestLevel, LeadPropertyResponse, UpdateLeadRequest, UserSummary } from '@/types/lead'
 import type { PropertySummaryResponse } from '@/types/property'
@@ -720,7 +746,9 @@ const setInterestLevel = async (lp: LeadPropertyResponse, level: InterestLevel) 
 const leadTasks = ref<TaskResponse[]>([])
 const newTaskTitle = ref('')
 const newTaskDue = ref('')
+const newTaskTypeId = ref<string | undefined>(undefined)
 const addingLeadTask = ref(false)
+const leadTaskTypes = ref<TaskTypeResponse[]>([])
 
 const toggleLeadTask = async (task: TaskResponse) => {
   try {
@@ -739,10 +767,12 @@ const submitLeadTask = async () => {
       leadId,
       assignedTo: authStore.currentUser?.id,
       dueAt: newTaskDue.value || undefined,
+      taskTypeId: newTaskTypeId.value || undefined,
     })
     leadTasks.value = [task, ...leadTasks.value]
     newTaskTitle.value = ''
     newTaskDue.value = ''
+    newTaskTypeId.value = undefined
   } catch { /* best-effort */ } finally {
     addingLeadTask.value = false
   }
@@ -777,6 +807,10 @@ onMounted(async () => {
   try {
     const taskResult = await taskService.list({ leadId, size: 50 })
     leadTasks.value = taskResult.content
+  } catch { /* best-effort */ }
+
+  try {
+    leadTaskTypes.value = await taskTypeService.list()
   } catch { /* best-effort */ }
 })
 </script>
