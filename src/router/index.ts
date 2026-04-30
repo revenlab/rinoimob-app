@@ -97,6 +97,12 @@ const router = createRouter({
       name: 'LeadDetail',
       component: () => import('@/views/LeadDetail.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/tarefas',
+      name: 'TasksManagement',
+      component: () => import('@/views/TasksManagement.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })

@@ -1,0 +1,381 @@
+<template>
+  <AppLayout>
+    <template #header>
+      <div class="flex items-center justify-between w-full">
+        <div>
+          <h1 class="text-lg font-bold text-slate-900 dark:text-white">Tarefas</h1>
+          <p class="text-xs text-slate-400">Gerencie atividades e compromissos</p>
+        </div>
+        <button
+          @click="openCreateModal"
+          class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-medium text-sm shadow-[0_4px_12px_rgba(79,70,229,0.3)] hover:translate-y-[-1px] transition-all duration-200"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          Nova tarefa
+        </button>
+      </div>
+    </template>
+
+    <!-- Filter bar -->
+    <div class="flex items-center gap-2 mb-6 flex-wrap">
+      <button
+        v-for="tab in filterTabs"
+        :key="tab.value"
+        @click="activeTab = tab.value; applyTabFilter()"
+        :class="[
+          'px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors',
+          activeTab === tab.value
+            ? 'bg-indigo-600 text-white shadow'
+            : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:border-indigo-300'
+        ]"
+      >
+        {{ tab.label }}
+      </button>
+      <input
+        v-model="search"
+        type="text"
+        placeholder="Buscar por título..."
+        class="px-4 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 w-64 ml-auto"
+      />
+    </div>
+
+    <!-- Loading -->
+    <div v-if="store.isLoading" class="flex justify-center py-16">
+      <svg class="animate-spin h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      </svg>
+    </div>
+
+    <!-- Empty state -->
+    <div
+      v-else-if="!filteredTasks.length"
+      class="flex flex-col items-center justify-center py-24 text-slate-400"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor" class="w-16 h-16 mb-4 opacity-20">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <p class="text-sm font-medium">Nenhuma tarefa ainda.</p>
+      <p class="text-xs mt-1">Crie sua primeira tarefa!</p>
+    </div>
+
+    <!-- Task list -->
+    <div v-else class="space-y-2">
+      <div
+        v-for="task in filteredTasks"
+        :key="task.id"
+        class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 py-3.5 shadow-sm flex items-center gap-3 group hover:shadow-md transition-shadow"
+      >
+        <!-- Checkbox -->
+        <button
+          @click="handleToggle(task)"
+          class="flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors"
+          :class="task.completed
+            ? 'bg-emerald-500 border-emerald-500 text-white'
+            : 'border-slate-300 dark:border-slate-600 hover:border-indigo-400'"
+        >
+          <svg v-if="task.completed" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-3 h-3">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+        </button>
+
+        <!-- Title + meta -->
+        <div class="flex-1 min-w-0">
+          <p
+            class="text-sm font-medium text-slate-800 dark:text-slate-200 truncate cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400"
+            :class="{ 'line-through text-slate-400 dark:text-slate-500': task.completed }"
+            @click="openEditModal(task)"
+          >
+            {{ task.title }}
+          </p>
+          <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+            <!-- Lead badge -->
+            <RouterLink
+              v-if="task.leadId"
+              :to="`/leads/${task.leadId}`"
+              class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/60 transition-colors"
+            >
+              {{ task.leadName }}
+            </RouterLink>
+
+            <!-- Assigned to -->
+            <span v-if="task.assignedToName" class="flex items-center gap-1 text-xs text-slate-400">
+              <span class="w-4 h-4 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-[8px] font-bold flex-shrink-0">
+                {{ initials(task.assignedToName) }}
+              </span>
+              {{ task.assignedToName }}
+            </span>
+
+            <!-- Due date -->
+            <span
+              v-if="task.dueAt"
+              class="text-xs font-medium"
+              :class="task.overdue && !task.completed ? 'text-red-500 dark:text-red-400' : 'text-slate-400'"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3 h-3 inline mr-0.5 -mt-0.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" />
+              </svg>
+              {{ formatDate(task.dueAt) }}
+              <span v-if="task.overdue && !task.completed" class="ml-0.5">(atrasada)</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Actions (visible on hover) -->
+        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+          <button
+            @click="openEditModal(task)"
+            class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
+            title="Editar"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+            </svg>
+          </button>
+          <button
+            @click="handleDelete(task.id)"
+            class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            title="Remover"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create / Edit Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showModal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+        @click.self="showModal = false"
+      >
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-6">
+          <h3 class="text-base font-bold text-slate-900 dark:text-white mb-5">
+            {{ editingTask ? 'Editar tarefa' : 'Nova tarefa' }}
+          </h3>
+
+          <div class="space-y-4">
+            <!-- Title -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Título <span class="text-red-500">*</span></label>
+              <input
+                v-model="form.title"
+                type="text"
+                placeholder="Título da tarefa"
+                class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              />
+            </div>
+
+            <!-- Description -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Descrição</label>
+              <textarea
+                v-model="form.description"
+                rows="3"
+                placeholder="Descrição opcional..."
+                class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 resize-none"
+              />
+            </div>
+
+            <!-- Lead -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Lead</label>
+              <select
+                v-model="form.leadId"
+                class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              >
+                <option value="">Nenhum</option>
+                <option v-for="lead in leads" :key="lead.id" :value="lead.id">{{ lead.name }}</option>
+              </select>
+            </div>
+
+            <!-- Assigned to -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Responsável</label>
+              <select
+                v-model="form.assignedTo"
+                class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              >
+                <option value="">Nenhum</option>
+                <option v-for="user in users" :key="user.id" :value="user.id">
+                  {{ user.firstName ?? '' }} {{ user.lastName ?? '' }} ({{ user.email }})
+                </option>
+              </select>
+            </div>
+
+            <!-- Due date -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Prazo</label>
+              <input
+                v-model="form.dueAt"
+                type="datetime-local"
+                class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              />
+            </div>
+
+            <!-- Error -->
+            <p v-if="formError" class="text-xs text-red-500">{{ formError }}</p>
+          </div>
+
+          <div class="flex gap-3 mt-6">
+            <button
+              @click="showModal = false"
+              class="flex-1 h-10 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              @click="submitForm"
+              :disabled="!form.title.trim() || saving"
+              class="flex-1 h-10 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl text-sm font-medium disabled:opacity-50 transition-all hover:translate-y-[-1px] shadow-[0_4px_12px_rgba(79,70,229,0.25)]"
+            >
+              <svg v-if="saving" class="animate-spin h-4 w-4 mx-auto" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span v-else>{{ editingTask ? 'Salvar' : 'Criar' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+  </AppLayout>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
+import AppLayout from '@/layouts/AppLayout.vue'
+import { useTaskStore } from '@/stores/task'
+import type { TaskResponse } from '@/types/task'
+import type { UserSummary } from '@/types/lead'
+import userService from '@/services/user'
+import leadService from '@/services/lead'
+
+const store = useTaskStore()
+
+// ── Filters ────────────────────────────────────────────────────────────────
+const filterTabs: { label: string; value: 'all' | 'pending' | 'done' }[] = [
+  { label: 'Todas', value: 'all' },
+  { label: 'Pendentes', value: 'pending' },
+  { label: 'Concluídas', value: 'done' },
+]
+const activeTab = ref<'all' | 'pending' | 'done'>('all')
+const search = ref('')
+
+const applyTabFilter = () => {
+  if (activeTab.value === 'pending') {
+    store.fetchTasks({ pending: true, size: 100 })
+  } else {
+    store.fetchTasks({ size: 100 })
+  }
+}
+
+const filteredTasks = computed(() => {
+  let list = store.tasks
+  if (activeTab.value === 'done') list = list.filter(t => t.completed)
+  else if (activeTab.value === 'pending') list = list.filter(t => !t.completed)
+  if (search.value.trim()) {
+    const q = search.value.toLowerCase()
+    list = list.filter(t => t.title.toLowerCase().includes(q))
+  }
+  return list
+})
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+const initials = (name: string) =>
+  name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase()
+
+const formatDate = (date: string) =>
+  new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+
+// ── Toggle complete ────────────────────────────────────────────────────────
+const handleToggle = async (task: TaskResponse) => {
+  await store.toggleComplete(task.id)
+}
+
+const handleDelete = async (id: string) => {
+  await store.deleteTask(id)
+}
+
+// ── Modal ──────────────────────────────────────────────────────────────────
+const showModal = ref(false)
+const editingTask = ref<TaskResponse | null>(null)
+const saving = ref(false)
+const formError = ref('')
+
+interface TaskForm {
+  title: string
+  description: string
+  leadId: string
+  assignedTo: string
+  dueAt: string
+}
+
+const emptyForm = (): TaskForm => ({ title: '', description: '', leadId: '', assignedTo: '', dueAt: '' })
+const form = ref<TaskForm>(emptyForm())
+
+const users = ref<UserSummary[]>([])
+const leads = ref<{ id: string; name: string }[]>([])
+
+const openCreateModal = () => {
+  editingTask.value = null
+  form.value = emptyForm()
+  formError.value = ''
+  showModal.value = true
+}
+
+const openEditModal = (task: TaskResponse) => {
+  editingTask.value = task
+  form.value = {
+    title: task.title,
+    description: task.description ?? '',
+    leadId: task.leadId ?? '',
+    assignedTo: task.assignedTo ?? '',
+    dueAt: task.dueAt ? task.dueAt.slice(0, 16) : '',
+  }
+  formError.value = ''
+  showModal.value = true
+}
+
+const submitForm = async () => {
+  if (!form.value.title.trim()) return
+  saving.value = true
+  formError.value = ''
+  try {
+    const payload = {
+      title: form.value.title.trim(),
+      description: form.value.description || undefined,
+      leadId: form.value.leadId || undefined,
+      assignedTo: form.value.assignedTo || undefined,
+      dueAt: form.value.dueAt || undefined,
+    }
+    if (editingTask.value) {
+      await store.updateTask(editingTask.value.id, payload)
+    } else {
+      await store.createTask(payload)
+    }
+    showModal.value = false
+  } catch (e: unknown) {
+    formError.value = e instanceof Error ? e.message : 'Erro ao salvar'
+  } finally {
+    saving.value = false
+  }
+}
+
+// ── Mount ──────────────────────────────────────────────────────────────────
+onMounted(async () => {
+  store.fetchTasks({ size: 100 })
+  const [usersRes, leadsRes] = await Promise.allSettled([
+    userService.listActive(),
+    leadService.list({ size: 200 }),
+  ])
+  if (usersRes.status === 'fulfilled') users.value = usersRes.value
+  if (leadsRes.status === 'fulfilled') leads.value = leadsRes.value.content.map(l => ({ id: l.id, name: l.name }))
+})
+</script>

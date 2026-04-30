@@ -31,6 +31,20 @@
       </RouterLink>
     </div>
 
+    <!-- Tarefas pendentes widget -->
+    <RouterLink to="/tarefas" class="flex items-center gap-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-4 shadow-[0_2px_8px_rgba(15,23,42,0.04)] hover:shadow-md transition-shadow">
+      <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center flex-shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5 text-indigo-600 dark:text-indigo-400">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div class="flex-1">
+        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400">Tarefas pendentes</p>
+        <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ pendingTasksCount }}</p>
+      </div>
+      <span class="text-xs text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium">Ver tarefas →</span>
+    </RouterLink>
+
     <!-- Pipeline strip -->
     <RouterLink to="/leads" class="grid grid-cols-5 gap-2 mb-6">
       <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/40 rounded-xl p-3 text-center">
@@ -124,11 +138,15 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 import leadService from '@/services/lead'
+import taskService from '@/services/task'
 
 const authStore = useAuthStore()
+
+const pendingTasksCount = ref(0)
 
 const metrics = ref({
   total: 0,
@@ -155,5 +173,9 @@ onMounted(async () => {
     const stats = await leadService.getStats()
     metrics.value = stats
   } catch { /* métricas são best-effort */ }
+  try {
+    const result = await taskService.list({ pending: true, size: 1 })
+    pendingTasksCount.value = result.totalElements
+  } catch { /* best-effort */ }
 })
 </script>
