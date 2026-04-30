@@ -82,16 +82,12 @@
 
         <div v-else class="space-y-4">
           <div class="flex flex-col items-center justify-center py-4">
-            <template v-if="qrData?.code">
+            <template v-if="qrImageUrl">
               <img
-                v-if="qrData.code.startsWith('data:image')"
-                :src="qrData.code"
-                class="w-48 h-48 mx-auto rounded-xl"
+                :src="qrImageUrl"
+                class="w-56 h-56 mx-auto rounded-xl"
                 alt="QR Code WhatsApp"
               />
-              <div v-else class="bg-slate-50 dark:bg-slate-900 rounded-xl p-4 w-full">
-                <p class="font-mono text-xs break-all text-slate-700 dark:text-slate-300">{{ qrData.code }}</p>
-              </div>
             </template>
             <div v-else class="text-center py-4">
               <svg class="animate-spin w-8 h-8 text-indigo-500 mx-auto mb-3" fill="none" viewBox="0 0 24 24">
@@ -230,7 +226,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import QRCode from 'qrcode'
 import AppLayout from '@/layouts/AppLayout.vue'
 import whatsappService from '@/services/whatsapp'
 import type { WhatsappInstance, QrCodeResponse } from '@/types/whatsapp'
@@ -249,10 +246,21 @@ const showQrModal = ref(false)
 const qrInstance = ref<WhatsappInstance | null>(null)
 const qrData = ref<QrCodeResponse | null>(null)
 const loadingQr = ref(false)
+const qrImageUrl = ref<string | null>(null)
 
 // Polling intervals
 let statusPollInterval: ReturnType<typeof setInterval> | null = null
 let qrPollInterval: ReturnType<typeof setInterval> | null = null
+
+// Generate QR image from code string whenever qrData changes
+watch(() => qrData.value?.code, async (code) => {
+  if (!code) { qrImageUrl.value = null; return }
+  if (code.startsWith('data:image')) {
+    qrImageUrl.value = code
+  } else {
+    qrImageUrl.value = await QRCode.toDataURL(code, { width: 256, margin: 1 })
+  }
+})
 
 async function fetchInstances() {
   loading.value = true
@@ -317,6 +325,7 @@ function closeQrModal() {
   showQrModal.value = false
   qrInstance.value = null
   qrData.value = null
+  qrImageUrl.value = null
   stopQrPolling()
 }
 
