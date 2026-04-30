@@ -6,6 +6,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [vue()],
+    define: {
+      global: 'globalThis',
+    },
     resolve: {
       alias: {
         '@': '/src'
