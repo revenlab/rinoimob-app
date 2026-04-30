@@ -109,6 +109,12 @@ const router = createRouter({
       name: 'WhatsappSettings',
       component: () => import('@/views/WhatsappSettings.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/equipe',
+      name: 'Equipe',
+      component: () => import('@/views/Equipe.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })
