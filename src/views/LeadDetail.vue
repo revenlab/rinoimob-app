@@ -382,6 +382,111 @@
               </div>
             </div>
           </div>
+
+          <!-- Card 5: WhatsApp -->
+          <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm">
+            <div class="flex items-center gap-2 mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-4 h-4 text-slate-400">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z" />
+              </svg>
+              <h2 class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400">WhatsApp</h2>
+            </div>
+
+            <!-- No phone warning -->
+            <div v-if="!store.currentLead?.phone" class="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-xl mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-4 h-4 text-amber-500 flex-shrink-0">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
+              <p class="text-xs text-amber-700 dark:text-amber-400">Lead sem telefone cadastrado</p>
+            </div>
+
+            <template v-if="store.currentLead?.phone">
+              <!-- No instances warning -->
+              <div v-if="waInstances.length === 0" class="text-center py-4 mb-4">
+                <p class="text-xs text-slate-400 dark:text-slate-500">Nenhum número WhatsApp cadastrado.</p>
+                <RouterLink to="/whatsapp" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
+                  Configurar em WhatsApp → Configurações
+                </RouterLink>
+              </div>
+
+              <template v-else>
+                <!-- Instance selector -->
+                <select
+                  v-model="selectedInstanceId"
+                  class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 mb-3"
+                >
+                  <option value="">Selecionar número...</option>
+                  <option v-for="inst in waInstances" :key="inst.id" :value="inst.id">
+                    {{ inst.displayName }}{{ inst.status === 'CONNECTED' ? ' ✓' : inst.status === 'CONNECTING' ? ' ⟳' : ' ✗' }}
+                  </option>
+                </select>
+
+                <!-- Chat area -->
+                <div
+                  ref="waChatRef"
+                  class="max-h-80 overflow-y-auto space-y-2 mb-3 pr-1"
+                >
+                  <template v-if="waMessages.length">
+                    <div
+                      v-for="msg in waMessages"
+                      :key="msg.id"
+                      :class="msg.direction === 'OUTBOUND' ? 'flex flex-col items-end' : 'flex flex-col items-start'"
+                    >
+                      <p
+                        v-if="msg.direction === 'OUTBOUND' && (msg.sentByUserName || msg.instanceDisplayName)"
+                        class="text-[10px] text-slate-400 dark:text-slate-500 mb-0.5 text-right"
+                      >
+                        {{ [msg.sentByUserName, msg.instanceDisplayName].filter(Boolean).join(' · ') }}
+                      </p>
+                      <div
+                        :class="[
+                          'max-w-[80%] px-3 py-2 rounded-2xl',
+                          msg.direction === 'OUTBOUND'
+                            ? 'bg-indigo-600 text-white rounded-br-sm'
+                            : 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-bl-sm',
+                        ]"
+                      >
+                        <p class="text-sm whitespace-pre-wrap break-words">{{ msg.content }}</p>
+                        <p
+                          :class="[
+                            'text-[10px] mt-1',
+                            msg.direction === 'OUTBOUND' ? 'text-indigo-200' : 'text-slate-400 dark:text-slate-500',
+                          ]"
+                        >
+                          {{ waTimeLabel(msg.createdAt) }}
+                        </p>
+                      </div>
+                    </div>
+                  </template>
+                  <p v-else class="text-xs text-slate-400 dark:text-slate-500 italic text-center py-6">
+                    Nenhuma mensagem ainda
+                  </p>
+                </div>
+
+                <!-- Input row -->
+                <div class="flex gap-2 border-t border-slate-100 dark:border-slate-700 pt-3">
+                  <textarea
+                    v-model="waMessageText"
+                    rows="2"
+                    placeholder="Digite sua mensagem..."
+                    class="flex-1 px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 resize-none"
+                    @keydown.enter.ctrl.prevent="sendWaMessage"
+                  />
+                  <button
+                    @click="sendWaMessage"
+                    :disabled="!selectedInstanceId || !waMessageText.trim() || sendingWa || !waInstances.find(i => i.id === selectedInstanceId && i.status === 'CONNECTED')"
+                    class="px-3 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl text-sm font-medium disabled:opacity-50 transition-all self-end"
+                  >
+                    <svg v-if="sendingWa" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    <span v-else>Enviar</span>
+                  </button>
+                </div>
+              </template>
+            </template>
+          </div>
         </div>
         <div class="space-y-6">
 
@@ -540,8 +645,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useLeadStore } from '@/stores/lead'
 import { useAuthStore } from '@/stores/auth'
@@ -551,6 +656,8 @@ import taskService from '@/services/task'
 import taskTypeService from '@/services/taskType'
 import type { TaskTypeResponse } from '@/types/task'
 import type { TaskResponse } from '@/types/task'
+import whatsappService from '@/services/whatsapp'
+import type { WhatsappInstance, WhatsappMessage } from '@/types/whatsapp'
 import type { LeadStatus, LeadEventType, InterestLevel, LeadPropertyResponse, UpdateLeadRequest, UserSummary } from '@/types/lead'
 import type { PropertySummaryResponse } from '@/types/property'
 
@@ -791,6 +898,56 @@ const executeDelete = async () => {
 }
 
 // ── Mount ──────────────────────────────────────────────────────────────────
+// ── WhatsApp ───────────────────────────────────────────────────────────────
+const waInstances = ref<WhatsappInstance[]>([])
+const waMessages = ref<WhatsappMessage[]>([])
+const selectedInstanceId = ref<string>('')
+const waMessageText = ref('')
+const sendingWa = ref(false)
+const waChatRef = ref<HTMLElement | null>(null)
+
+async function loadWaData() {
+  if (!store.currentLead?.id) return
+  try {
+    const [instances, messages] = await Promise.allSettled([
+      whatsappService.listInstances(),
+      whatsappService.getMessages(store.currentLead.id),
+    ])
+    if (instances.status === 'fulfilled') {
+      waInstances.value = instances.value
+      const connected = instances.value.find(i => i.status === 'CONNECTED')
+      if (connected) selectedInstanceId.value = connected.id
+    }
+    if (messages.status === 'fulfilled') waMessages.value = messages.value
+  } catch { /* best-effort */ }
+}
+
+async function sendWaMessage() {
+  if (!waMessageText.value.trim() || !selectedInstanceId.value || !store.currentLead?.id) return
+  sendingWa.value = true
+  try {
+    const msg = await whatsappService.sendMessage(store.currentLead.id, {
+      instanceId: selectedInstanceId.value,
+      text: waMessageText.value.trim(),
+    })
+    waMessages.value.push(msg)
+    waMessageText.value = ''
+  } catch (e: any) {
+    alert(e?.message ?? 'Erro ao enviar mensagem')
+  } finally {
+    sendingWa.value = false
+  }
+}
+
+function waTimeLabel(date: string) {
+  return new Date(date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+}
+
+watch(waMessages, async () => {
+  await nextTick()
+  if (waChatRef.value) waChatRef.value.scrollTop = waChatRef.value.scrollHeight
+}, { deep: true })
+
 onMounted(async () => {
   store.currentLead = null
   await store.fetchLead(leadId)
@@ -812,5 +969,7 @@ onMounted(async () => {
   try {
     leadTaskTypes.value = await taskTypeService.list()
   } catch { /* best-effort */ }
+
+  loadWaData()
 })
 </script>
