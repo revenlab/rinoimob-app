@@ -1,13 +1,78 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink, useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useTheme } from '@/composables/useTheme'
+import { useWebSocketStore } from '@/stores/websocket'
 
 const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 const { isDark, toggle } = useTheme()
+
+// ── Notifications ─────────────────────────────────────────────────────────
+interface AppNotification {
+  id: number
+  message: string
+  leadId: string | null
+  createdAt: Date
+}
+let notifSeq = 0
+const notifications = ref<AppNotification[]>([])
+
+function addNotification(message: string, leadId: string | null) {
+  const n: AppNotification = { id: ++notifSeq, message, leadId, createdAt: new Date() }
+  notifications.value.unshift(n)
+  // Auto-dismiss after 6 seconds
+  setTimeout(() => dismissNotification(n.id), 6000)
+}
+
+function dismissNotification(id: number) {
+  notifications.value = notifications.value.filter(n => n.id !== id)
+}
+
+function goToLead(n: AppNotification) {
+  if (n.leadId) router.push(`/leads/${n.leadId}`)
+  dismissNotification(n.id)
+}
+
+// ── WebSocket ──────────────────────────────────────────────────────────────
+const wsStore = useWebSocketStore()
+let unsubWa: (() => void) | null = null
+
+function setupWsSubscription() {
+  const tenantId = authStore.currentTenantId
+  if (!tenantId) return
+  unsubWa = wsStore.subscribeToTenantWhatsapp(tenantId, (event: any) => {
+    if (event.type !== 'WHATSAPP_MESSAGE') return
+    const msg = event.payload
+    if (msg?.direction !== 'INBOUND') return
+    // Only notify when user is NOT already viewing that lead's page
+    const onLeadPage = route.path === `/leads/${msg.leadId}`
+    if (!onLeadPage) {
+      const from = msg.senderName ?? msg.fromNumber ?? 'Contato desconhecido'
+      addNotification(`💬 Nova mensagem de ${from}`, msg.leadId ?? null)
+    }
+  })
+}
+
+onMounted(() => {
+  wsStore.connect()
+  // Wait for connection before subscribing
+  const waitAndSub = () => {
+    if (wsStore.connected) {
+      setupWsSubscription()
+    } else {
+      setTimeout(waitAndSub, 500)
+    }
+  }
+  waitAndSub()
+})
+
+onUnmounted(() => {
+  unsubWa?.()
+  wsStore.disconnect()
+})
 
 const collapsed = ref(false)
 
@@ -219,4 +284,36 @@ const handleLogout = () => {
       </main>
     </div>
   </div>
+
+  <!-- Notification toasts -->
+  <teleport to="body">
+    <div class="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+      <transition-group name="notif" tag="div" class="flex flex-col gap-2">
+        <div
+          v-for="n in notifications"
+          :key="n.id"
+          class="pointer-events-auto flex items-start gap-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition-shadow"
+          @click="goToLead(n)"
+        >
+          <span class="text-xl leading-none mt-0.5">💬</span>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-slate-900 dark:text-white truncate">{{ n.message }}</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ n.leadId ? 'Clique para ver a conversa' : 'Número não vinculado a um lead' }}</p>
+          </div>
+          <button
+            class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 shrink-0"
+            @click.stop="dismissNotification(n.id)"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </transition-group>
+    </div>
+  </teleport>
 </template>
+
+<style scoped>
+.notif-enter-active, .notif-leave-active { transition: all 0.3s ease; }
+.notif-enter-from { opacity: 0; transform: translateY(12px); }
+.notif-leave-to   { opacity: 0; transform: translateX(100%); }
+</style>

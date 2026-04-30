@@ -29,20 +29,6 @@
         </div>
         <div v-if="store.currentLead" class="flex items-center gap-2">
           <button
-            @click="toggleEdit"
-            class="px-4 py-2 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-          >
-            {{ isEditing ? 'Cancelar' : 'Editar' }}
-          </button>
-          <button
-            v-if="isEditing"
-            @click="saveEdits"
-            :disabled="savingEdit"
-            class="px-4 py-2 bg-gradient-to-r from-violet-700 to-indigo-700 text-white rounded-xl font-medium text-sm disabled:opacity-50 transition-all"
-          >
-            {{ savingEdit ? 'Salvando...' : 'Salvar' }}
-          </button>
-          <button
             @click="handleDelete"
             class="px-4 py-2 border border-red-200 text-red-600 rounded-xl text-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
           >
@@ -74,85 +60,6 @@
 
         <!-- ── Left column (col-span-2) ─────────────────────────────────── -->
         <div class="lg:col-span-2 space-y-6">
-
-          <!-- Card 1: Lead Info -->
-          <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm">
-            <h2 class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-4">Informações do Lead</h2>
-
-            <div v-if="editError" class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-xs text-red-600 dark:text-red-400">
-              {{ editError }}
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <!-- Nome -->
-              <div>
-                <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-1">Nome</p>
-                <input
-                  v-if="isEditing"
-                  v-model="editForm.name"
-                  type="text"
-                  class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                />
-                <p v-else class="text-sm text-slate-800 dark:text-slate-200">{{ store.currentLead.name }}</p>
-              </div>
-
-              <!-- Email -->
-              <div>
-                <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-1">Email</p>
-                <input
-                  v-if="isEditing"
-                  v-model="editForm.email"
-                  type="email"
-                  class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                />
-                <p v-else class="text-sm text-slate-800 dark:text-slate-200">{{ store.currentLead.email ?? '—' }}</p>
-              </div>
-
-              <!-- Telefone -->
-              <div>
-                <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-1">Telefone</p>
-                <input
-                  v-if="isEditing"
-                  v-model="editForm.phone"
-                  type="tel"
-                  class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                />
-                <p v-else class="text-sm text-slate-800 dark:text-slate-200">{{ store.currentLead.phone ?? '—' }}</p>
-              </div>
-
-              <!-- Origem -->
-              <div>
-                <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-1">Origem</p>
-                <p class="text-sm text-slate-800 dark:text-slate-200">{{ store.currentLead.source === 'PORTAL' ? 'Portal' : 'Manual' }}</p>
-              </div>
-
-              <!-- Data de criação -->
-              <div>
-                <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-1">Data de criação</p>
-                <p class="text-sm text-slate-800 dark:text-slate-200">{{ formatDate(store.currentLead.createdAt) }}</p>
-              </div>
-
-              <!-- Última atualização -->
-              <div>
-                <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-1">Última atualização</p>
-                <p class="text-sm text-slate-800 dark:text-slate-200">{{ formatDate(store.currentLead.updatedAt) }}</p>
-              </div>
-            </div>
-
-            <!-- Mensagem inicial -->
-            <div v-if="isEditing || store.currentLead.message" class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
-              <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2">Mensagem inicial</p>
-              <textarea
-                v-if="isEditing"
-                v-model="editForm.message"
-                rows="3"
-                class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 resize-none"
-              />
-              <p v-else class="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3 whitespace-pre-wrap">
-                {{ store.currentLead.message }}
-              </p>
-            </div>
-          </div>
 
           <!-- Card 2: Imóveis de Interesse -->
           <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm">
@@ -290,99 +197,6 @@
             </div>
           </div>
 
-          <!-- Card 4: Tarefas -->
-          <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400">Tarefas</h2>
-              <span class="text-xs text-slate-400">{{ leadTasks.length }} tarefa(s)</span>
-            </div>
-
-            <div class="space-y-2 mb-4 max-h-64 overflow-y-auto">
-              <div
-                v-for="task in leadTasks"
-                :key="task.id"
-                class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/50 group"
-              >
-                <button
-                  @click="toggleLeadTask(task)"
-                  class="flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors"
-                  :class="task.completed
-                    ? 'bg-emerald-500 border-emerald-500 text-white'
-                    : 'border-slate-300 dark:border-slate-500 hover:border-indigo-400'"
-                >
-                  <svg v-if="task.completed" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-2.5 h-2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
-                </button>
-                <div class="flex-1 min-w-0">
-                  <p class="text-xs font-medium text-slate-700 dark:text-slate-300 truncate" :class="{ 'line-through text-slate-400 dark:text-slate-500': task.completed }">
-                    {{ task.title }}
-                  </p>
-                  <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
-                    <span
-                      v-if="task.taskTypeName"
-                      :style="{ backgroundColor: (task.taskTypeColor ?? '#6366f1') + '20', color: task.taskTypeColor ?? '#6366f1' }"
-                      class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium"
-                    >
-                      {{ task.taskTypeName }}
-                    </span>
-                    <p
-                      v-if="task.dueAt"
-                      class="text-xs"
-                      :class="task.overdue && !task.completed ? 'text-red-500' : 'text-slate-400'"
-                    >
-                      {{ formatDate(task.dueAt) }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <p v-if="!leadTasks.length" class="text-xs text-slate-400 dark:text-slate-500 italic text-center py-4">
-                Nenhuma tarefa ainda
-              </p>
-            </div>
-
-            <!-- Inline new task form -->
-            <div class="border-t border-slate-100 dark:border-slate-700 pt-3 space-y-2">
-              <input
-                v-model="newTaskTitle"
-                type="text"
-                placeholder="Nova tarefa..."
-                class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                @keydown.enter.prevent="submitLeadTask"
-              />
-              <!-- Type pills -->
-              <div v-if="leadTaskTypes.length" class="flex flex-wrap gap-1.5">
-                <button
-                  v-for="type in leadTaskTypes"
-                  :key="type.id"
-                  type="button"
-                  @click="newTaskTypeId = newTaskTypeId === type.id ? undefined : type.id"
-                  :style="newTaskTypeId === type.id
-                    ? { backgroundColor: type.color, color: '#fff', borderColor: type.color }
-                    : { borderColor: type.color + '40', color: type.color }"
-                  class="px-2.5 py-0.5 rounded-full text-[10px] font-medium border-2 transition-all"
-                >
-                  {{ type.name }}
-                </button>
-              </div>
-              <div class="flex items-center gap-2">
-                <input
-                  v-model="newTaskDue"
-                  type="datetime-local"
-                  class="flex-1 px-3 py-2 text-xs border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                />
-                <button
-                  @click="submitLeadTask"
-                  :disabled="!newTaskTitle.trim() || addingLeadTask"
-                  class="px-3 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl text-xs font-medium disabled:opacity-50 transition-all whitespace-nowrap"
-                >
-                  <span v-if="addingLeadTask">...</span>
-                  <span v-else>+ Adicionar</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
           <!-- Card 5: WhatsApp -->
           <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm">
             <div class="flex items-center gap-2 mb-4">
@@ -490,38 +304,94 @@
         </div>
         <div class="space-y-6">
 
-          <!-- Card A: Status -->
+          <!-- Card 1: Lead Info (right column) -->
           <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm">
-            <h2 class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-4">Status do Lead</h2>
-
-            <div class="flex justify-center mb-4">
-              <span :class="statusClass(store.currentLead.status)" class="inline-flex px-4 py-1.5 rounded-full text-sm font-semibold">
-                {{ statusLabel(store.currentLead.status) }}
-              </span>
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400">Informações do Lead</h2>
+              <div class="flex items-center gap-2">
+                <button
+                  v-if="isEditing"
+                  @click="saveEdits"
+                  :disabled="savingEdit"
+                  class="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-lg text-xs font-medium disabled:opacity-50 transition-all"
+                >{{ savingEdit ? '...' : 'Salvar' }}</button>
+                <button
+                  @click="toggleEdit"
+                  class="px-3 py-1.5 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 rounded-lg text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                >{{ isEditing ? 'Cancelar' : 'Editar' }}</button>
+              </div>
             </div>
 
-            <div class="space-y-2">
-              <button
-                v-for="s in allStatuses"
-                :key="s.value"
-                @click="changeStatus(s.value)"
-                :disabled="store.currentLead.status === s.value || changingStatus"
-                :class="[
-                  'w-full px-4 py-2 rounded-xl text-sm font-medium transition-all border flex items-center justify-between',
-                  store.currentLead.status === s.value
-                    ? s.filledCls + ' cursor-default border-transparent'
-                    : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-indigo-300 dark:hover:border-indigo-600'
-                ]"
+            <div v-if="editError" class="mb-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-xs text-red-600 dark:text-red-400">
+              {{ editError }}
+            </div>
+
+            <div class="space-y-3">
+              <div>
+                <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-1">Nome</p>
+                <input v-if="isEditing" v-model="editForm.name" type="text"
+                  class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
+                <p v-else class="text-sm text-slate-800 dark:text-slate-200 font-medium">{{ store.currentLead.name }}</p>
+              </div>
+              <div>
+                <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-1">Email</p>
+                <input v-if="isEditing" v-model="editForm.email" type="email"
+                  class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
+                <p v-else class="text-sm text-slate-700 dark:text-slate-300">{{ store.currentLead.email ?? '—' }}</p>
+              </div>
+              <div>
+                <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-1">Telefone</p>
+                <input v-if="isEditing" v-model="editForm.phone" type="tel"
+                  class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
+                <p v-else class="text-sm text-slate-700 dark:text-slate-300">{{ store.currentLead.phone ?? '—' }}</p>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-1">Origem</p>
+                  <p class="text-sm text-slate-700 dark:text-slate-300">{{ store.currentLead.source === 'PORTAL' ? 'Portal' : 'Manual' }}</p>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-1">Criado em</p>
+                  <p class="text-sm text-slate-700 dark:text-slate-300">{{ formatDate(store.currentLead.createdAt) }}</p>
+                </div>
+              </div>
+              <div v-if="isEditing || store.currentLead.message" class="pt-2 border-t border-slate-100 dark:border-slate-700">
+                <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-1">Mensagem inicial</p>
+                <textarea v-if="isEditing" v-model="editForm.message" rows="3"
+                  class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 resize-none" />
+                <p v-else class="text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-700/50 rounded-xl p-2.5 whitespace-pre-wrap">{{ store.currentLead.message }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card A: Status do Lead (dropdown) -->
+          <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm">
+            <h2 class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-3">Status do Lead</h2>
+            <div class="relative">
+              <select
+                :value="store.currentLead.status"
+                @change="changeStatus(($event.target as HTMLSelectElement).value as LeadStatus)"
+                :disabled="changingStatus"
+                class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 appearance-none pr-9 disabled:opacity-60 cursor-pointer"
               >
-                <span>{{ s.label }}</span>
-                <svg v-if="changingStatus && store.currentLead.status !== s.value" class="animate-spin h-3.5 w-3.5 opacity-40" fill="none" viewBox="0 0 24 24">
+                <option v-for="s in allStatuses" :key="s.value" :value="s.value">{{ s.label }}</option>
+              </select>
+              <div v-if="changingStatus" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                <svg class="animate-spin h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                <svg v-else-if="store.currentLead.status === s.value" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </div>
+              <div v-else class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
-              </button>
+              </div>
+            </div>
+            <div class="mt-2 flex justify-center">
+              <span :class="statusClass(store.currentLead.status)" class="inline-flex px-3 py-1 rounded-full text-xs font-semibold">
+                {{ statusLabel(store.currentLead.status) }}
+              </span>
             </div>
           </div>
 
@@ -562,6 +432,87 @@
             <button v-else @click="showReassign = true" class="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 rounded-xl text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
               {{ store.currentLead.assignedToName ? 'Reatribuir' : 'Atribuir corretor' }}
             </button>
+          </div>
+
+          <!-- Card 4: Tarefas -->
+          <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400">Tarefas</h2>
+              <span class="text-xs text-slate-400">{{ leadTasks.length }} tarefa(s)</span>
+            </div>
+
+            <div class="space-y-2 mb-4 max-h-64 overflow-y-auto">
+              <div
+                v-for="task in leadTasks"
+                :key="task.id"
+                class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/50"
+              >
+                <button
+                  @click="toggleLeadTask(task)"
+                  class="flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors"
+                  :class="task.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 dark:border-slate-500 hover:border-indigo-400'"
+                >
+                  <svg v-if="task.completed" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-2.5 h-2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                </button>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-medium text-slate-700 dark:text-slate-300 truncate" :class="{ 'line-through text-slate-400 dark:text-slate-500': task.completed }">
+                    {{ task.title }}
+                  </p>
+                  <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
+                    <span
+                      v-if="task.taskTypeName"
+                      :style="{ backgroundColor: (task.taskTypeColor ?? '#6366f1') + '20', color: task.taskTypeColor ?? '#6366f1' }"
+                      class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium"
+                    >{{ task.taskTypeName }}</span>
+                    <p v-if="task.dueAt" class="text-xs" :class="task.overdue && !task.completed ? 'text-red-500' : 'text-slate-400'">
+                      {{ formatDate(task.dueAt) }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <p v-if="!leadTasks.length" class="text-xs text-slate-400 dark:text-slate-500 italic text-center py-4">
+                Nenhuma tarefa ainda
+              </p>
+            </div>
+
+            <div class="border-t border-slate-100 dark:border-slate-700 pt-3 space-y-2">
+              <input
+                v-model="newTaskTitle"
+                type="text"
+                placeholder="Nova tarefa..."
+                class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                @keydown.enter.prevent="submitLeadTask"
+              />
+              <div v-if="leadTaskTypes.length" class="flex flex-wrap gap-1.5">
+                <button
+                  v-for="type in leadTaskTypes"
+                  :key="type.id"
+                  type="button"
+                  @click="newTaskTypeId = newTaskTypeId === type.id ? undefined : type.id"
+                  :style="newTaskTypeId === type.id
+                    ? { backgroundColor: type.color, color: '#fff', borderColor: type.color }
+                    : { borderColor: type.color + '40', color: type.color }"
+                  class="px-2.5 py-0.5 rounded-full text-[10px] font-medium border-2 transition-all"
+                >{{ type.name }}</button>
+              </div>
+              <div class="flex items-center gap-2">
+                <input
+                  v-model="newTaskDue"
+                  type="datetime-local"
+                  class="flex-1 px-3 py-2 text-xs border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                />
+                <button
+                  @click="submitLeadTask"
+                  :disabled="!newTaskTitle.trim() || addingLeadTask"
+                  class="px-3 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl text-xs font-medium disabled:opacity-50 transition-all whitespace-nowrap"
+                >
+                  <span v-if="addingLeadTask">...</span>
+                  <span v-else>+ Adicionar</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- Card C: Histórico -->
@@ -645,11 +596,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useLeadStore } from '@/stores/lead'
 import { useAuthStore } from '@/stores/auth'
+import { useWebSocketStore } from '@/stores/websocket'
 import userService from '@/services/user'
 import propertyService from '@/services/property'
 import taskService from '@/services/task'
@@ -665,6 +617,7 @@ const route = useRoute()
 const router = useRouter()
 const store = useLeadStore()
 const authStore = useAuthStore()
+const wsStore = useWebSocketStore()
 const leadId = route.params.id as string
 
 // ── Status helpers ─────────────────────────────────────────────────────────
@@ -948,6 +901,8 @@ watch(waMessages, async () => {
   if (waChatRef.value) waChatRef.value.scrollTop = waChatRef.value.scrollHeight
 }, { deep: true })
 
+let unsubWa: (() => void) | null = null
+
 onMounted(async () => {
   store.currentLead = null
   await store.fetchLead(leadId)
@@ -971,5 +926,18 @@ onMounted(async () => {
   } catch { /* best-effort */ }
 
   loadWaData()
+
+  const tenantId = authStore.currentTenantId
+  if (tenantId && leadId) {
+    unsubWa = wsStore.subscribeToLeadWhatsapp(tenantId, leadId, (event) => {
+      if (event.type === 'WHATSAPP_MESSAGE' && event.payload?.direction === 'INBOUND') {
+        waMessages.value.push(event.payload)
+      }
+    })
+  }
+})
+
+onUnmounted(() => {
+  unsubWa?.()
 })
 </script>
