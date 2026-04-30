@@ -10,7 +10,7 @@
           <!-- View toggle -->
           <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1 gap-1">
             <button
-              @click="viewMode = 'list'"
+              @click="setViewMode('list')"
               :class="viewMode === 'list' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'"
               class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
             >
@@ -20,7 +20,7 @@
               Lista
             </button>
             <button
-              @click="viewMode = 'calendar'"
+              @click="setViewMode('calendar')"
               :class="viewMode === 'calendar' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'"
               class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
             >
@@ -565,7 +565,15 @@ import taskTypeService from '@/services/taskType'
 const store = useTaskStore()
 
 // ── View mode ──────────────────────────────────────────────────────────────
-const viewMode = ref<'list' | 'calendar'>('list')
+const TASKS_VIEW_KEY = 'rinoimob:tasks:viewMode'
+const viewMode = ref<'list' | 'calendar'>(
+  (localStorage.getItem(TASKS_VIEW_KEY) as 'list' | 'calendar') ?? 'calendar'
+)
+
+const setViewMode = (mode: 'list' | 'calendar') => {
+  viewMode.value = mode
+  localStorage.setItem(TASKS_VIEW_KEY, mode)
+}
 
 // ── Calendar state ─────────────────────────────────────────────────────────
 const calendarDate = ref(new Date())

@@ -7,131 +7,235 @@
       </div>
     </template>
 
-    <!-- Métricas rápidas -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-      <RouterLink to="/leads" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-[0_2px_8px_rgba(15,23,42,0.04)] hover:shadow-md transition-shadow">
-        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2">Leads</p>
-        <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ metrics.total }}</p>
-        <p class="text-xs text-slate-400 mt-1">total de leads</p>
+    <!-- Row 1: 4 metric cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <RouterLink
+        to="/leads"
+        class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow hover:shadow-md transition-shadow"
+      >
+        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2">Leads Totais</p>
+        <p class="text-3xl font-bold text-violet-600 dark:text-violet-400">{{ metrics.total }}</p>
+        <p class="text-xs text-slate-400 mt-1">Todos os períodos</p>
       </RouterLink>
-      <RouterLink to="/leads" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-[0_2px_8px_rgba(15,23,42,0.04)] hover:shadow-md transition-shadow">
-        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2">Novos leads</p>
-        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ metrics.newLeads }}</p>
-        <p class="text-xs text-slate-400 mt-1">{{ metrics.thisWeek }} esta semana</p>
+
+      <RouterLink
+        to="/leads"
+        class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow hover:shadow-md transition-shadow"
+      >
+        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2">Novos Esta Semana</p>
+        <p class="text-3xl font-bold text-slate-900 dark:text-white">{{ metrics.thisWeek }}</p>
+        <p class="text-xs text-slate-400 mt-1">↑ 0% vs semana anterior</p>
       </RouterLink>
-      <RouterLink to="/leads" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-[0_2px_8px_rgba(15,23,42,0.04)] hover:shadow-md transition-shadow">
-        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2">Em contato</p>
-        <p class="text-2xl font-bold text-amber-500">{{ metrics.contacted }}</p>
-        <p class="text-xs text-slate-400 mt-1">em andamento</p>
+
+      <RouterLink
+        to="/leads"
+        class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow hover:shadow-md transition-shadow"
+      >
+        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2">Em Contato</p>
+        <p class="text-3xl font-bold text-amber-500">{{ metrics.contacted }}</p>
+        <p class="text-xs text-slate-400 mt-1">Em andamento</p>
       </RouterLink>
-      <RouterLink to="/leads" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-[0_2px_8px_rgba(15,23,42,0.04)] hover:shadow-md transition-shadow">
-        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2">Ganhos</p>
-        <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ metrics.won }}</p>
-        <p class="text-xs text-slate-400 mt-1">{{ metrics.conversionRate.toFixed(0) }}% conversão</p>
+
+      <RouterLink
+        to="/leads"
+        class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow hover:shadow-md transition-shadow"
+      >
+        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-2">Taxa de Conversão</p>
+        <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{{ metrics.conversionRate.toFixed(0) }}%</p>
+        <p class="text-xs text-slate-400 mt-1">{{ metrics.won }} ganhos / {{ metrics.total }} leads</p>
       </RouterLink>
     </div>
 
-    <!-- Tarefas pendentes widget -->
-    <RouterLink to="/tarefas" class="flex items-center gap-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-4 shadow-[0_2px_8px_rgba(15,23,42,0.04)] hover:shadow-md transition-shadow">
-      <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center flex-shrink-0">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5 text-indigo-600 dark:text-indigo-400">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
+    <!-- Row 2: Pipeline de Vendas -->
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 mb-6 shadow">
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400">Pipeline de Vendas</p>
+        <RouterLink to="/leads" class="text-xs text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+          Ver tudo →
+        </RouterLink>
       </div>
-      <div class="flex-1">
-        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400">Tarefas pendentes</p>
-        <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ pendingTasksCount }}</p>
+      <div class="flex items-center gap-2">
+        <RouterLink
+          to="/leads"
+          class="flex-1 bg-violet-700/20 dark:bg-violet-900/40 border border-violet-500/30 rounded-xl p-3 text-center hover:opacity-90 transition-opacity"
+        >
+          <p class="text-2xl font-bold text-violet-300">{{ metrics.newLeads }}</p>
+          <p class="text-xs text-violet-300 font-medium mt-0.5">NOVOS</p>
+        </RouterLink>
+        <span class="text-slate-400 text-xl flex-shrink-0">›</span>
+        <RouterLink
+          to="/leads"
+          class="flex-1 bg-slate-600/30 dark:bg-slate-700/60 border border-slate-500/30 rounded-xl p-3 text-center hover:opacity-90 transition-opacity"
+        >
+          <p class="text-2xl font-bold text-slate-300">{{ metrics.contacted }}</p>
+          <p class="text-xs text-slate-300 font-medium mt-0.5">CONTATO</p>
+        </RouterLink>
+        <span class="text-slate-400 text-xl flex-shrink-0">›</span>
+        <RouterLink
+          to="/leads"
+          class="flex-1 bg-indigo-700/20 dark:bg-indigo-900/40 border border-indigo-500/30 rounded-xl p-3 text-center hover:opacity-90 transition-opacity"
+        >
+          <p class="text-2xl font-bold text-indigo-300">{{ metrics.qualified }}</p>
+          <p class="text-xs text-indigo-300 font-medium mt-0.5">QUALIF.</p>
+        </RouterLink>
+        <span class="text-slate-400 text-xl flex-shrink-0">›</span>
+        <RouterLink
+          to="/leads"
+          class="flex-1 bg-emerald-700/20 dark:bg-emerald-900/40 border border-emerald-500/30 rounded-xl p-3 text-center hover:opacity-90 transition-opacity"
+        >
+          <p class="text-2xl font-bold text-emerald-300">{{ metrics.won }}</p>
+          <p class="text-xs text-emerald-300 font-medium mt-0.5">GANHOS</p>
+        </RouterLink>
+        <span class="text-slate-400 text-xl flex-shrink-0">›</span>
+        <RouterLink
+          to="/leads"
+          class="flex-1 bg-red-700/20 dark:bg-red-900/40 border border-red-500/30 rounded-xl p-3 text-center hover:opacity-90 transition-opacity"
+        >
+          <p class="text-2xl font-bold text-red-300">{{ metrics.lost }}</p>
+          <p class="text-xs text-red-300 font-medium mt-0.5">PERDIDOS</p>
+        </RouterLink>
       </div>
-      <span class="text-xs text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium">Ver tarefas →</span>
-    </RouterLink>
+    </div>
 
-    <!-- Pipeline strip -->
-    <RouterLink to="/leads" class="grid grid-cols-5 gap-2 mb-6">
-      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/40 rounded-xl p-3 text-center">
-        <p class="text-lg font-bold text-blue-600 dark:text-blue-400">{{ metrics.newLeads }}</p>
-        <p class="text-xs text-blue-500 dark:text-blue-400 font-medium mt-0.5">Novos</p>
-      </div>
-      <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/40 rounded-xl p-3 text-center">
-        <p class="text-lg font-bold text-amber-600 dark:text-amber-400">{{ metrics.contacted }}</p>
-        <p class="text-xs text-amber-500 dark:text-amber-400 font-medium mt-0.5">Contato</p>
-      </div>
-      <div class="bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-800/40 rounded-xl p-3 text-center">
-        <p class="text-lg font-bold text-violet-600 dark:text-violet-400">{{ metrics.qualified }}</p>
-        <p class="text-xs text-violet-500 dark:text-violet-400 font-medium mt-0.5">Qualif.</p>
-      </div>
-      <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/40 rounded-xl p-3 text-center">
-        <p class="text-lg font-bold text-emerald-600 dark:text-emerald-400">{{ metrics.won }}</p>
-        <p class="text-xs text-emerald-500 dark:text-emerald-400 font-medium mt-0.5">Ganhos</p>
-      </div>
-      <div class="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/40 rounded-xl p-3 text-center">
-        <p class="text-lg font-bold text-red-500 dark:text-red-400">{{ metrics.lost }}</p>
-        <p class="text-xs text-red-400 font-medium mt-0.5">Perdidos</p>
-      </div>
-    </RouterLink>
-
+    <!-- Row 3: 3 columns -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <!-- Perfil -->
-      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[2rem] shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
-        <div class="flex items-center justify-between mb-5">
-          <h2 class="text-xs font-semibold tracking-[0.2em] uppercase text-slate-400 dark:text-slate-500">Perfil</h2>
-          <RouterLink to="/profile" class="text-xs font-semibold text-indigo-700 hover:text-indigo-800">
-            Editar
+
+      <!-- Left: Tarefas Pendentes -->
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow flex flex-col">
+        <div class="flex items-center justify-between mb-4">
+          <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400">Tarefas Pendentes</p>
+          <RouterLink to="/tarefas" class="text-xs text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+            Ver tudo →
           </RouterLink>
         </div>
-        <div class="space-y-4">
-          <div>
-            <p class="text-xs font-semibold tracking-[0.2em] uppercase text-slate-400 dark:text-slate-500 mb-1">Nome</p>
-            <p class="text-slate-800 dark:text-slate-200 font-medium">{{ authStore.currentUser?.firstName }} {{ authStore.currentUser?.lastName }}</p>
-          </div>
-          <div>
-            <p class="text-xs font-semibold tracking-[0.2em] uppercase text-slate-400 dark:text-slate-500 mb-1">Email</p>
-            <p class="text-slate-800 dark:text-slate-200 font-medium break-all">{{ authStore.currentUser?.email }}</p>
-          </div>
-          <div>
-            <p class="text-xs font-semibold tracking-[0.2em] uppercase text-slate-400 dark:text-slate-500 mb-1">Membro desde</p>
-            <p class="text-slate-800 dark:text-slate-200 font-medium">{{ formatDate(authStore.currentUser?.createdAt) }}</p>
-          </div>
+
+        <div class="flex-1 space-y-3">
+          <template v-if="pendingTasks.length > 0">
+            <div
+              v-for="task in pendingTasks"
+              :key="task.id"
+              class="flex items-center gap-3"
+            >
+              <span
+                class="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                :style="{ backgroundColor: task.taskTypeColor ?? '#6366f1' }"
+              />
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{{ task.title }}</p>
+              </div>
+              <template v-if="dueLabel(task.dueAt ?? undefined)">
+                <span
+                  class="text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0"
+                  :class="dueLabel(task.dueAt ?? undefined)!.classes"
+                >
+                  {{ dueLabel(task.dueAt ?? undefined)!.text }}
+                </span>
+              </template>
+            </div>
+          </template>
+          <p v-else class="text-sm text-slate-400 text-center py-4">Nenhuma tarefa pendente</p>
+        </div>
+
+        <RouterLink
+          to="/tarefas"
+          class="w-full mt-4 h-10 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center"
+        >
+          + Nova Tarefa
+        </RouterLink>
+      </div>
+
+      <!-- Middle: Atividade Recente -->
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow flex flex-col">
+        <div class="flex items-center justify-between mb-4">
+          <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400">Atividade Recente</p>
+          <RouterLink to="/leads" class="text-xs text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+            Ver tudo →
+          </RouterLink>
+        </div>
+
+        <div class="flex-1 space-y-3">
+          <template v-if="recentActivity.length > 0">
+            <div
+              v-for="event in recentActivity"
+              :key="event.id"
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold"
+                :class="eventIconBg(event.eventType)"
+              >
+                <span v-if="event.eventType === 'CREATED'">+</span>
+                <span v-else-if="event.eventType === 'STATUS_CHANGED'">⇄</span>
+                <span v-else-if="event.eventType === 'NOTE_ADDED'">💬</span>
+                <span v-else-if="event.eventType === 'ASSIGNED'">✓</span>
+                <span v-else>•</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{{ eventTitle(event.eventType) }}</p>
+                <p class="text-xs text-slate-400 truncate">{{ timeAgo(event.createdAt) }}</p>
+              </div>
+            </div>
+          </template>
+          <p v-else class="text-sm text-slate-400 text-center py-4">Nenhuma atividade recente</p>
+        </div>
+
+        <div class="mt-4 text-right">
+          <RouterLink to="/leads" class="text-xs text-indigo-600 hover:underline">Ver tudo →</RouterLink>
         </div>
       </div>
 
-      <!-- Ações rápidas -->
-      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[2rem] shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
-        <h2 class="text-xs font-semibold tracking-[0.2em] uppercase text-slate-400 dark:text-slate-500 mb-5">Ações rápidas</h2>
-        <div class="space-y-3">
-          <RouterLink
-            to="/profile"
-            class="flex items-center justify-center w-full h-12 bg-gradient-to-r from-violet-700 to-indigo-700 text-white rounded-2xl font-medium text-sm shadow-[0_6px_16px_rgba(79,70,229,0.25)] hover:translate-y-[-1px] transition-all duration-200"
-          >
-            Editar perfil &amp; senha
-          </RouterLink>
-        </div>
-      </div>
+      <!-- Right: Perfil -->
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow flex flex-col">
+        <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-4">Perfil</p>
 
-      <!-- Status da conta -->
-      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[2rem] shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
-        <h2 class="text-xs font-semibold tracking-[0.2em] uppercase text-slate-400 dark:text-slate-500 mb-5">Status da conta</h2>
-        <div class="space-y-4">
-          <div class="flex items-center justify-between">
-            <span class="text-slate-500 dark:text-slate-400 text-sm">Status</span>
+        <div class="flex flex-col items-center mb-4">
+          <div class="w-16 h-16 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center mb-3">
+            <span class="text-xl font-bold text-white">{{ initials() }}</span>
+          </div>
+          <p class="text-lg font-bold text-slate-900 dark:text-white text-center">
+            {{ authStore.currentUser?.firstName }} {{ authStore.currentUser?.lastName }}
+          </p>
+          <p class="text-xs text-slate-400 break-all text-center mt-0.5">{{ authStore.currentUser?.email }}</p>
+        </div>
+
+        <hr class="border-slate-200 dark:border-slate-700 mb-3" />
+
+        <div class="flex-1 space-y-0.5">
+          <div class="flex justify-between items-center py-1.5 text-sm">
+            <span class="text-slate-500">Membro desde</span>
+            <span class="font-medium text-slate-800 dark:text-slate-200">{{ formatDate(authStore.currentUser?.createdAt) }}</span>
+          </div>
+          <div class="flex justify-between items-center py-1.5 text-sm">
+            <span class="text-slate-500">Status</span>
             <span
               v-if="authStore.currentUser?.active"
-              class="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-xs font-semibold dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700"
-            >
-              Ativo
-            </span>
+              class="px-2 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-full text-xs font-semibold"
+            >Ativo</span>
             <span
               v-else
-              class="px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-semibold dark:bg-red-900/30 dark:text-red-300 dark:border-red-700"
-            >
-              Inativo
-            </span>
+              class="px-2 py-0.5 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-full text-xs font-semibold"
+            >Inativo</span>
           </div>
-          <div class="flex items-center justify-between">
-            <span class="text-slate-500 dark:text-slate-400 text-sm">Último acesso</span>
-            <span class="text-slate-800 dark:text-slate-200 text-sm font-medium">Agora</span>
+          <div class="flex justify-between items-center py-1.5 text-sm">
+            <span class="text-slate-500">Último acesso</span>
+            <span class="font-medium text-slate-800 dark:text-slate-200">Agora</span>
           </div>
         </div>
+
+        <RouterLink
+          :to="{ path: '/leads', query: { new: '1' } }"
+          class="w-full mt-4 h-10 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center"
+        >
+          + Novo Lead
+        </RouterLink>
+        <RouterLink
+          to="/profile"
+          class="w-full mt-2 h-10 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors flex items-center justify-center"
+        >
+          Editar perfil
+        </RouterLink>
       </div>
+
     </div>
   </AppLayout>
 </template>
@@ -143,10 +247,10 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 import leadService from '@/services/lead'
 import taskService from '@/services/task'
+import type { TaskResponse } from '@/types/task'
+import type { LeadEventResponse } from '@/types/lead'
 
 const authStore = useAuthStore()
-
-const pendingTasksCount = ref(0)
 
 const metrics = ref({
   total: 0,
@@ -159,23 +263,98 @@ const metrics = ref({
   conversionRate: 0,
 })
 
-const formatDate = (date: string | undefined) => {
+const pendingTasks = ref<TaskResponse[]>([])
+const recentActivity = ref<(LeadEventResponse & { leadName?: string })[]>([])
+
+function formatDate(date?: string): string {
   if (!date) return 'N/A'
   return new Date(date).toLocaleDateString('pt-BR', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
   })
+}
+
+function dueLabel(dueAt?: string): { text: string; classes: string } | null {
+  if (!dueAt) return null
+  const now = new Date()
+  const due = new Date(dueAt)
+  const todayStr = now.toDateString()
+  const dueStr = due.toDateString()
+  const tomorrow = new Date(now)
+  tomorrow.setDate(now.getDate() + 1)
+  const tomorrowStr = tomorrow.toDateString()
+  if (dueStr === todayStr) {
+    return { text: 'Hoje', classes: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' }
+  }
+  if (dueStr === tomorrowStr) {
+    return { text: 'Amanhã', classes: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' }
+  }
+  if (due < now) {
+    return { text: 'Atrasada', classes: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' }
+  }
+  const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+  return { text: days[due.getDay()], classes: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300' }
+}
+
+function timeAgo(date: string): string {
+  const d = new Date(date)
+  const now = new Date()
+  const todayStr = now.toDateString()
+  const yesterday = new Date(now)
+  yesterday.setDate(now.getDate() - 1)
+  const dStr = d.toDateString()
+  const timeStr = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  if (dStr === todayStr) return `Hoje às ${timeStr}`
+  if (dStr === yesterday.toDateString()) return `Ontem às ${timeStr}`
+  const diffMs = now.getTime() - d.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  return `${diffDays} dias atrás`
+}
+
+function eventTitle(type: string): string {
+  const map: Record<string, string> = {
+    CREATED: 'Novo lead criado',
+    STATUS_CHANGED: 'Status atualizado',
+    NOTE_ADDED: 'Nota adicionada',
+    ASSIGNED: 'Lead atribuído',
+    PROPERTY_LINKED: 'Imóvel vinculado',
+    TASK_COMPLETED: 'Tarefa concluída',
+  }
+  return map[type] ?? 'Atividade registrada'
+}
+
+function eventIconBg(type: string): string {
+  if (type === 'CREATED') return 'bg-emerald-500'
+  if (type === 'STATUS_CHANGED') return 'bg-blue-500'
+  if (type === 'NOTE_ADDED') return 'bg-indigo-500'
+  if (type === 'TASK_COMPLETED' || type === 'ASSIGNED') return 'bg-violet-500'
+  return 'bg-slate-500'
+}
+
+function initials(): string {
+  return `${authStore.currentUser?.firstName?.[0] ?? ''}${authStore.currentUser?.lastName?.[0] ?? ''}`.toUpperCase()
 }
 
 onMounted(async () => {
   try {
-    const stats = await leadService.getStats()
-    metrics.value = stats
-  } catch { /* métricas são best-effort */ }
+    metrics.value = await leadService.getStats()
+  } catch { /* best-effort */ }
+
   try {
-    const result = await taskService.list({ pending: true, size: 1 })
-    pendingTasksCount.value = result.totalElements
+    const r = await taskService.list({ pending: true, size: 3 })
+    pendingTasks.value = r.content
+  } catch { /* best-effort */ }
+
+  try {
+    const page = await leadService.list({ size: 3 })
+    const allEvents: (LeadEventResponse & { leadName?: string })[] = []
+    for (const lead of page.content) {
+      const evs = await leadService.getEvents(lead.id)
+      evs.forEach(e => allEvents.push({ ...e, leadName: lead.name }))
+    }
+    allEvents.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    recentActivity.value = allEvents.slice(0, 5)
   } catch { /* best-effort */ }
 })
 </script>
