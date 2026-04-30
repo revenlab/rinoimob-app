@@ -326,7 +326,10 @@ const leadStore = useLeadStore()
 const router = useRouter()
 
 // ── View mode ──────────────────────────────────────────────────────────────
-const viewMode = ref<'table' | 'kanban'>('table')
+const LEADS_VIEW_KEY = 'rinoimob:leads:viewMode'
+const viewMode = ref<'table' | 'kanban'>(
+  (localStorage.getItem(LEADS_VIEW_KEY) as 'table' | 'kanban') ?? 'kanban'
+)
 const kanbanLoading = ref(false)
 const kanbanAllLeads = ref<LeadResponse[]>([])
 
@@ -342,6 +345,7 @@ const kanbanLeads = (status: LeadStatus) => kanbanAllLeads.value.filter(l => l.s
 
 const switchView = async (mode: 'table' | 'kanban') => {
   viewMode.value = mode
+  localStorage.setItem(LEADS_VIEW_KEY, mode)
   if (mode === 'kanban') {
     await loadKanban()
   }
@@ -475,7 +479,11 @@ const loadLeads = () => {
 }
 
 onMounted(async () => {
-  loadLeads()
+  if (viewMode.value === 'kanban') {
+    loadKanban()
+  } else {
+    loadLeads()
+  }
   try {
     brokers.value = await userService.listActive()
   } catch {

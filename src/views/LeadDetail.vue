@@ -289,9 +289,100 @@
               </button>
             </div>
           </div>
-        </div>
 
-        <!-- ── Right sidebar (col-span-1) ────────────────────────────────── -->
+          <!-- Card 4: Tarefas -->
+          <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400">Tarefas</h2>
+              <span class="text-xs text-slate-400">{{ leadTasks.length }} tarefa(s)</span>
+            </div>
+
+            <div class="space-y-2 mb-4 max-h-64 overflow-y-auto">
+              <div
+                v-for="task in leadTasks"
+                :key="task.id"
+                class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/50 group"
+              >
+                <button
+                  @click="toggleLeadTask(task)"
+                  class="flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors"
+                  :class="task.completed
+                    ? 'bg-emerald-500 border-emerald-500 text-white'
+                    : 'border-slate-300 dark:border-slate-500 hover:border-indigo-400'"
+                >
+                  <svg v-if="task.completed" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-2.5 h-2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                </button>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-medium text-slate-700 dark:text-slate-300 truncate" :class="{ 'line-through text-slate-400 dark:text-slate-500': task.completed }">
+                    {{ task.title }}
+                  </p>
+                  <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
+                    <span
+                      v-if="task.taskTypeName"
+                      :style="{ backgroundColor: (task.taskTypeColor ?? '#6366f1') + '20', color: task.taskTypeColor ?? '#6366f1' }"
+                      class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium"
+                    >
+                      {{ task.taskTypeName }}
+                    </span>
+                    <p
+                      v-if="task.dueAt"
+                      class="text-xs"
+                      :class="task.overdue && !task.completed ? 'text-red-500' : 'text-slate-400'"
+                    >
+                      {{ formatDate(task.dueAt) }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <p v-if="!leadTasks.length" class="text-xs text-slate-400 dark:text-slate-500 italic text-center py-4">
+                Nenhuma tarefa ainda
+              </p>
+            </div>
+
+            <!-- Inline new task form -->
+            <div class="border-t border-slate-100 dark:border-slate-700 pt-3 space-y-2">
+              <input
+                v-model="newTaskTitle"
+                type="text"
+                placeholder="Nova tarefa..."
+                class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                @keydown.enter.prevent="submitLeadTask"
+              />
+              <!-- Type pills -->
+              <div v-if="leadTaskTypes.length" class="flex flex-wrap gap-1.5">
+                <button
+                  v-for="type in leadTaskTypes"
+                  :key="type.id"
+                  type="button"
+                  @click="newTaskTypeId = newTaskTypeId === type.id ? undefined : type.id"
+                  :style="newTaskTypeId === type.id
+                    ? { backgroundColor: type.color, color: '#fff', borderColor: type.color }
+                    : { borderColor: type.color + '40', color: type.color }"
+                  class="px-2.5 py-0.5 rounded-full text-[10px] font-medium border-2 transition-all"
+                >
+                  {{ type.name }}
+                </button>
+              </div>
+              <div class="flex items-center gap-2">
+                <input
+                  v-model="newTaskDue"
+                  type="datetime-local"
+                  class="flex-1 px-3 py-2 text-xs border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                />
+                <button
+                  @click="submitLeadTask"
+                  :disabled="!newTaskTitle.trim() || addingLeadTask"
+                  class="px-3 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl text-xs font-medium disabled:opacity-50 transition-all whitespace-nowrap"
+                >
+                  <span v-if="addingLeadTask">...</span>
+                  <span v-else>+ Adicionar</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="space-y-6">
 
           <!-- Card A: Status -->
@@ -453,14 +544,20 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useLeadStore } from '@/stores/lead'
+import { useAuthStore } from '@/stores/auth'
 import userService from '@/services/user'
 import propertyService from '@/services/property'
+import taskService from '@/services/task'
+import taskTypeService from '@/services/taskType'
+import type { TaskTypeResponse } from '@/types/task'
+import type { TaskResponse } from '@/types/task'
 import type { LeadStatus, LeadEventType, InterestLevel, LeadPropertyResponse, UpdateLeadRequest, UserSummary } from '@/types/lead'
 import type { PropertySummaryResponse } from '@/types/property'
 
 const route = useRoute()
 const router = useRouter()
 const store = useLeadStore()
+const authStore = useAuthStore()
 const leadId = route.params.id as string
 
 // ── Status helpers ─────────────────────────────────────────────────────────
@@ -645,6 +742,42 @@ const setInterestLevel = async (lp: LeadPropertyResponse, level: InterestLevel) 
   await store.updateLeadPropertyInterest(leadId, lp.id, level)
 }
 
+// ── Lead tasks ─────────────────────────────────────────────────────────────
+const leadTasks = ref<TaskResponse[]>([])
+const newTaskTitle = ref('')
+const newTaskDue = ref('')
+const newTaskTypeId = ref<string | undefined>(undefined)
+const addingLeadTask = ref(false)
+const leadTaskTypes = ref<TaskTypeResponse[]>([])
+
+const toggleLeadTask = async (task: TaskResponse) => {
+  try {
+    const updated = await taskService.complete(task.id)
+    const idx = leadTasks.value.findIndex(t => t.id === task.id)
+    if (idx !== -1) leadTasks.value[idx] = updated
+  } catch { /* best-effort */ }
+}
+
+const submitLeadTask = async () => {
+  if (!newTaskTitle.value.trim()) return
+  addingLeadTask.value = true
+  try {
+    const task = await taskService.create({
+      title: newTaskTitle.value.trim(),
+      leadId,
+      assignedTo: authStore.currentUser?.id,
+      dueAt: newTaskDue.value || undefined,
+      taskTypeId: newTaskTypeId.value || undefined,
+    })
+    leadTasks.value = [task, ...leadTasks.value]
+    newTaskTitle.value = ''
+    newTaskDue.value = ''
+    newTaskTypeId.value = undefined
+  } catch { /* best-effort */ } finally {
+    addingLeadTask.value = false
+  }
+}
+
 // ── Delete ─────────────────────────────────────────────────────────────────
 const showDeleteConfirm = ref(false)
 
@@ -670,5 +803,14 @@ onMounted(async () => {
 
   if (brokersData.status === 'fulfilled') brokers.value = brokersData.value
   if (propertiesData.status === 'fulfilled') properties.value = propertiesData.value.content
+
+  try {
+    const taskResult = await taskService.list({ leadId, size: 50 })
+    leadTasks.value = taskResult.content
+  } catch { /* best-effort */ }
+
+  try {
+    leadTaskTypes.value = await taskTypeService.list()
+  } catch { /* best-effort */ }
 })
 </script>
