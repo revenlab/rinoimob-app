@@ -115,6 +115,12 @@ const router = createRouter({
       name: 'Equipe',
       component: () => import('@/views/Equipe.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/automations',
+      name: 'Automations',
+      component: () => import('@/views/Automations.vue'),
+      meta: { requiresAuth: true, title: 'Automações' }
     }
   ]
 })
