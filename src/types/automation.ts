@@ -25,6 +25,21 @@ export enum ActionType {
   WAIT = 'WAIT'
 }
 
+export enum WhatsappRecipientType {
+  LEAD = 'LEAD',
+  ASSIGNED_USER = 'ASSIGNED_USER',
+  CUSTOM_NUMBER = 'CUSTOM_NUMBER'
+}
+
+export interface SendWhatsappActionParams {
+  instanceId: string
+  recipientType: WhatsappRecipientType | string
+  recipientValue?: string        // For CUSTOM_NUMBER
+  recipientPhone?: string        // For ASSIGNED_USER (optional override)
+  message?: string
+  messageTemplate?: string
+}
+
 export enum NodeType {
   TRIGGER = 'TRIGGER',
   CONDITION = 'CONDITION',

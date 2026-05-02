@@ -89,16 +89,7 @@
 
       <!-- SEND_WHATSAPP params -->
       <template v-if="node.data?.actionType === 'SEND_WHATSAPP'">
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Mensagem</label>
-          <textarea
-            :value="node.data?.parameters?.message || ''"
-            @input="(e) => updateParam('message', (e.target as HTMLTextAreaElement).value)"
-            placeholder="Texto da mensagem WhatsApp..."
-            rows="3"
-            class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm resize-none"
-          />
-        </div>
+        <SendWhatsappActionPanel :node="node" @update="(nodeId, data) => emit('update', nodeId, data)" />
       </template>
 
       <!-- SEND_EMAIL params -->
@@ -228,7 +219,9 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { Node } from '@vue-flow/core'
+import SendWhatsappActionPanel from './SendWhatsappActionPanel.vue'
 
 const props = defineProps<{ node: Node }>()
 const emit = defineEmits<{
