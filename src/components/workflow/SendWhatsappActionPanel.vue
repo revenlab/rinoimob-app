@@ -95,15 +95,6 @@
           />
           <span class="text-sm text-slate-700 dark:text-slate-300">Template</span>
         </label>
-        <label class="flex items-center gap-2 cursor-pointer">
-          <input
-            type="radio"
-            :checked="messageMode === 'auto'"
-            @change="messageMode = 'auto'"
-            class="w-4 h-4"
-          />
-          <span class="text-sm text-slate-700 dark:text-slate-300">Auto-gerada (padrão)</span>
-        </label>
       </div>
 
       <!-- Explicit Message -->
@@ -137,16 +128,6 @@
           <strong>Preview:</strong> {{ getTemplatePreview(node.data?.parameters?.messageTemplate) }}
         </div>
       </div>
-
-      <!-- Auto-generated Message -->
-      <div v-if="messageMode === 'auto'" class="p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
-        <p class="text-xs text-slate-600 dark:text-slate-400">
-          A mensagem será gerada automaticamente a partir do nome do lead:
-        </p>
-        <p class="text-sm text-slate-700 dark:text-slate-300 mt-2 italic">
-          "Hi {leadName}, thanks for your interest in our service!"
-        </p>
-      </div>
     </div>
 
     <!-- Help Text -->
@@ -179,12 +160,13 @@ const instances = ref<WhatsappInstance[]>([])
 
 // Determine message mode based on current parameters
 const messageMode = computed({
-  get() {
+  get(): 'explicit' | 'template' {
     if (props.node.data?.parameters?.message) return 'explicit'
     if (props.node.data?.parameters?.messageTemplate) return 'template'
-    return 'auto'
+    // Default to 'explicit' to encourage custom messages
+    return 'explicit'
   },
-  set(value: string) {
+  set(value: 'explicit' | 'template') {
     // When switching modes, clear conflicting fields
     const newParameters = { ...props.node.data?.parameters }
     
@@ -192,9 +174,6 @@ const messageMode = computed({
       delete newParameters.messageTemplate
     } else if (value === 'template') {
       delete newParameters.message
-    } else {
-      delete newParameters.message
-      delete newParameters.messageTemplate
     }
     
     emit('update', props.node.id, {

@@ -462,6 +462,25 @@ function validateWorkflow(): { valid: boolean; errors: string[] } {
     errors.push(`• ${nodesWithoutConfig.length} nó(s) sem configuração completa`)
   }
 
+  // Verificar ações SEND_WHATSAPP têm instanceId configurada
+  const whatsappActions = nodes.value.filter(
+    n => n.type === 'ACTION' && n.data?.actionType === 'SEND_WHATSAPP'
+  )
+  const whatsappWithoutInstance = whatsappActions.filter(
+    n => !n.data?.parameters?.instanceId || n.data.parameters.instanceId.trim() === ''
+  )
+  if (whatsappWithoutInstance.length > 0) {
+    errors.push(`• ${whatsappWithoutInstance.length} ação(ões) WhatsApp sem instância configurada`)
+  }
+
+  // Verificar ações SEND_WHATSAPP têm mensagem configurada
+  const whatsappWithoutMessage = whatsappActions.filter(
+    n => !n.data?.parameters?.message && !n.data?.parameters?.messageTemplate
+  )
+  if (whatsappWithoutMessage.length > 0) {
+    errors.push(`• ${whatsappWithoutMessage.length} ação(ões) WhatsApp sem mensagem configurada`)
+  }
+
   // Verificar nós órfãos (não conectados)
   const connectedNodes = new Set<string>()
   edges.value.forEach(e => {
