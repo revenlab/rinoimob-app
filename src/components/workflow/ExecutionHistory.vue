@@ -1,17 +1,17 @@
 <template>
   <div class="space-y-4">
-    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Execution History</h3>
+    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Histórico de Execuções</h3>
 
     <div class="relative overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
       <table class="w-full text-sm">
         <thead class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
           <tr>
-            <th class="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">Triggered At</th>
+            <th class="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">Disparado em</th>
             <th class="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">Event</th>
             <th class="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">Status</th>
-            <th class="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">Path</th>
-            <th class="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">Duration</th>
-            <th class="px-4 py-3 text-center font-semibold text-slate-700 dark:text-slate-300">Actions</th>
+            <th class="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">Caminho</th>
+            <th class="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">Duração</th>
+            <th class="px-4 py-3 text-center font-semibold text-slate-700 dark:text-slate-300">Ações</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
@@ -48,14 +48,14 @@
                 </div>
               </td>
               <td class="px-4 py-3 text-slate-700 dark:text-slate-300">
-                {{ getDuration(exec) }}
+                {{ getDuração(exec) }}
               </td>
               <td class="px-4 py-3 text-center">
                 <button
                   @click="expandedId = expandedId === exec.id ? null : exec.id"
                   class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
                 >
-                  {{ expandedId === exec.id ? 'Hide' : 'Show' }}
+                  {{ expandedId === exec.id ? 'Ocultar' : 'Detalhes' }}
                 </button>
               </td>
             </tr>
@@ -72,13 +72,13 @@
                   </div>
 
                   <div v-if="expandedExecution.resultData" class="p-3 bg-slate-100 dark:bg-slate-900 rounded">
-                    <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">Result Data</p>
+                    <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">Dados do Resultado</p>
                     <pre class="text-xs text-slate-600 dark:text-slate-400 overflow-x-auto mt-1">{{ JSON.stringify(expandedExecution.resultData, null, 2) }}</pre>
                   </div>
 
                   <div class="text-xs text-slate-500 dark:text-slate-400">
                     <p v-if="expandedExecution.completedAt">
-                      Duration: {{ getDuration(expandedExecution) }}
+                      Duração: {{ getDuração(expandedExecution) }}
                     </p>
                   </div>
                 </div>
@@ -88,7 +88,7 @@
 
           <tr v-else>
             <td colspan="6" class="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
-              No executions yet
+              Nenhuma execução ainda
             </td>
           </tr>
         </tbody>
@@ -142,8 +142,8 @@ function statusDotClass(status: WorkflowExecutionStatus) {
   }
 }
 
-function getDuration(exec: AutomationExecution): string {
-  if (!exec.completedAt) return 'Running...'
+function getDuração(exec: AutomationExecution): string {
+  if (!exec.completedAt) return 'Executando...'
   const start = new Date(exec.createdAt).getTime()
   const end = new Date(exec.completedAt).getTime()
   const ms = end - start

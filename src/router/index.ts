@@ -121,6 +121,18 @@ const router = createRouter({
       name: 'Automations',
       component: () => import('@/views/Automations.vue'),
       meta: { requiresAuth: true, title: 'Automações' }
+    },
+    {
+      path: '/automations/new',
+      name: 'AutomationNew',
+      component: () => import('@/views/AutomationEditor.vue'),
+      meta: { requiresAuth: true, title: 'New Automation' }
+    },
+    {
+      path: '/automations/:id/edit',
+      name: 'AutomationEdit',
+      component: () => import('@/views/AutomationEditor.vue'),
+      meta: { requiresAuth: true, title: 'Edit Automation' }
     }
   ]
 })
