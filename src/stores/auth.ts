@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User, TenantInfo, LoginRequest, RegisterRequest, TenantRegistrationRequest, LoginResponse, MeResponse } from '@/types/auth'
 import authService from '@/services/auth'
+import { connectWebSocket } from '@/services/websocket'
 
 const TOKEN_KEY = 'auth_token'
 const REFRESH_TOKEN_KEY = 'refresh_token'
@@ -262,6 +263,9 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem(TOKEN_KEY, response.accessToken)
     localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken)
     localStorage.setItem(USER_KEY, JSON.stringify(response.user))
+    
+    // Connect WebSocket with the new access token
+    connectWebSocket(response.accessToken)
   }
 
   return {

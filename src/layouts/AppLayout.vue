@@ -4,6 +4,7 @@ import { RouterLink, useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useTheme } from '@/composables/useTheme'
 import { useWebSocketStore } from '@/stores/websocket'
+import NotificationBell from '@/components/NotificationBell.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -275,6 +276,8 @@ const handleLogout = async () => {
             <h1 class="text-lg font-bold text-slate-900 dark:text-white">{{ $route.meta.title as string ?? '' }}</h1>
           </slot>
         </div>
+        <!-- Notification Bell -->
+        <NotificationBell />
         <!-- Theme toggle -->
         <button @click="toggle" class="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700 transition shrink-0" :title="isDark ? 'Tema claro' : 'Tema escuro'">
           <!-- Moon icon when light -->

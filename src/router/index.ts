@@ -133,6 +133,12 @@ const router = createRouter({
       name: 'AutomationEdit',
       component: () => import('@/views/AutomationEditor.vue'),
       meta: { requiresAuth: true, title: 'Edit Automation' }
+    },
+    {
+      path: '/notifications',
+      name: 'Notifications',
+      component: () => import('@/views/NotificationsView.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })

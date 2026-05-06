@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login CORS</title>
+    <style>
+        body { font-family: monospace; margin: 20px; background: #f5f5f5; }
+        .log { background: white; padding: 15px; margin: 10px 0; border-left: 4px solid #333; }
+        .error { border-left-color: #d32f2f; color: #d32f2f; }
+        .success { border-left-color: #388e3c; color: #388e3c; }
+        .info { border-left-color: #1976d2; color: #1976d2; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🧪 CORS Debug Test</h1>
+    <button onclick="testIdentify()">Test Identify (no auth)</button>
+    <button onclick="testLeads()">Test GET /leads (with auth)</button>
+    <button onclick="clearLogs()">Clear Logs</button>
+    
+    <div id="logs"></div>
+
+    <script>
+        const logsDiv = document.getElementById('logs');
+
+        function log(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = new Date().toLocaleTimeString() + ' — ' + msg;
+            logsDiv.appendChild(div);
+            console.log(msg);
+        }
+
+        function clearLogs() {
+            logsDiv.innerHTML = '';
+        }
+
+        async function testIdentify() {
+            log('Testing /api/v1/auth/identify...', 'info');
+            
+            try {
+                const response = await fetch('/api/v1/auth/identify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'test@rinoimob.local',
+                        password: 'Test123@'
+                    })
+                });
+
+                log(`Response Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                
+                // Log all headers
+                const headersObj = {};
+                response.headers.forEach((value, name) => {
+                    if (name.toLowerCase().includes('access-control') || name.toLowerCase().includes('cors')) {
+                        headersObj[name] = value;
+                    }
+                });
+                log('CORS Headers: ' + JSON.stringify(headersObj), 'info');
+
+                const data = await response.json();
+                if (response.ok) {
+                    log('✅ Success! PreAuthToken received', 'success');
+                    log('Tenants: ' + JSON.stringify(data.tenants), 'success');
+                } else {
+                    log('❌ Error: ' + (data.message || 'Unknown error'), 'error');
+                }
+            } catch (e) {
+                log('❌ Request failed: ' + e.message, 'error');
+                log('Check browser console for CORS details', 'error');
+            }
+        }
+
+        async function testLeads() {
+            const token = prompt('Enter Bearer token (or leave empty)');
+            
+            log('Testing GET /api/v1/leads...', 'info');
+            
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                
+                const response = await fetch('/api/v1/leads', {
+                    method: 'GET',
+                    headers
+                });
+
+                log(`Response Status: ${response.status}`, response.ok ? 'success' : 'error');
+                const data = await response.text();
+                log('Response: ' + data.substring(0, 200), response.ok ? 'success' : 'error');
+            } catch (e) {
+                log('❌ Request failed: ' + e.message, 'error');
+            }
+        }
+
+        window.onload = () => {
+            log('Test page loaded from: ' + window.location.href, 'info');
+        };
+    </script>
+</body>
+</html>
