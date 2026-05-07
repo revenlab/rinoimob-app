@@ -294,14 +294,18 @@ onMounted(async () => {
 })
 
 function handleKeyDown(e: KeyboardEvent) {
-  if (e.key === 'Delete' || e.key === 'Backspace') {
-    if (selectedNode.value) {
-      onNodeDelete(selectedNode.value.id)
-      selectedNode.value = null
-    } else if (selectedEdge.value) {
-      edges.value = edges.value.filter(ed => ed.id !== selectedEdge.value.id)
-      selectedEdge.value = null
-    }
+  if (e.key !== 'Delete') return
+
+  // Don't delete nodes when the user is typing in an input, textarea or contenteditable
+  const tag = (e.target as HTMLElement)?.tagName
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return
+
+  if (selectedNode.value) {
+    onNodeDelete(selectedNode.value.id)
+    selectedNode.value = null
+  } else if (selectedEdge.value) {
+    edges.value = edges.value.filter(ed => ed.id !== selectedEdge.value.id)
+    selectedEdge.value = null
   }
 }
 
