@@ -90,6 +90,17 @@ export const useNotificationStore = defineStore('notification', () => {
     }
   }
 
+  const deleteAllNotifications = async () => {
+    try {
+      await notificationService.deleteAllNotifications()
+      notifications.value = []
+      stats.value = { unreadCount: 0, totalCount: 0 }
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to delete all notifications'
+      console.error('Error deleting all notifications:', err)
+    }
+  }
+
   const addNotification = (notification: InAppNotification) => {
     const exists = notifications.value.some(n => n.id === notification.id)
     if (!exists) {
@@ -108,7 +119,9 @@ export const useNotificationStore = defineStore('notification', () => {
       return
     }
 
-    const topic = `/user/${userId}/queue/notifications`
+    // Spring routes /user/queue/notifications to the connected principal's session.
+    // Principal name = userId (set in WebSocketAuthInterceptor).
+    const topic = `/user/queue/notifications`
     const unsubscribe = subscribe(topic, (notification: InAppNotification) => {
       console.log('Received notification:', notification)
       addNotification(notification)
@@ -132,6 +145,7 @@ export const useNotificationStore = defineStore('notification', () => {
     markAllAsRead,
     deleteNotification,
     addNotification,
+    deleteAllNotifications,
     subscribeToNotifications,
   }
 })

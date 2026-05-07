@@ -58,8 +58,9 @@ const notificationService = {
   },
 
   async deleteAllNotifications(): Promise<void> {
-    const unread = await this.getUnreadNotifications()
-    await Promise.all(unread.map(n => this.deleteNotification(n.id)))
+    await apiFetch(`${API_BASE}/notifications/in-app`, {
+      method: 'DELETE'
+    })
   }
 }
 
