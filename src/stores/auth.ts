@@ -264,8 +264,10 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken)
     localStorage.setItem(USER_KEY, JSON.stringify(response.user))
     
-    // Connect WebSocket with the new access token
-    connectWebSocket(response.accessToken)
+    // Connect WebSocket — on auth failure (expired token), force logout
+    connectWebSocket(response.accessToken, undefined, () => {
+      logout()
+    })
   }
 
   return {
