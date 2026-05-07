@@ -4,12 +4,14 @@ import { RouterLink, useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useTheme } from '@/composables/useTheme'
 import { useWebSocketStore } from '@/stores/websocket'
+import { useNotificationStore } from '@/stores/notification'
 import NotificationBell from '@/components/NotificationBell.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 const { isDark, toggle } = useTheme()
+const notificationStore = useNotificationStore()
 
 // ── Notifications ─────────────────────────────────────────────────────────
 interface AppNotification {
@@ -59,15 +61,18 @@ function setupWsSubscription() {
 
 onMounted(() => {
   wsStore.connect()
-  // Wait for connection before subscribing
+  // Wait for connection before subscribing to both WhatsApp events and in-app notifications
   const waitAndSub = () => {
     if (wsStore.connected) {
       setupWsSubscription()
+      notificationStore.subscribeToNotifications()
     } else {
       setTimeout(waitAndSub, 500)
     }
   }
   waitAndSub()
+  // Fetch initial notification count
+  notificationStore.fetchStats()
 })
 
 onUnmounted(() => {
