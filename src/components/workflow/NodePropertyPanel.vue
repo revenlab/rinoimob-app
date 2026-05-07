@@ -144,6 +144,16 @@
       <!-- SEND_NOTIFICATION params -->
       <template v-if="node.data?.actionType === 'SEND_NOTIFICATION'">
         <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Título</label>
+          <input
+            :value="node.data?.parameters?.title || ''"
+            @input="(e) => updateParam('title', (e.target as HTMLInputElement).value)"
+            type="text"
+            placeholder="Título da notificação (opcional)"
+            class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm"
+          />
+        </div>
+        <div>
           <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Mensagem</label>
           <textarea
             :value="node.data?.parameters?.message || ''"
@@ -151,6 +161,27 @@
             placeholder="Texto da notificação..."
             rows="2"
             class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm resize-none"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Destinatário</label>
+          <select
+            :value="node.data?.parameters?.recipientType || 'ASSIGNED_USER'"
+            @change="(e) => updateParam('recipientType', (e.target as HTMLSelectElement).value)"
+            class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm"
+          >
+            <option value="ASSIGNED_USER">Usuário atribuído ao lead</option>
+            <option value="SPECIFIC_USER">Usuário específico (ID)</option>
+          </select>
+        </div>
+        <div v-if="node.data?.parameters?.recipientType === 'SPECIFIC_USER'">
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">ID do Usuário</label>
+          <input
+            :value="node.data?.parameters?.userId || ''"
+            @input="(e) => updateParam('userId', (e.target as HTMLInputElement).value)"
+            type="text"
+            placeholder="UUID do usuário destinatário"
+            class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm"
           />
         </div>
       </template>
