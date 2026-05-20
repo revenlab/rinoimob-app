@@ -71,6 +71,10 @@ export const useTeamStore = defineStore('team', () => {
     if (idx !== -1) users.value[idx] = { ...users.value[idx], active: false }
   }
 
+  async function resendInvitation(userId: string): Promise<void> {
+    await userManagementService.resendInvitation(userId)
+  }
+
   return {
     roles,
     users,
@@ -84,5 +88,6 @@ export const useTeamStore = defineStore('team', () => {
     inviteUser,
     assignRole,
     deactivateUser,
+    resendInvitation,
   }
 })

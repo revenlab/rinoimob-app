@@ -61,7 +61,8 @@
 
       <!-- Help text -->
       <div class="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-700 px-4 py-2 text-xs text-blue-700 dark:text-blue-300">
-        💡 Arraste nós da paleta para o canvas. Conecte arrastando de um ponto branco para outro. Clique em uma conexão para selecioná-la ou deletá-la. Pressione Delete para remover.
+        <InformationCircleIcon class="w-4 h-4 inline-block -mt-0.5 mr-1" />
+        Arraste nós da paleta para o canvas. Conecte arrastando de um ponto branco para outro. Clique em uma conexão para selecioná-la ou deletá-la. Pressione Delete para remover.
       </div>
 
       <!-- VueFlow -->
@@ -148,7 +149,9 @@
           <!-- Validation indicator -->
           <div :class="['p-3 rounded-lg text-sm', workflowValidation.valid ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700' : 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700']">
             <p :class="['font-semibold', workflowValidation.valid ? 'text-green-800 dark:text-green-300' : 'text-amber-800 dark:text-amber-300']">
-              {{ workflowValidation.valid ? '✅ Workflow válido' : '⚠️ Workflow incompleto' }}
+              <CheckCircleIcon v-if="workflowValidation.valid" class="w-4 h-4 inline-block -mt-0.5 mr-1" />
+              <ExclamationTriangleIcon v-else class="w-4 h-4 inline-block -mt-0.5 mr-1" />
+              {{ workflowValidation.valid ? 'Workflow válido' : 'Workflow incompleto' }}
             </p>
             <ul v-if="!workflowValidation.valid" class="mt-2 space-y-1">
               <li v-for="error in workflowValidation.errors" :key="error" :class="['text-xs', workflowValidation.valid ? 'text-green-700 dark:text-green-400' : 'text-amber-700 dark:text-amber-400']">
@@ -189,7 +192,7 @@ import { VueFlow, useVueFlow, type Connection, type Node, type Edge } from '@vue
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import { MiniMap } from '@vue-flow/minimap'
-import { PlayIcon, BoltIcon, ArrowPathIcon, StopIcon } from '@heroicons/vue/20/solid'
+import { PlayIcon, BoltIcon, ArrowPathIcon, StopIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon } from '@heroicons/vue/20/solid'
 import { nanoid } from 'nanoid'
 import { useAutomationStore } from '@/stores/automation'
 import NodePropertyPanel from '@/components/workflow/NodePropertyPanel.vue'

@@ -10,9 +10,7 @@
       ]"
     >
       <div class="flex items-center gap-2">
-        <span :class="toastIconClasses(toast.type)">
-          {{ toastIcon(toast.type) }}
-        </span>
+        <component :is="toastIcon(toast.type)" :class="toastIconClasses(toast.type)" />
         <p class="text-sm font-medium">{{ toast.message }}</p>
       </div>
     </div>
@@ -21,6 +19,7 @@
 
 <script setup lang="ts">
 import { useNotification } from '@/composables/useNotification'
+import { CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon } from '@heroicons/vue/20/solid'
 
 const { toasts } = useNotification()
 
@@ -36,15 +35,21 @@ function toastClasses(type: string): string {
 }
 
 function toastIconClasses(type: string): string {
-  return 'text-lg'
+  const classes: Record<string, string> = {
+    error: 'w-5 h-5 text-red-200 shrink-0',
+    success: 'w-5 h-5 text-green-200 shrink-0',
+    warning: 'w-5 h-5 text-yellow-200 shrink-0',
+    info: 'w-5 h-5 text-blue-200 shrink-0',
+  }
+  return classes[type] || classes.info
 }
 
-function toastIcon(type: string): string {
-  const icons: Record<string, string> = {
-    error: '❌',
-    success: '✅',
-    warning: '⚠️',
-    info: 'ℹ️',
+function toastIcon(type: string) {
+  const icons: Record<string, unknown> = {
+    error: XCircleIcon,
+    success: CheckCircleIcon,
+    warning: ExclamationTriangleIcon,
+    info: InformationCircleIcon,
   }
   return icons[type] || icons.info
 }

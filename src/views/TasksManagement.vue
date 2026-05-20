@@ -35,9 +35,7 @@
             @click="openCreateModal"
             class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-medium text-sm shadow-[0_4px_12px_rgba(79,70,229,0.3)] hover:translate-y-[-1px] transition-all duration-200"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
+            <PlusIcon class="w-4 h-4" />
             Nova tarefa
           </button>
         </div>
@@ -281,7 +279,9 @@
           <h3 class="text-sm font-bold text-slate-800 dark:text-white capitalize">
             {{ formatSelectedDay(selectedDay) }}
           </h3>
-          <button @click="selectedDay = null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors text-lg leading-none">✕</button>
+          <button @click="selectedDay = null" class="text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-200 transition-colors text-lg leading-none">
+            <XMarkIcon class="w-5 h-5" />
+          </button>
         </div>
 
         <p v-if="!tasksForDay(selectedDay).length" class="text-sm text-slate-400 italic">
@@ -561,6 +561,7 @@ import type { UserSummary } from '@/types/lead'
 import userService from '@/services/user'
 import leadService from '@/services/lead'
 import taskTypeService from '@/services/taskType'
+import { PlusIcon, XMarkIcon } from '@heroicons/vue/20/solid'
 
 const store = useTaskStore()
 

@@ -19,6 +19,7 @@ export interface FloorPlanPhotoResponse {
   id: string
   url: string
   position: number
+  isCover: boolean
   createdAt: string
 }
 

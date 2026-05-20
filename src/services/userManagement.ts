@@ -24,6 +24,10 @@ class UserManagementService {
     })
   }
 
+  async resendInvitation(userId: string): Promise<void> {
+    return apiFetch<void>(`${BASE}/${userId}/resend-invitation`, { method: 'POST' })
+  }
+
   async deactivate(userId: string): Promise<void> {
     return apiFetch<void>(`${BASE}/${userId}`, { method: 'DELETE' })
   }

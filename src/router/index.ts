@@ -111,6 +111,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/email-sender',
+      name: 'EmailSenderSettings',
+      component: () => import('@/views/EmailSenderSettings.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/equipe',
       name: 'Equipe',
       component: () => import('@/views/Equipe.vue'),

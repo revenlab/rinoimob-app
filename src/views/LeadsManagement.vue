@@ -43,9 +43,7 @@
             @click="openCreateModal"
             class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-700 to-indigo-700 text-white rounded-xl font-medium text-sm shadow-[0_4px_12px_rgba(79,70,229,0.3)] hover:translate-y-[-1px] transition-all duration-200"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
+            <PlusIcon class="w-4 h-4" />
             Novo lead
           </button>
         </div>
@@ -221,7 +219,8 @@
                   {{ lead.source === 'PORTAL' ? 'Portal' : 'Manual' }}
                 </span>
                 <span v-if="lead.assignedToName" class="text-xs text-slate-400 truncate max-w-[120px]">
-                  👤 {{ lead.assignedToName }}
+                  <UserCircleIcon class="w-3.5 h-3.5 inline-block -mt-0.5 mr-1" />
+                  {{ lead.assignedToName }}
                 </span>
               </div>
               <p class="text-xs text-slate-300 dark:text-slate-600 mt-2">{{ formatDate(lead.createdAt) }}</p>
@@ -321,6 +320,7 @@ import { useLeadStore } from '@/stores/lead'
 import leadService from '@/services/lead'
 import userService from '@/services/user'
 import type { LeadResponse, LeadStatus, CreateLeadRequest, UserSummary } from '@/types/lead'
+import { PlusIcon, UserCircleIcon } from '@heroicons/vue/20/solid'
 
 const leadStore = useLeadStore()
 const router = useRouter()

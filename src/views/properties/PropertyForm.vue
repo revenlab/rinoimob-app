@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { usePropertyStore } from '@/stores/property'
 import { useCategoryStore } from '@/stores/category'
-import type { CreatePropertyRequest, PropertyCondition, PropertyOperation, PropertyStatus, PropertyType } from '@/types/property'
+import propertyService from '@/services/property'
+import type { CreatePropertyRequest, PropertyCondition, PropertyStatus } from '@/types/property'
 
 const router = useRouter()
 const route = useRoute()
@@ -24,6 +25,198 @@ const form = ref<CreatePropertyRequest & { status?: PropertyStatus }>({
   addressCountry: 'BR',
   attributes: {},
   categoryIds: [],
+})
+
+type PropertyPhotoDraft = {
+  id: string
+  file: File
+  previewUrl: string
+  altText: string
+  isCover: boolean
+}
+
+type FloorPlanPhotoDraft = {
+  id: string
+  url: string
+  previewUrl: string
+  file?: File
+  persisted: boolean
+  isCover: boolean
+}
+
+type FloorPlanDraft = {
+  id: string
+  persistedId?: string
+  name: string
+  area?: number
+  photos: FloorPlanPhotoDraft[]
+}
+
+const propertyPhotos = ref<PropertyPhotoDraft[]>([])
+const floorPlansDraft = ref<FloorPlanDraft[]>([])
+
+function createDraftId() {
+  return crypto.randomUUID()
+}
+
+function revokeDraft(draft: { previewUrl: string }) {
+  URL.revokeObjectURL(draft.previewUrl)
+}
+
+function addPropertyPhotos(files: FileList | null) {
+  if (!files?.length) return
+
+  const next = Array.from(files).map(file => ({
+    id: createDraftId(),
+    file,
+    previewUrl: URL.createObjectURL(file),
+    altText: '',
+    isCover: false,
+  }))
+
+  if (propertyPhotos.value.length === 0 && next.length > 0) {
+    next[0].isCover = true
+  }
+
+  propertyPhotos.value = [...propertyPhotos.value, ...next]
+}
+
+function handlePropertyPhotosChange(event: Event) {
+  addPropertyPhotos((event.target as HTMLInputElement).files)
+  ;(event.target as HTMLInputElement).value = ''
+}
+
+function removePropertyPhoto(id: string) {
+  const draft = propertyPhotos.value.find(photo => photo.id === id)
+  if (!draft) return
+  revokeDraft(draft)
+  propertyPhotos.value = propertyPhotos.value.filter(photo => photo.id !== id)
+  if (!propertyPhotos.value.some(photo => photo.isCover) && propertyPhotos.value.length > 0) {
+    propertyPhotos.value[0].isCover = true
+  }
+}
+
+function setPropertyCover(id: string) {
+  propertyPhotos.value = propertyPhotos.value.map(photo => ({
+    ...photo,
+    isCover: photo.id === id,
+  }))
+}
+
+function addFloorPlan() {
+  floorPlansDraft.value = [
+    ...floorPlansDraft.value,
+    {
+      id: createDraftId(),
+      persistedId: undefined,
+      name: '',
+      area: undefined,
+      photos: [],
+    },
+  ]
+}
+
+async function removeFloorPlan(id: string) {
+  const plan = floorPlansDraft.value.find(item => item.id === id)
+  if (!plan) return
+  plan.photos.forEach(revokeDraft)
+  if (plan.persistedId && propertyId.value) {
+    try {
+      await propertyService.deleteFloorPlan(propertyId.value, plan.persistedId)
+    } catch (e: unknown) {
+      formError.value = e instanceof Error ? e.message : 'Erro ao remover planta'
+      return
+    }
+  }
+  floorPlansDraft.value = floorPlansDraft.value.filter(item => item.id !== id)
+}
+
+function addFloorPlanPhotos(planId: string, files: FileList | null) {
+  if (!files?.length) return
+  const plan = floorPlansDraft.value.find(item => item.id === planId)
+  if (!plan) return
+
+  const nextFiles = Array.from(files)
+  const pid = propertyId.value
+  if (plan.persistedId && pid) {
+    void (async () => {
+      for (const file of nextFiles) {
+        const uploaded = await propertyService.uploadFloorPlanPhoto(pid, plan.persistedId!, file)
+        plan.photos.push({
+          id: uploaded.id,
+          url: uploaded.url,
+          previewUrl: uploaded.url,
+          persisted: true,
+          isCover: uploaded.isCover,
+        })
+      }
+    })().catch((e: unknown) => {
+      formError.value = e instanceof Error ? e.message : 'Erro ao enviar imagem da planta'
+    })
+    return
+  }
+
+  const next = nextFiles.map(file => ({
+    id: createDraftId(),
+    file,
+    previewUrl: URL.createObjectURL(file),
+    url: '',
+    persisted: false,
+    isCover: false,
+  }))
+
+  if (!plan.photos.some(photo => photo.isCover) && next.length > 0) {
+    next[0].isCover = true
+  }
+
+  plan.photos = [...plan.photos, ...next]
+}
+
+function handleFloorPlanPhotosChange(planId: string, event: Event) {
+  addFloorPlanPhotos(planId, (event.target as HTMLInputElement).files)
+  ;(event.target as HTMLInputElement).value = ''
+}
+
+function removeFloorPlanPhoto(planId: string, photoId: string) {
+  const plan = floorPlansDraft.value.find(item => item.id === planId)
+  const photo = plan?.photos.find(item => item.id === photoId)
+  if (!plan || !photo) return
+  if (plan.persistedId && photo.persisted && propertyId.value) {
+    propertyService.deleteFloorPlanPhoto(propertyId.value, plan.persistedId, photo.id)
+      .then(() => {
+        plan.photos = plan.photos.filter(item => item.id !== photoId)
+      })
+      .catch((e: unknown) => {
+        formError.value = e instanceof Error ? e.message : 'Erro ao remover imagem da planta'
+      })
+    return
+  }
+
+  revokeDraft(photo)
+  plan.photos = plan.photos.filter(item => item.id !== photoId)
+  if (!plan.photos.some(item => item.isCover) && plan.photos.length > 0) {
+    plan.photos[0].isCover = true
+  }
+}
+
+async function setFloorPlanCover(planId: string, photoId: string) {
+  const plan = floorPlansDraft.value.find(item => item.id === planId)
+  if (!plan) return
+
+  if (plan.persistedId && propertyId.value) {
+    await propertyService.setFloorPlanPhotoCover(propertyId.value, plan.persistedId, photoId)
+  }
+
+  const index = plan.photos.findIndex(photo => photo.id === photoId)
+  if (index < 0) return
+  const [selected] = plan.photos.splice(index, 1)
+  plan.photos.unshift(selected)
+  plan.photos = plan.photos.map((photo, idx) => ({ ...photo, isCover: idx === 0 }))
+}
+
+onBeforeUnmount(() => {
+  propertyPhotos.value.forEach(revokeDraft)
+  floorPlansDraft.value.forEach(plan => plan.photos.forEach(revokeDraft))
 })
 
 onMounted(async () => {
@@ -64,6 +257,20 @@ onMounted(async () => {
         attributes: p.attributes ?? {},
         categoryIds: p.categories?.map(c => c.id) ?? [],
       }
+
+      floorPlansDraft.value = p.floorPlans.map(plan => ({
+        id: plan.id,
+        persistedId: plan.id,
+        name: plan.name,
+        area: plan.area ?? undefined,
+        photos: plan.photos.map(photo => ({
+          id: photo.id,
+          url: photo.url,
+          previewUrl: photo.url,
+          persisted: true,
+          isCover: photo.isCover,
+        })),
+      }))
     }
   }
 })
@@ -114,11 +321,44 @@ async function handleSubmit() {
     } else {
       result = await store.createProperty(form.value)
     }
+    await uploadPropertyMedia(result.id)
     router.push(`/imoveis/${result.id}`)
   } catch (e: unknown) {
     formError.value = e instanceof Error ? e.message : 'Erro ao salvar imóvel'
   } finally {
     isSaving.value = false
+  }
+}
+
+async function uploadPropertyMedia(id: string) {
+  const coverDraft = propertyPhotos.value.find(photo => photo.isCover) ?? propertyPhotos.value[0] ?? null
+  let coverPhotoId: string | null = null
+
+  for (const draft of propertyPhotos.value) {
+    const photo = await propertyService.uploadPhoto(id, draft.file, draft.altText || undefined)
+    if (draft === coverDraft) {
+      coverPhotoId = photo.id
+    }
+  }
+
+  if (coverPhotoId) {
+    await propertyService.setCoverPhoto(id, coverPhotoId)
+  }
+
+  for (const planDraft of floorPlansDraft.value) {
+    if (planDraft.persistedId) continue
+    if (!planDraft.name.trim()) continue
+
+    const plan = await propertyService.addFloorPlan(id, {
+      name: planDraft.name.trim(),
+      area: planDraft.area,
+    })
+
+    for (const photoDraft of planDraft.photos) {
+      if (photoDraft.file) {
+        await propertyService.uploadFloorPlanPhoto(id, plan.id, photoDraft.file)
+      }
+    }
   }
 }
 
@@ -308,6 +548,166 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
             {{ cat.name }}
             <span v-if="cat.isGlobal" class="ml-1 opacity-60 text-[10px]">Sistema</span>
           </button>
+        </div>
+      </div>
+
+      <!-- Media -->
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6 space-y-6">
+        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500">Mídia</h2>
+
+        <div>
+          <div class="flex items-center justify-between gap-3 mb-3">
+            <div>
+              <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">Fotos do imóvel</p>
+              <p class="text-xs text-slate-400 dark:text-slate-500">Selecione uma ou mais imagens e marque a de destaque.</p>
+            </div>
+            <label class="px-4 py-2 rounded-xl text-sm font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-100 dark:border-indigo-800 cursor-pointer transition">
+              Adicionar fotos
+              <input type="file" accept="image/*" multiple class="hidden" @change="handlePropertyPhotosChange" />
+            </label>
+          </div>
+
+          <div v-if="propertyPhotos.length" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div
+              v-for="photo in propertyPhotos"
+              :key="photo.id"
+              class="relative rounded-xl overflow-hidden border-2 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700"
+              :class="photo.isCover ? 'ring-2 ring-indigo-500 border-indigo-400' : ''"
+            >
+              <img :src="photo.previewUrl" alt="" class="w-full h-28 object-cover" />
+              <div class="p-2 space-y-2">
+                <input
+                  v-model="photo.altText"
+                  type="text"
+                  class="w-full px-2 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
+                  placeholder="Texto alternativo"
+                />
+                <div class="flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    @click="setPropertyCover(photo.id)"
+                    class="text-[11px] font-semibold px-2 py-1 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
+                  >
+                    {{ photo.isCover ? 'Imagem de destaque' : 'Definir destaque' }}
+                  </button>
+                  <button
+                    type="button"
+                    @click="removePropertyPhoto(photo.id)"
+                    class="text-[11px] font-semibold px-2 py-1 rounded-lg bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                  >
+                    Remover
+                  </button>
+                </div>
+              </div>
+              <span v-if="photo.isCover" class="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-600 text-white">
+                Destaque
+              </span>
+            </div>
+          </div>
+          <p v-else class="text-sm text-slate-400 dark:text-slate-500">Nenhuma foto selecionada.</p>
+        </div>
+
+        <div class="space-y-3">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">Plantas</p>
+              <p class="text-xs text-slate-400 dark:text-slate-500">Cada planta pode ter uma ou mais imagens.</p>
+            </div>
+            <button
+              type="button"
+              @click="addFloorPlan"
+              class="px-4 py-2 rounded-xl text-sm font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-100 dark:border-indigo-800 transition"
+            >
+              Adicionar planta
+            </button>
+          </div>
+
+          <div v-if="floorPlansDraft.length" class="space-y-4">
+            <div
+              v-for="plan in floorPlansDraft"
+              :key="plan.id"
+              class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/40 p-4 space-y-4"
+            >
+              <div class="flex items-start justify-between gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
+                  <input
+                    v-model="plan.name"
+                    type="text"
+                    :disabled="!!plan.persistedId"
+                    :class="inputClass"
+                    placeholder="Nome da planta"
+                  />
+                  <input
+                    v-model.number="plan.area"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    :disabled="!!plan.persistedId"
+                    :class="inputClass"
+                    placeholder="Área (m²)"
+                  />
+                </div>
+                <button
+                  type="button"
+                  @click="removeFloorPlan(plan.id)"
+                  class="px-3 py-2 rounded-xl text-xs font-semibold text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30"
+                >
+                  Remover planta
+                </button>
+              </div>
+
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <p class="text-xs text-slate-400 dark:text-slate-500">
+                    {{ plan.persistedId ? 'Planta salva' : 'Nova planta' }}
+                  </p>
+                </div>
+                <label class="px-3 py-2 rounded-xl text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-white dark:bg-slate-800 border border-indigo-100 dark:border-indigo-800 cursor-pointer transition">
+                  Adicionar imagens da planta
+                  <input type="file" accept="image/*" multiple class="hidden" @change="event => handleFloorPlanPhotosChange(plan.id, event)" />
+                </label>
+              </div>
+
+              <div v-if="plan.photos.length" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div
+                  v-for="(photo, index) in plan.photos"
+                  :key="photo.id"
+                  class="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 transition duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+                  :class="photo.isCover ? 'sm:col-span-2 sm:row-span-2' : ''"
+                >
+                  <img
+                    :src="photo.previewUrl"
+                    alt=""
+                    class="w-full object-cover transition duration-300 group-hover:scale-105"
+                    :class="photo.isCover ? 'h-56' : 'h-24'"
+                  />
+                  <div class="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/30 transition flex items-end justify-between p-2">
+                    <button
+                      type="button"
+                      @click="setFloorPlanCover(plan.id, photo.id)"
+                      class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-white/90 text-indigo-700 opacity-0 group-hover:opacity-100 transition"
+                    >
+                      {{ photo.isCover ? 'Destaque' : 'Definir destaque' }}
+                    </button>
+                    <button
+                      type="button"
+                      @click="removeFloorPlanPhoto(plan.id, photo.id)"
+                      class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-black/60 text-white opacity-0 group-hover:opacity-100 transition"
+                    >
+                      Remover
+                    </button>
+                  </div>
+                  <span
+                    v-if="photo.isCover"
+                    class="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-600 text-white"
+                  >
+                    Destaque
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p v-else class="text-sm text-slate-400 dark:text-slate-500">Nenhuma planta adicionada.</p>
         </div>
       </div>
 

@@ -7,9 +7,7 @@
             @click="router.push('/leads')"
             class="flex items-center gap-1 text-sm text-slate-500 hover:text-indigo-600 transition-colors flex-shrink-0"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
+            <ArrowLeftIcon class="w-4 h-4" />
             Leads
           </button>
           <span class="text-slate-300 dark:text-slate-600">/</span>
@@ -231,7 +229,8 @@
                 >
                   <option value="">Selecionar número...</option>
                   <option v-for="inst in waInstances" :key="inst.id" :value="inst.id">
-                    {{ inst.displayName }}{{ inst.status === 'CONNECTED' ? ' ✓' : inst.status === 'CONNECTING' ? ' ⟳' : ' ✗' }}
+                    {{ inst.displayName }} ·
+                    {{ inst.status === 'CONNECTED' ? 'conectado' : inst.status === 'CONNECTING' ? 'conectando' : 'desconectado' }}
                   </option>
                 </select>
 
@@ -612,6 +611,7 @@ import whatsappService from '@/services/whatsapp'
 import type { WhatsappInstance, WhatsappMessage } from '@/types/whatsapp'
 import type { LeadStatus, LeadEventType, InterestLevel, LeadPropertyResponse, UpdateLeadRequest, UserSummary } from '@/types/lead'
 import type { PropertySummaryResponse } from '@/types/property'
+import { ArrowLeftIcon } from '@heroicons/vue/20/solid'
 
 const route = useRoute()
 const router = useRouter()

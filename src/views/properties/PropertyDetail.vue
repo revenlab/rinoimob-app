@@ -12,6 +12,8 @@ const propertyId = route.params.id as string
 const uploadingPhoto = ref(false)
 const photoError = ref<string | null>(null)
 const deletingPhotoId = ref<string | null>(null)
+const uploadingFloorPlanPhotoId = ref<string | null>(null)
+const deletingFloorPlanPhotoId = ref<string | null>(null)
 
 // Floor plan modal
 const showFloorPlanModal = ref(false)
@@ -115,6 +117,34 @@ async function saveFloorPlan() {
 
 async function deleteFloorPlan(planId: string) {
   await propertyService.deleteFloorPlan(propertyId, planId)
+  await store.fetchProperty(propertyId)
+}
+
+async function handleFloorPlanPhotoUpload(planId: string, event: Event) {
+  const files = (event.target as HTMLInputElement).files
+  if (!files?.length) return
+  uploadingFloorPlanPhotoId.value = planId
+  try {
+    await Promise.all(Array.from(files).map(file => propertyService.uploadFloorPlanPhoto(propertyId, planId, file)))
+    await store.fetchProperty(propertyId)
+  } finally {
+    uploadingFloorPlanPhotoId.value = null
+    ;(event.target as HTMLInputElement).value = ''
+  }
+}
+
+async function deleteFloorPlanPhoto(planId: string, photoId: string) {
+  deletingFloorPlanPhotoId.value = photoId
+  try {
+    await propertyService.deleteFloorPlanPhoto(propertyId, planId, photoId)
+    await store.fetchProperty(propertyId)
+  } finally {
+    deletingFloorPlanPhotoId.value = null
+  }
+}
+
+async function setFloorPlanCover(planId: string, photoId: string) {
+  await propertyService.setFloorPlanPhotoCover(propertyId, planId, photoId)
   await store.fetchProperty(propertyId)
 }
 </script>
@@ -350,24 +380,72 @@ async function deleteFloorPlan(planId: string) {
             Nenhuma planta adicionada
           </div>
 
-          <div v-else class="space-y-3">
+          <div v-else class="space-y-4">
             <div
               v-for="plan in store.currentProperty.floorPlans"
               :key="plan.id"
-              class="flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50"
+              class="rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 p-4 space-y-4"
             >
-              <div>
-                <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ plan.name }}</p>
-                <p v-if="plan.area" class="text-xs text-slate-400 dark:text-slate-500">{{ plan.area }}m²</p>
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ plan.name }}</p>
+                  <p v-if="plan.area" class="text-xs text-slate-400 dark:text-slate-500">{{ plan.area }}m²</p>
+                </div>
+                <button
+                  @click="deleteFloorPlan(plan.id)"
+                  class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
-              <button
-                @click="deleteFloorPlan(plan.id)"
-                class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+
+              <div class="flex items-center justify-between gap-3">
+                <label class="px-3 py-2 rounded-xl text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-white dark:bg-slate-800 border border-indigo-100 dark:border-indigo-800 cursor-pointer transition">
+                  {{ uploadingFloorPlanPhotoId === plan.id ? 'Enviando...' : 'Adicionar imagens' }}
+                  <input type="file" accept="image/*" multiple class="hidden" @change="event => handleFloorPlanPhotoUpload(plan.id, event)" :disabled="uploadingFloorPlanPhotoId === plan.id" />
+                </label>
+                <span class="text-xs text-slate-400 dark:text-slate-500">{{ plan.photos.length }} imagem(ns)</span>
+              </div>
+
+              <div v-if="plan.photos.length" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div
+                  v-for="photo in plan.photos"
+                  :key="photo.id"
+                  class="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 transition duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+                  :class="photo.isCover ? 'sm:col-span-2 sm:row-span-2' : ''"
+                >
+                  <img
+                    :src="photo.url"
+                    :alt="plan.name"
+                    class="w-full object-cover transition duration-300 group-hover:scale-105"
+                    :class="photo.isCover ? 'h-56' : 'h-24'"
+                  />
+                  <div class="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/30 transition flex items-end justify-between p-2">
+                    <button
+                      v-if="!photo.isCover"
+                      @click="setFloorPlanCover(plan.id, photo.id)"
+                      class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-white/90 text-indigo-700 opacity-0 group-hover:opacity-100 transition"
+                    >
+                      Definir destaque
+                    </button>
+                    <span v-else class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-white/90 text-indigo-700 opacity-0 group-hover:opacity-100 transition">
+                      Destaque
+                    </span>
+                    <button
+                      @click="deleteFloorPlanPhoto(plan.id, photo.id)"
+                      :disabled="deletingFloorPlanPhotoId === photo.id"
+                      class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-black/60 text-white opacity-0 group-hover:opacity-100 transition"
+                    >
+                      Remover
+                    </button>
+                  </div>
+                  <span v-if="photo.isCover" class="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-500 text-white">
+                    Destaque
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

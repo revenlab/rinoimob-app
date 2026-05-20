@@ -7,7 +7,7 @@
           @click="emit('close')"
           class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-2xl leading-none"
         >
-          ✕
+          <XMarkIcon class="w-5 h-5" />
         </button>
       </div>
 
@@ -114,6 +114,7 @@
 import { ref, computed } from 'vue'
 import { useAutomationStore } from '@/stores/automation'
 import type { AutomationExecution } from '@/types/automation'
+import { XMarkIcon } from '@heroicons/vue/20/solid'
 
 const props = defineProps<{
   workflowId: string

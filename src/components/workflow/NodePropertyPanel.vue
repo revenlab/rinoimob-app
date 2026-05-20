@@ -94,6 +94,53 @@
 
       <!-- SEND_EMAIL params -->
       <template v-if="node.data?.actionType === 'SEND_EMAIL'">
+        <div v-if="emailSenderConfigs.length > 0 || allowSystemSenderInDev">
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Remetente SMTP</label>
+          <select
+            :value="node.data?.parameters?.senderConfigId || ''"
+            @change="(e) => updateParam('senderConfigId', (e.target as HTMLSelectElement).value || null)"
+            class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm"
+          >
+            <option v-if="allowSystemSenderInDev" value="">Usar e-mail padrão da Rino (apenas dev)</option>
+            <option v-for="cfg in emailSenderConfigs" :key="cfg.id" :value="cfg.id">
+              {{ cfg.displayName }} — {{ cfg.fromEmail }}{{ cfg.isDefault ? ' (padrão)' : '' }}
+            </option>
+          </select>
+          <p class="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
+            A automação usa um SMTP configurado do tenant. O e-mail da Rino só fica disponível em desenvolvimento para testes.
+          </p>
+        </div>
+        <div v-else class="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 p-3">
+          <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">Nenhum remetente SMTP configurado</p>
+          <router-link
+            to="/email-sender"
+            class="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:underline"
+          >
+            Clique aqui para configurar
+          </router-link>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Destinatário</label>
+          <select
+            :value="node.data?.parameters?.recipientType || 'ASSIGNED_USER'"
+            @change="(e) => updateParam('recipientType', (e.target as HTMLSelectElement).value)"
+            class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm"
+          >
+            <option value="ASSIGNED_USER">Usuário responsável</option>
+            <option value="LEAD">Lead</option>
+            <option value="CUSTOM_EMAIL">E-mail customizado</option>
+          </select>
+        </div>
+        <div v-if="node.data?.parameters?.recipientType === 'CUSTOM_EMAIL'">
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">E-mail do destinatário</label>
+          <input
+            :value="node.data?.parameters?.recipientEmail || ''"
+            @input="(e) => updateParam('recipientEmail', (e.target as HTMLInputElement).value)"
+            type="email"
+            placeholder="destinatario@empresa.com"
+            class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm"
+          />
+        </div>
         <div>
           <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Assunto</label>
           <input
@@ -250,9 +297,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import type { Node } from '@vue-flow/core'
 import SendWhatsappActionPanel from './SendWhatsappActionPanel.vue'
+import emailSenderService, { type EmailSenderConfig } from '@/services/emailSender'
+
+const emailSenderConfigs = ref<EmailSenderConfig[]>([])
+const allowSystemSenderInDev = import.meta.env.DEV
+
+async function loadEmailSenderConfigs() {
+  try {
+    emailSenderConfigs.value = await emailSenderService.list()
+  } catch {
+    // Non-critical; the dropdown will just be empty
+  }
+}
 
 const props = defineProps<{ node: Node }>()
 const emit = defineEmits<{
@@ -277,4 +336,68 @@ function updateParam(key: string, value: any) {
     parameters: { ...(props.node.data?.parameters || {}), [key]: value },
   })
 }
+
+function ensureEmailDefaults() {
+  if (props.node.type !== 'ACTION' || props.node.data?.actionType !== 'SEND_EMAIL') {
+    return
+  }
+
+  const parameters = props.node.data?.parameters || {}
+  if (parameters.recipientType) {
+    return
+  }
+
+  const nextParameters = { ...parameters }
+  if (parameters.email && !parameters.recipientEmail) {
+    nextParameters.recipientType = 'CUSTOM_EMAIL'
+    nextParameters.recipientEmail = parameters.email
+  } else {
+    nextParameters.recipientType = 'ASSIGNED_USER'
+  }
+
+  emit('update', props.node.id, {
+    ...props.node.data,
+    parameters: nextParameters,
+  })
+}
+
+function ensureSenderConfigDefault() {
+  if (props.node.type !== 'ACTION' || props.node.data?.actionType !== 'SEND_EMAIL') {
+    return
+  }
+
+  const parameters = props.node.data?.parameters || {}
+  if (parameters.senderConfigId) {
+    return
+  }
+
+  if (emailSenderConfigs.value.length === 0) {
+    return
+  }
+
+  const preferred = emailSenderConfigs.value.find(config => config.isDefault) ?? emailSenderConfigs.value[0]
+  if (!preferred) {
+    return
+  }
+
+  emit('update', props.node.id, {
+    ...props.node.data,
+    parameters: { ...parameters, senderConfigId: preferred.id },
+  })
+}
+
+onMounted(() => {
+  ensureEmailDefaults()
+  loadEmailSenderConfigs()
+})
+watch(
+  () => [props.node.type, props.node.data?.actionType, props.node.data?.parameters?.recipientType] as const,
+  () => ensureEmailDefaults(),
+)
+
+watch(
+  () => emailSenderConfigs.value,
+  () => ensureSenderConfigDefault(),
+  { deep: true },
+)
 </script>

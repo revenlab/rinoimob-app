@@ -96,6 +96,14 @@ class PropertyService {
       body: formData,
     })
   }
+
+  async setFloorPlanPhotoCover(propertyId: string, planId: string, photoId: string): Promise<void> {
+    return this.request<void>(`/${propertyId}/floor-plans/${planId}/photos/${photoId}/cover`, { method: 'PATCH' })
+  }
+
+  async deleteFloorPlanPhoto(propertyId: string, planId: string, photoId: string): Promise<void> {
+    return this.request<void>(`/${propertyId}/floor-plans/${planId}/photos/${photoId}`, { method: 'DELETE' })
+  }
 }
 
 export default new PropertyService()

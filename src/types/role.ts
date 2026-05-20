@@ -40,6 +40,7 @@ export interface UserManagementResponse {
   tenantRoleId: string | null
   tenantRoleName: string | null
   createdAt: string
+  verificationStatus: 'PENDING' | 'VERIFIED' | 'EXPIRED' | null
 }
 
 export interface PermissionDef {

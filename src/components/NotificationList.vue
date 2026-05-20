@@ -23,7 +23,7 @@
           class="ml-2 text-current opacity-50 hover:opacity-100 transition-opacity"
           aria-label="Delete notification"
         >
-          ✕
+          <XMarkIcon class="w-4 h-4" />
         </button>
       </div>
       
@@ -51,6 +51,7 @@
 </template>
 
 <script setup lang="ts">
+import { XMarkIcon } from '@heroicons/vue/20/solid'
 import type { InAppNotification } from '@/services/notification'
 
 interface Props {

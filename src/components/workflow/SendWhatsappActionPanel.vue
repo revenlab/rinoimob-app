@@ -16,7 +16,8 @@
         </option>
       </select>
       <p v-if="!node.data?.parameters?.instanceId" class="text-xs text-amber-600 dark:text-amber-400 mt-1">
-        ⚠️ Instância é obrigatória
+        <ExclamationTriangleIcon class="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" />
+        Instância é obrigatória
       </p>
     </div>
 
@@ -66,7 +67,8 @@
         class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm"
       />
       <p v-if="!node.data?.parameters?.recipientValue" class="text-xs text-amber-600 dark:text-amber-400 mt-1">
-        ⚠️ Número de telefone é obrigatório
+        <ExclamationTriangleIcon class="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" />
+        Número de telefone é obrigatório
       </p>
     </div>
 
@@ -150,6 +152,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import type { Node } from '@vue-flow/core'
 import whatsappService from '@/services/whatsapp'
 import type { WhatsappInstance } from '@/types/whatsapp'
+import { ExclamationTriangleIcon } from '@heroicons/vue/20/solid'
 
 const props = defineProps<{ node: Node }>()
 const emit = defineEmits<{

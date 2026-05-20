@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { usePropertyStore } from '@/stores/property'
 import type { PropertyListParams } from '@/types/property'
+import { ArrowsPointingOutIcon, HomeModernIcon, MapPinIcon, PhotoIcon, PlusIcon, TrashIcon } from '@heroicons/vue/20/solid'
 
 const store = usePropertyStore()
 
@@ -85,9 +86,7 @@ const typeLabel: Record<string, string> = {
           to="/imoveis/novo"
           class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-700 to-indigo-700 text-white rounded-xl font-medium text-sm shadow-[0_4px_12px_rgba(79,70,229,0.25)] hover:-translate-y-px transition-all duration-200"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
+          <PlusIcon class="w-4 h-4" />
           Novo Imóvel
         </RouterLink>
       </div>
@@ -163,9 +162,7 @@ const typeLabel: Record<string, string> = {
       v-else-if="!store.properties?.content?.length"
       class="flex flex-col items-center justify-center py-24 text-slate-400"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor" class="w-16 h-16 mb-4 text-slate-200">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-      </svg>
+      <PhotoIcon class="w-16 h-16 mb-4 text-slate-200" />
       <p class="text-sm font-medium">Nenhum imóvel encontrado</p>
       <RouterLink to="/imoveis/novo" class="mt-4 text-sm font-semibold text-indigo-600 hover:text-indigo-800">
         Cadastrar primeiro imóvel →
@@ -188,9 +185,7 @@ const typeLabel: Record<string, string> = {
             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
           <div v-else class="w-full h-full flex items-center justify-center text-slate-300">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-12 h-12">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 21l6.75-6.75 1.5 1.5M21 3l-9 9" />
-            </svg>
+          <HomeModernIcon class="w-12 h-12" />
           </div>
           <span
             class="absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full"
@@ -221,13 +216,13 @@ const typeLabel: Record<string, string> = {
           </div>
 
           <div class="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500 mb-3">
-            <span v-if="p.bedrooms">🛏 {{ p.bedrooms }}</span>
-            <span v-if="p.bathrooms">🚿 {{ p.bathrooms }}</span>
-            <span v-if="p.areaTotal">📐 {{ p.areaTotal }}m²</span>
+            <span v-if="p.bedrooms" class="inline-flex items-center gap-1"><HomeModernIcon class="w-3.5 h-3.5" />{{ p.bedrooms }}</span>
+            <span v-if="p.bathrooms" class="inline-flex items-center gap-1"><HomeModernIcon class="w-3.5 h-3.5" />{{ p.bathrooms }}</span>
+            <span v-if="p.areaTotal" class="inline-flex items-center gap-1"><ArrowsPointingOutIcon class="w-3.5 h-3.5" />{{ p.areaTotal }}m²</span>
           </div>
 
           <p v-if="p.addressCity" class="text-xs text-slate-400 dark:text-slate-500 mb-4">
-            📍 {{ p.addressCity }}, {{ p.addressState }}
+            <span class="inline-flex items-center gap-1"><MapPinIcon class="w-3.5 h-3.5" />{{ p.addressCity }}, {{ p.addressState }}</span>
           </p>
 
           <div class="mt-auto flex gap-2">
@@ -247,9 +242,7 @@ const typeLabel: Record<string, string> = {
               @click="deleteConfirmId = p.id"
               class="px-3 py-2 rounded-xl text-xs font-semibold text-red-500 bg-red-50 hover:bg-red-100 border border-red-100 transition"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-              </svg>
+              <TrashIcon class="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -315,9 +308,9 @@ const typeLabel: Record<string, string> = {
               <span v-if="p.addressCity">{{ p.addressCity }}, {{ p.addressState }}</span>
               <span v-else class="text-slate-300 dark:text-slate-600">—</span>
               <div class="flex gap-2 text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-                <span v-if="p.bedrooms">🛏 {{ p.bedrooms }}</span>
-                <span v-if="p.bathrooms">🚿 {{ p.bathrooms }}</span>
-                <span v-if="p.areaTotal">📐 {{ p.areaTotal }}m²</span>
+                <span v-if="p.bedrooms" class="inline-flex items-center gap-1"><HomeModernIcon class="w-3 h-3" />{{ p.bedrooms }}</span>
+                <span v-if="p.bathrooms" class="inline-flex items-center gap-1"><HomeModernIcon class="w-3 h-3" />{{ p.bathrooms }}</span>
+                <span v-if="p.areaTotal" class="inline-flex items-center gap-1"><ArrowsPointingOutIcon class="w-3 h-3" />{{ p.areaTotal }}m²</span>
               </div>
             </td>
 

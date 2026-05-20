@@ -6,6 +6,7 @@ import { useTheme } from '@/composables/useTheme'
 import { useWebSocketStore } from '@/stores/websocket'
 import { useNotificationStore } from '@/stores/notification'
 import NotificationBell from '@/components/NotificationBell.vue'
+import { ChatBubbleLeftRightIcon } from '@heroicons/vue/20/solid'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -54,7 +55,7 @@ function setupWsSubscription() {
     const onLeadPage = route.path === `/leads/${msg.leadId}`
     if (!onLeadPage) {
       const from = msg.senderName ?? msg.fromNumber ?? 'Contato desconhecido'
-      addNotification(`💬 Nova mensagem de ${from}`, msg.leadId ?? null)
+      addNotification(`Nova mensagem de ${from}`, msg.leadId ?? null)
     }
   })
 }
@@ -112,6 +113,11 @@ const navItems = [
     label: 'WhatsApp',
     to: '/whatsapp',
     icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z" /></svg>`,
+  },
+  {
+    label: 'E-mail',
+    to: '/email-sender',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>`,
   },
   {
     label: 'Equipe',
@@ -313,7 +319,7 @@ const handleLogout = async () => {
           class="pointer-events-auto flex items-start gap-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition-shadow"
           @click="goToLead(n)"
         >
-          <span class="text-xl leading-none mt-0.5">💬</span>
+          <ChatBubbleLeftRightIcon class="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium text-slate-900 dark:text-white truncate">{{ n.message }}</p>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ n.leadId ? 'Clique para ver a conversa' : 'Número não vinculado a um lead' }}</p>

@@ -55,6 +55,19 @@ async function handleDeactivate(userId: string) {
   }
 }
 
+const resendingUserId = ref<string | null>(null)
+
+async function handleResendInvitation(userId: string) {
+  resendingUserId.value = userId
+  try {
+    await store.resendInvitation(userId)
+  } catch (e: unknown) {
+    alert(e instanceof Error ? e.message : 'Erro ao reenviar convite')
+  } finally {
+    resendingUserId.value = null
+  }
+}
+
 // ── Role modal ─────────────────────────────────────────────────────────────
 const showRoleModal = ref(false)
 const editingRole = ref<TenantRole | null>(null)
@@ -280,6 +293,10 @@ onMounted(() => {
                     <span class="w-1.5 h-1.5 rounded-full" :class="user.active ? 'bg-emerald-500' : 'bg-slate-400'" />
                     {{ user.active ? 'Ativo' : 'Inativo' }}
                   </span>
+                  <span
+                    v-if="user.verificationStatus === 'PENDING'"
+                    class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
+                  >Convite pendente</span>
                 </td>
 
                 <!-- Date -->
@@ -289,16 +306,33 @@ onMounted(() => {
 
                 <!-- Actions -->
                 <td class="px-5 py-3.5">
-                  <button
-                    v-if="user.active && !user.systemRole"
-                    @click="handleDeactivate(user.id)"
-                    class="text-xs text-slate-400 hover:text-red-500 transition-colors"
-                    title="Desativar usuário"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                    </svg>
-                  </button>
+                  <div class="flex items-center gap-1">
+                    <button
+                      v-if="user.active && !user.systemRole && user.verificationStatus === 'PENDING'"
+                      @click="handleResendInvitation(user.id)"
+                      :disabled="resendingUserId === user.id"
+                      class="text-xs text-slate-400 hover:text-indigo-500 transition-colors disabled:opacity-50"
+                      title="Reenviar convite"
+                    >
+                      <svg v-if="resendingUserId === user.id" class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                      </svg>
+                      <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v4.5m0 0h-4.5m4.5 0l-6-6m-10.5 3a9 9 0 1012.568 12.568" />
+                      </svg>
+                    </button>
+                    <button
+                      v-if="user.active && !user.systemRole"
+                      @click="handleDeactivate(user.id)"
+                      class="text-xs text-slate-400 hover:text-red-500 transition-colors"
+                      title="Desativar usuário"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                      </svg>
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>

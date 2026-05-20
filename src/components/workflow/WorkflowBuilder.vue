@@ -10,7 +10,10 @@
           @dragstart="onDragStart('TRIGGER')"
           class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg cursor-move hover:shadow-md transition text-sm font-medium text-blue-700 dark:text-blue-300"
         >
-          🟦 Trigger
+          <div class="flex items-center gap-2">
+            <PlayIcon class="w-4 h-4" />
+            Trigger
+          </div>
         </div>
         
         <div
@@ -18,7 +21,10 @@
           @dragstart="onDragStart('CONDITION')"
           class="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg cursor-move hover:shadow-md transition text-sm font-medium text-yellow-700 dark:text-yellow-300"
         >
-          ? Condition
+          <div class="flex items-center gap-2">
+            <ArrowPathIcon class="w-4 h-4" />
+            Condition
+          </div>
         </div>
         
         <div
@@ -26,7 +32,10 @@
           @dragstart="onDragStart('ACTION')"
           class="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg cursor-move hover:shadow-md transition text-sm font-medium text-green-700 dark:text-green-300"
         >
-          ✓ Action
+          <div class="flex items-center gap-2">
+            <BoltIcon class="w-4 h-4" />
+            Action
+          </div>
         </div>
         
         <div
@@ -34,7 +43,10 @@
           @dragstart="onDragStart('END')"
           class="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg cursor-move hover:shadow-md transition text-sm font-medium text-red-700 dark:text-red-300"
         >
-          ⊗ End
+          <div class="flex items-center gap-2">
+            <StopIcon class="w-4 h-4" />
+            End
+          </div>
         </div>
       </div>
     </div>
@@ -61,6 +73,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { NodeType } from '@/types/automation'
+import { ArrowPathIcon, BoltIcon, StopIcon, PlayIcon } from '@heroicons/vue/20/solid'
 
 const props = defineProps<{
   initialNodes?: any[]

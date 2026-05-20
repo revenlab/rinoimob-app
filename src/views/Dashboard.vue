@@ -164,10 +164,10 @@
                 class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold"
                 :class="eventIconBg(event.eventType)"
               >
-                <span v-if="event.eventType === 'CREATED'">+</span>
-                <span v-else-if="event.eventType === 'STATUS_CHANGED'">⇄</span>
-                <span v-else-if="event.eventType === 'NOTE_ADDED'">💬</span>
-                <span v-else-if="event.eventType === 'ASSIGNED'">✓</span>
+                <PlusIcon v-if="event.eventType === 'CREATED'" class="w-4 h-4" />
+                <ArrowPathIcon v-else-if="event.eventType === 'STATUS_CHANGED'" class="w-4 h-4" />
+                <ChatBubbleLeftRightIcon v-else-if="event.eventType === 'NOTE_ADDED'" class="w-4 h-4" />
+                <CheckCircleIcon v-else-if="event.eventType === 'ASSIGNED'" class="w-4 h-4" />
                 <span v-else>•</span>
               </div>
               <div class="flex-1 min-w-0">
@@ -249,6 +249,7 @@ import leadService from '@/services/lead'
 import taskService from '@/services/task'
 import type { TaskResponse } from '@/types/task'
 import type { LeadEventResponse } from '@/types/lead'
+import { ArrowPathIcon, ChatBubbleLeftRightIcon, CheckCircleIcon, PlusIcon, UserCircleIcon } from '@heroicons/vue/20/solid'
 
 const authStore = useAuthStore()
 
