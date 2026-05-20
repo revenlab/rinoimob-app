@@ -7,6 +7,39 @@ export interface TenantRole {
   permissions: string[]
 }
 
+export type SystemRole =
+  | 'TENANT_OWNER'
+  | 'TENANT_ADMIN'
+  | 'SUPPORT_MANAGER'
+  | 'SUPPORT_AGENT'
+
+export const INTERNAL_SYSTEM_ROLES = ['TENANT_ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_AGENT'] as const
+
+export const SYSTEM_ROLE_LABELS: Record<SystemRole, string> = {
+  TENANT_OWNER: 'Proprietário',
+  TENANT_ADMIN: 'Administrador de tenants',
+  SUPPORT_MANAGER: 'Gerente interno',
+  SUPPORT_AGENT: 'Operador interno',
+}
+
+export interface SystemRoleOption {
+  value: Exclude<SystemRole, 'TENANT_OWNER'>
+  label: string
+}
+
+export const INTERNAL_SYSTEM_ROLE_OPTIONS: SystemRoleOption[] = INTERNAL_SYSTEM_ROLES.map(value => ({
+  value,
+  label: SYSTEM_ROLE_LABELS[value],
+}))
+
+export function isInternalSystemRole(role: SystemRole | null | undefined): role is Exclude<SystemRole, 'TENANT_OWNER'> {
+  return !!role && INTERNAL_SYSTEM_ROLES.includes(role as Exclude<SystemRole, 'TENANT_OWNER'>)
+}
+
+export function systemRoleLabel(role: SystemRole | null | undefined) {
+  return role ? (SYSTEM_ROLE_LABELS[role] ?? role) : '—'
+}
+
 export interface CreateTenantRoleRequest {
   name: string
   description?: string
@@ -36,7 +69,7 @@ export interface UserManagementResponse {
   firstName: string
   lastName: string
   active: boolean
-  systemRole: string | null
+  systemRole: SystemRole | null
   tenantRoleId: string | null
   tenantRoleName: string | null
   createdAt: string

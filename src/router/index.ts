@@ -145,19 +145,40 @@ const router = createRouter({
       name: 'Notifications',
       component: () => import('@/views/NotificationsView.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/tenants',
+      name: 'TenantsAdmin',
+      component: () => import('@/views/TenantsAdmin.vue'),
+      meta: { requiresAuth: true, internalOnly: true, title: 'Tenants' }
+    },
+    {
+      path: '/force-password-reset',
+      name: 'ForcePasswordReset',
+      component: () => import('@/views/ForcePasswordReset.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })
 
 // Route guards
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 
   const isPublic = to.meta.public
   const requiresAuth = to.meta.requiresAuth
+  const internalOnly = to.meta.internalOnly
+
+  if (authStore.isAuthenticated && !authStore.currentUser) {
+    await authStore.fetchMe()
+  }
 
   if (requiresAuth && !authStore.isAuthenticated) {
     next({ name: 'Login', query: { redirect: to.fullPath } })
+  } else if (authStore.isAuthenticated && authStore.forcePasswordReset && to.name !== 'ForcePasswordReset') {
+    next({ name: 'ForcePasswordReset' })
+  } else if (internalOnly && !authStore.isInternalStaff) {
+    next({ name: 'Dashboard' })
   } else if (isPublic && authStore.isAuthenticated && (to.name === 'Login' || to.name === 'Register')) {
     next({ name: 'Dashboard' })
   } else {

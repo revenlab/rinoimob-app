@@ -161,8 +161,12 @@ const handleIdentify = async () => {
 const handleSelectWorkspace = async (tenantId: string) => {
   const ok = await authStore.selectWorkspace(tenantId)
   if (ok) {
-    const redirect = route.query.redirect as string
-    router.push(redirect?.startsWith('/') ? redirect : { name: 'Dashboard' })
+    if (authStore.forcePasswordReset) {
+      router.push({ name: 'ForcePasswordReset' })
+    } else {
+      const redirect = route.query.redirect as string
+      router.push(redirect?.startsWith('/') ? redirect : { name: 'Dashboard' })
+    }
   }
 }
 

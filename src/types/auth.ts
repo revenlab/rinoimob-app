@@ -1,9 +1,12 @@
+import type { SystemRole } from './role'
+
 export interface User {
   id: string
   email: string
   firstName: string
   lastName: string
   active: boolean
+  systemRole: SystemRole | null
   createdAt: string
 }
 
@@ -42,6 +45,7 @@ export interface LoginResponse {
   refreshToken: string
   expiresIn: number
   user: User
+  forcePasswordReset: boolean
 }
 
 export interface RegisterRequest {
@@ -79,6 +83,7 @@ export interface MeResponse {
   firstName: string
   lastName: string
   active: boolean
+  systemRole: SystemRole | null
   createdAt: string
   tenantId: string | null
   tenantName: string | null

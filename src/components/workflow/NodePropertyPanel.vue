@@ -37,6 +37,20 @@
         <option value="TASK_COMPLETED">Tarefa Concluída</option>
         <option value="LEAD_NO_ACTIVITY">Lead sem Atividade</option>
       </select>
+      <div v-if="node.data?.triggerType === 'LEAD_NO_ACTIVITY'" class="mt-3">
+        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Sem atividade por (dias)</label>
+        <input
+          :value="node.data?.parameters?.inactiveDays || 7"
+          @input="(e) => updateParam('inactiveDays', Math.max(parseInt((e.target as HTMLInputElement).value) || 0, 1))"
+          type="number"
+          min="1"
+          placeholder="Ex: 7"
+          class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm"
+        />
+        <p class="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
+          O workflow dispara quando o lead ficar parado por esse período.
+        </p>
+      </div>
     </div>
 
     <!-- CONDITION fields -->

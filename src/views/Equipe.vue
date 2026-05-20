@@ -2,8 +2,8 @@
 import { ref, computed, onMounted } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useTeamStore } from '@/stores/team'
-import type { TenantRole, CreateTenantRoleRequest, UpdateTenantRoleRequest, InviteUserRequest } from '@/types/role'
-import { ALL_PERMISSIONS } from '@/types/role'
+import type { TenantRole, CreateTenantRoleRequest, UpdateTenantRoleRequest, InviteUserRequest, SystemRole } from '@/types/role'
+import { ALL_PERMISSIONS, systemRoleLabel } from '@/types/role'
 
 const store = useTeamStore()
 
@@ -153,17 +153,9 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('pt-BR')
 }
 
-function getRoleName(user: { systemRole: string | null; tenantRoleName: string | null }) {
+function getRoleName(user: { systemRole: SystemRole | null; tenantRoleName: string | null }) {
   if (user.systemRole) return systemRoleLabel(user.systemRole)
   return user.tenantRoleName ?? '—'
-}
-
-function systemRoleLabel(role: string) {
-  const map: Record<string, string> = {
-    TENANT_OWNER: 'Proprietário',
-    TENANT_ADMIN: 'Administrador do sistema',
-  }
-  return map[role] ?? role
 }
 
 // ── CSS helpers ────────────────────────────────────────────────────────────

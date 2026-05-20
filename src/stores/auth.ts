@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User, TenantInfo, LoginRequest, RegisterRequest, TenantRegistrationRequest, LoginResponse, MeResponse } from '@/types/auth'
+import { isInternalSystemRole } from '@/types/role'
 import authService from '@/services/auth'
 import { connectWebSocket } from '@/services/websocket'
 
@@ -14,6 +15,7 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
+  const forcePasswordReset = ref(false)
 
   // Workspace-selector state
   const availableTenants = ref<TenantInfo[]>([])
@@ -26,6 +28,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!accessToken.value)
   const currentUser = computed(() => user.value)
+  const isInternalStaff = computed(() => isInternalSystemRole(user.value?.systemRole))
   const hasPendingWorkspaceSelection = computed(() => preAuthToken.value !== null && availableTenants.value.length > 0)
 
   const initializeAuth = () => {
@@ -208,6 +211,7 @@ export const useAuthStore = defineStore('auth', () => {
         firstName: me.firstName,
         lastName: me.lastName,
         active: me.active,
+        systemRole: me.systemRole,
         createdAt: me.createdAt,
       }
       currentTenantId.value = me.tenantId
@@ -244,6 +248,7 @@ export const useAuthStore = defineStore('auth', () => {
       error.value = null
       if (!accessToken.value) throw new Error('Não autenticado')
       await authService.changePassword(currentPassword, newPassword, confirmPassword)
+      forcePasswordReset.value = false
       return true
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Falha ao alterar senha'
@@ -260,6 +265,7 @@ export const useAuthStore = defineStore('auth', () => {
     accessToken.value = response.accessToken
     refreshToken.value = response.refreshToken
     user.value = response.user
+    forcePasswordReset.value = response.forcePasswordReset ?? false
     localStorage.setItem(TOKEN_KEY, response.accessToken)
     localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken)
     localStorage.setItem(USER_KEY, JSON.stringify(response.user))
@@ -276,6 +282,7 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     isLoading,
     error,
+    forcePasswordReset,
     availableTenants,
     preAuthToken,
     currentTenantId,
@@ -283,6 +290,7 @@ export const useAuthStore = defineStore('auth', () => {
     currentTenantSubdomain,
     isAuthenticated,
     currentUser,
+    isInternalStaff,
     hasPendingWorkspaceSelection,
     initializeAuth,
     fetchMe,
