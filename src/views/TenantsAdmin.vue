@@ -1,15 +1,28 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useNotification } from '@/composables/useNotification'
 import tenantsAdminService from '@/services/tenantsAdmin'
-import { systemRoleLabel } from '@/types/role'
-import type { TenantAuditLog, TenantHealth, TenantSummary, TenantUserSummary } from '@/types/tenantsAdmin'
+import { INTERNAL_SYSTEM_ROLE_OPTIONS, systemRoleLabel } from '@/types/role'
+import {
+  SUPPORT_PERMISSIONS,
+  type SupportPermissionValue,
+  type TenantAuditLog,
+  type TenantHealth,
+  type TenantSummary,
+  type TenantUserSummary,
+} from '@/types/tenantsAdmin'
+
+type TabKey = 'tenants' | 'operators' | 'audit'
+
+const SUPPORT_PERMISSION_VALUES = new Set<SupportPermissionValue>(
+  SUPPORT_PERMISSIONS.map(permission => permission.value)
+)
 
 const authStore = useAuthStore()
 const { showSuccess, showError } = useNotification()
-const activeTab = ref<'tenants' | 'operators' | 'audit'>('tenants')
+const activeTab = ref<TabKey>('tenants')
 
 const tenants = ref<TenantSummary[]>([])
 const tenantUsers = ref<TenantUserSummary[]>([])
@@ -30,10 +43,43 @@ const loadingUsers = ref(false)
 const loadingOperators = ref(false)
 const loadingAudit = ref(false)
 const loadingHealth = ref(false)
+const loadingOperatorPermissions = ref(false)
 const resendingInvitationUserId = ref<string | null>(null)
 const resettingAccessUserId = ref<string | null>(null)
+const togglingTenantId = ref<string | null>(null)
+const togglingUserId = ref<string | null>(null)
+const changingRoleUserId = ref<string | null>(null)
+const editingOperatorId = ref<string | null>(null)
+const editingPermissions = ref<SupportPermissionValue[]>([])
+const savingPermissions = ref(false)
+const editingTenant = ref(false)
+const savingTenant = ref(false)
+const tenantEditForm = ref({ name: '', subdomain: '' })
+const editingTenantUserId = ref<string | null>(null)
+const savingTenantUserId = ref<string | null>(null)
+const tenantUserEditForm = ref({ firstName: '', lastName: '', email: '', phone: '' })
+const successMessage = ref<string | null>(null)
 const error = ref<string | null>(null)
+let successMessageTimeout: ReturnType<typeof setTimeout> | null = null
 
+const availableTabs = computed(() => {
+  const tabs: Array<{ key: TabKey; label: string }> = []
+
+  if (authStore.canViewTenants) {
+    tabs.push({ key: 'tenants', label: 'Tenants' })
+  }
+  if (authStore.canViewOperators) {
+    tabs.push({ key: 'operators', label: 'Operadores' })
+  }
+  if (authStore.canViewAudit) {
+    tabs.push({ key: 'audit', label: 'Auditoria' })
+  }
+
+  return tabs
+})
+const hasSupportAccess = computed(() => availableTabs.value.length > 0)
+const hasTenantDetailsAccess = computed(() => authStore.canEditTenants || authStore.canViewHealth || authStore.canViewTenantUsers)
+const tenantsSectionClass = computed(() => hasTenantDetailsAccess.value ? 'grid gap-6 lg:grid-cols-[320px_1fr]' : 'grid gap-6')
 const selectedTenant = computed(() => tenants.value.find(tenant => tenant.id === selectedTenantId.value) ?? null)
 
 const AUDIT_ACTION_LABELS: Record<string, string> = {
@@ -41,6 +87,8 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
   SUPPORT_VIEW_TENANT_USERS: 'Visualizou usuários do tenant',
   SUPPORT_VIEW_OPERATORS: 'Visualizou operadores internos',
   SUPPORT_VIEW_AUDIT: 'Visualizou auditoria',
+  SUPPORT_OPERATOR_PERMISSIONS_UPDATED: 'Permissões de suporte atualizadas',
+  SUPPORT_PERMISSIONS_UPDATED: 'Permissões de suporte atualizadas',
   TENANT_ACTIVATED: 'Tenant ativado',
   TENANT_DEACTIVATED: 'Tenant desativado',
   USER_ACTIVATED: 'Usuário ativado',
@@ -74,7 +122,113 @@ function formatHealthStatus(status: TenantHealth['status']) {
   return 'OK'
 }
 
+function normalizeOperatorPermissions(permissions: string[]): SupportPermissionValue[] {
+  return SUPPORT_PERMISSIONS
+    .map(permission => permission.value)
+    .filter(value => permissions.includes(value) && SUPPORT_PERMISSION_VALUES.has(value))
+}
+
+function updateTenantInList(updatedTenant: TenantSummary) {
+  tenants.value = tenants.value.map(tenant => tenant.id === updatedTenant.id ? updatedTenant : tenant)
+}
+
+function updateTenantUserInLists(updatedUser: TenantUserSummary) {
+  tenantUsers.value = tenantUsers.value.map(user => user.id === updatedUser.id ? updatedUser : user)
+  operators.value = operators.value.map(user => user.id === updatedUser.id ? updatedUser : user)
+
+  if (tenantHealth.value) {
+    tenantHealth.value = {
+      ...tenantHealth.value,
+      pendingInviteUsers: tenantHealth.value.pendingInviteUsers.map(user => user.id === updatedUser.id ? updatedUser : user),
+      inactiveUsersSample: tenantHealth.value.inactiveUsersSample.map(user => user.id === updatedUser.id ? updatedUser : user),
+    }
+  }
+}
+
+function clearSuccessMessageTimeout() {
+  if (successMessageTimeout) {
+    clearTimeout(successMessageTimeout)
+    successMessageTimeout = null
+  }
+}
+
+function setSuccessMessage(message: string) {
+  clearSuccessMessageTimeout()
+  successMessage.value = message
+  successMessageTimeout = setTimeout(() => {
+    successMessage.value = null
+    successMessageTimeout = null
+  }, 3000)
+}
+
+function resetTenantEditForm(tenant: TenantSummary | null = selectedTenant.value) {
+  tenantEditForm.value = {
+    name: tenant?.name ?? '',
+    subdomain: tenant?.subdomain ?? '',
+  }
+}
+
+function cancelTenantEdit() {
+  editingTenant.value = false
+  resetTenantEditForm()
+}
+
+function toggleTenantEdit() {
+  if (!selectedTenant.value || !authStore.canEditTenants) return
+
+  if (editingTenant.value) {
+    cancelTenantEdit()
+    return
+  }
+
+  resetTenantEditForm(selectedTenant.value)
+  editingTenant.value = true
+}
+
+function resetTenantUserEditForm(user?: TenantUserSummary | null) {
+  tenantUserEditForm.value = {
+    firstName: user?.firstName ?? '',
+    lastName: user?.lastName ?? '',
+    email: user?.email ?? '',
+    phone: user?.phone ?? '',
+  }
+}
+
+function cancelTenantUserEdit() {
+  editingTenantUserId.value = null
+  resetTenantUserEditForm()
+}
+
+function toggleTenantUserEdit(user: TenantUserSummary) {
+  if (!authStore.canEditTenantUsers) return
+
+  if (editingTenantUserId.value === user.id) {
+    cancelTenantUserEdit()
+    return
+  }
+
+  editingTenantUserId.value = user.id
+  resetTenantUserEditForm(user)
+}
+
+function togglePermissionSelection(permission: SupportPermissionValue, checked: boolean) {
+  if (checked) {
+    editingPermissions.value = SUPPORT_PERMISSIONS
+      .map(item => item.value)
+      .filter(value => value === permission || editingPermissions.value.includes(value))
+    return
+  }
+
+  editingPermissions.value = editingPermissions.value.filter(value => value !== permission)
+}
+
 async function loadTenants() {
+  if (!authStore.canViewTenants) {
+    tenants.value = []
+    selectedTenantId.value = ''
+    return
+  }
+
   loadingTenants.value = true
   error.value = null
   try {
@@ -90,10 +244,11 @@ async function loadTenants() {
 }
 
 async function loadTenantUsers(tenantId: string) {
-  if (!tenantId) {
+  if (!tenantId || !authStore.canViewTenantUsers) {
     tenantUsers.value = []
     return
   }
+
   loadingUsers.value = true
   error.value = null
   try {
@@ -106,10 +261,11 @@ async function loadTenantUsers(tenantId: string) {
 }
 
 async function loadTenantHealth(tenantId: string) {
-  if (!tenantId) {
+  if (!tenantId || !authStore.canViewHealth) {
     tenantHealth.value = null
     return
   }
+
   loadingHealth.value = true
   error.value = null
   try {
@@ -122,7 +278,8 @@ async function loadTenantHealth(tenantId: string) {
 }
 
 async function resendTenantInvitation(userId: string) {
-  if (!selectedTenantId.value) return
+  if (!selectedTenantId.value || !authStore.canEditTenantUsers) return
+
   resendingInvitationUserId.value = userId
   error.value = null
   try {
@@ -137,7 +294,8 @@ async function resendTenantInvitation(userId: string) {
 }
 
 async function resetTenantUserAccess(userId: string) {
-  if (!selectedTenantId.value) return
+  if (!selectedTenantId.value || !authStore.canEditTenantUsers) return
+
   resettingAccessUserId.value = userId
   error.value = null
   try {
@@ -150,7 +308,181 @@ async function resetTenantUserAccess(userId: string) {
   }
 }
 
+async function saveTenantChanges() {
+  if (!selectedTenant.value || !authStore.canEditTenants) return
+
+  savingTenant.value = true
+  error.value = null
+  try {
+    const updatedTenant = await tenantsAdminService.updateTenant(selectedTenant.value.id, {
+      name: tenantEditForm.value.name.trim(),
+      subdomain: tenantEditForm.value.subdomain.trim(),
+    })
+    updateTenantInList(updatedTenant)
+    if (tenantHealth.value?.tenantId === updatedTenant.id) {
+      tenantHealth.value = {
+        ...tenantHealth.value,
+        tenantName: updatedTenant.name,
+        subdomain: updatedTenant.subdomain,
+        active: updatedTenant.active,
+      }
+    }
+    cancelTenantEdit()
+    const message = 'Tenant atualizado com sucesso.'
+    setSuccessMessage(message)
+    showSuccess(message)
+  } catch (e: unknown) {
+    showError(e instanceof Error ? e.message : 'Erro ao atualizar tenant')
+  } finally {
+    savingTenant.value = false
+  }
+}
+
+async function toggleTenantStatus() {
+  if (!selectedTenant.value || !authStore.canEditTenants) return
+
+  togglingTenantId.value = selectedTenant.value.id
+  error.value = null
+  const nextStatus = !selectedTenant.value.active
+  try {
+    const updatedTenant = await tenantsAdminService.setTenantStatus(selectedTenant.value.id, nextStatus)
+    updateTenantInList(updatedTenant)
+    if (tenantHealth.value?.tenantId === updatedTenant.id) {
+      tenantHealth.value = {
+        ...tenantHealth.value,
+        active: updatedTenant.active,
+      }
+    }
+    const message = `Tenant ${updatedTenant.active ? 'ativado' : 'desativado'} com sucesso.`
+    setSuccessMessage(message)
+    showSuccess(message)
+  } catch (e: unknown) {
+    showError(e instanceof Error ? e.message : 'Erro ao atualizar status do tenant')
+  } finally {
+    togglingTenantId.value = null
+  }
+}
+
+async function saveTenantUserChanges(userId: string) {
+  if (!selectedTenantId.value || !authStore.canEditTenantUsers || editingTenantUserId.value !== userId) return
+
+  savingTenantUserId.value = userId
+  error.value = null
+  try {
+    const updatedUser = await tenantsAdminService.updateTenantUser(selectedTenantId.value, userId, {
+      firstName: tenantUserEditForm.value.firstName.trim(),
+      lastName: tenantUserEditForm.value.lastName.trim(),
+      email: tenantUserEditForm.value.email.trim(),
+      phone: tenantUserEditForm.value.phone.trim() || undefined,
+    })
+    updateTenantUserInLists(updatedUser)
+    cancelTenantUserEdit()
+    const message = 'Usuário atualizado com sucesso.'
+    setSuccessMessage(message)
+    showSuccess(message)
+  } catch (e: unknown) {
+    showError(e instanceof Error ? e.message : 'Erro ao atualizar usuário')
+  } finally {
+    savingTenantUserId.value = null
+  }
+}
+
+async function toggleTenantUserStatus(user: TenantUserSummary) {
+  if (!selectedTenantId.value || !authStore.canEditTenantUsers) return
+
+  togglingUserId.value = user.id
+  error.value = null
+  const nextStatus = !user.active
+  try {
+    const updatedUser = await tenantsAdminService.setUserStatus(selectedTenantId.value, user.id, nextStatus)
+    updateTenantUserInLists(updatedUser)
+    await loadTenantHealth(selectedTenantId.value)
+    const message = `Usuário ${updatedUser.active ? 'ativado' : 'desativado'} com sucesso.`
+    setSuccessMessage(message)
+    showSuccess(message)
+  } catch (e: unknown) {
+    showError(e instanceof Error ? e.message : 'Erro ao atualizar status do usuário')
+  } finally {
+    togglingUserId.value = null
+  }
+}
+
+async function changeOperatorRole(userId: string, systemRole: string) {
+  if (!authStore.canEditOperators) return
+
+  changingRoleUserId.value = userId
+  error.value = null
+  try {
+    const updatedUser = await tenantsAdminService.setOperatorRole(userId, systemRole)
+    updateTenantUserInLists(updatedUser)
+    showSuccess('Papel interno atualizado com sucesso.')
+  } catch (e: unknown) {
+    showError(e instanceof Error ? e.message : 'Erro ao atualizar papel interno')
+  } finally {
+    changingRoleUserId.value = null
+  }
+}
+
+async function handleOperatorRoleChange(userId: string, event: Event) {
+  const target = event.target
+  if (!(target instanceof HTMLSelectElement)) return
+  await changeOperatorRole(userId, target.value)
+}
+
+async function toggleOperatorPermissions(user: TenantUserSummary) {
+  if (!authStore.canEditOperators) return
+
+  if (editingOperatorId.value === user.id) {
+    editingOperatorId.value = null
+    editingPermissions.value = []
+    return
+  }
+
+  editingOperatorId.value = user.id
+  editingPermissions.value = []
+  loadingOperatorPermissions.value = true
+  error.value = null
+  try {
+    const permissions = await tenantsAdminService.getOperatorPermissions(user.id)
+    editingPermissions.value = normalizeOperatorPermissions(permissions)
+  } catch (e: unknown) {
+    editingOperatorId.value = null
+    showError(e instanceof Error ? e.message : 'Erro ao carregar permissões do operador')
+  } finally {
+    loadingOperatorPermissions.value = false
+  }
+}
+
+function handleSupportPermissionToggle(permission: SupportPermissionValue, event: Event) {
+  const target = event.target
+  if (!(target instanceof HTMLInputElement)) return
+  togglePermissionSelection(permission, target.checked)
+}
+
+async function saveOperatorPermissions() {
+  if (!editingOperatorId.value) return
+
+  savingPermissions.value = true
+  error.value = null
+  try {
+    const permissions = await tenantsAdminService.setOperatorPermissions(editingOperatorId.value, editingPermissions.value)
+    editingPermissions.value = normalizeOperatorPermissions(permissions)
+    showSuccess('Permissões do operador atualizadas com sucesso.')
+  } catch (e: unknown) {
+    showError(e instanceof Error ? e.message : 'Erro ao salvar permissões do operador')
+  } finally {
+    savingPermissions.value = false
+  }
+}
+
 async function loadOperators() {
+  if (!authStore.canViewOperators) {
+    operators.value = []
+    editingOperatorId.value = null
+    editingPermissions.value = []
+    return
+  }
+
   loadingOperators.value = true
   error.value = null
   try {
@@ -163,6 +495,11 @@ async function loadOperators() {
 }
 
 async function loadAuditLogs() {
+  if (!authStore.canViewAudit) {
+    auditLogs.value = []
+    return
+  }
+
   loadingAudit.value = true
   error.value = null
   try {
@@ -191,27 +528,68 @@ function resetAuditFilters() {
 }
 
 async function clearAuditFilters() {
+  if (!authStore.canViewAudit) return
+
   resetAuditFilters()
   await loadAuditLogs()
 }
 
 watch(selectedTenantId, async tenantId => {
-  await Promise.all([loadTenantUsers(tenantId), loadTenantHealth(tenantId)])
+  editingTenant.value = false
+  resetTenantEditForm()
+  cancelTenantUserEdit()
+
+  if (!tenantId) {
+    tenantUsers.value = []
+    tenantHealth.value = null
+    return
+  }
+
+  const loaders: Promise<void>[] = []
+
+  if (authStore.canViewTenantUsers) {
+    loaders.push(loadTenantUsers(tenantId))
+  }
+  if (authStore.canViewHealth) {
+    loaders.push(loadTenantHealth(tenantId))
+  }
+
+  if (loaders.length > 0) {
+    await Promise.all(loaders)
+  }
 })
 
+watch(availableTabs, tabs => {
+  if (tabs.length > 0 && !tabs.some(tab => tab.key === activeTab.value)) {
+    activeTab.value = tabs[0].key
+  }
+}, { immediate: true })
+
 watch(activeTab, async tab => {
-  if (tab === 'operators' && operators.value.length === 0) {
+  if (tab === 'operators' && authStore.canViewOperators && operators.value.length === 0) {
     await loadOperators()
   }
-  if (tab === 'audit' && auditLogs.value.length === 0) {
+  if (tab === 'audit' && authStore.canViewAudit && auditLogs.value.length === 0) {
     await loadAuditLogs()
   }
 })
 
+watch(selectedTenant, tenant => {
+  if (!editingTenant.value) {
+    resetTenantEditForm(tenant)
+  }
+})
+
+onBeforeUnmount(() => {
+  clearSuccessMessageTimeout()
+})
+
 onMounted(async () => {
-  await loadTenants()
-  await loadOperators()
-  await loadAuditLogs()
+  await Promise.all([
+    authStore.canViewTenants ? loadTenants() : Promise.resolve(),
+    authStore.canViewOperators ? loadOperators() : Promise.resolve(),
+    authStore.canViewAudit ? loadAuditLogs() : Promise.resolve(),
+  ])
 })
 </script>
 
@@ -224,20 +602,16 @@ onMounted(async () => {
       </div>
     </template>
 
-    <div v-if="!authStore.isInternalStaff" class="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-800">
+    <div v-if="!authStore.isInternalStaff || !hasSupportAccess" class="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-800">
       Você não tem acesso a esta área.
     </div>
 
     <div v-else class="space-y-6">
       <div class="flex gap-2 border-b border-slate-200 dark:border-slate-700">
         <button
-          v-for="tab in [
-            { key: 'tenants', label: 'Tenants' },
-            { key: 'operators', label: 'Operadores' },
-            { key: 'audit', label: 'Auditoria' },
-          ]"
+          v-for="tab in availableTabs"
           :key="tab.key"
-          @click="activeTab = tab.key as 'tenants' | 'operators' | 'audit'"
+          @click="activeTab = tab.key"
           class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors"
           :class="activeTab === tab.key
             ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
@@ -247,8 +621,11 @@ onMounted(async () => {
         </button>
       </div>
 
-      <section v-if="activeTab === 'tenants'" class="grid gap-6 lg:grid-cols-[320px_1fr]">
-        <!-- Coluna esquerda: lista de tenants -->
+      <p v-if="successMessage" class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        {{ successMessage }}
+      </p>
+
+      <section v-if="activeTab === 'tenants' && authStore.canViewTenants" :class="tenantsSectionClass">
         <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 lg:self-start">
           <div class="flex items-center justify-between mb-4">
             <div>
@@ -278,25 +655,93 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Coluna direita: saúde + usuários -->
-        <div class="space-y-6 lg:col-start-2">
+        <div v-if="hasTenantDetailsAccess" class="space-y-6 lg:col-start-2">
           <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
+            <div v-if="selectedTenant" class="rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p class="text-xs font-semibold uppercase text-slate-400">Dados do tenant</p>
+                  <p class="mt-1 text-sm font-semibold text-slate-800 dark:text-slate-200">{{ selectedTenant.name }}</p>
+                  <p class="text-xs text-slate-400">@{{ selectedTenant.subdomain }}</p>
+                </div>
+                <button
+                  v-if="authStore.canEditTenants"
+                  @click="toggleTenantEdit"
+                  :disabled="savingTenant"
+                  class="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors disabled:opacity-60"
+                >
+                  {{ editingTenant ? 'Fechar' : 'Editar' }}
+                </button>
+              </div>
+
+              <form v-if="editingTenant" class="mt-4 space-y-4" @submit.prevent="saveTenantChanges">
+                <div class="grid gap-3 md:grid-cols-2">
+                  <label class="flex flex-col gap-1 text-xs text-slate-500">
+                    Nome
+                    <input
+                      v-model="tenantEditForm.name"
+                      type="text"
+                      class="border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 w-full"
+                    >
+                  </label>
+                  <label class="flex flex-col gap-1 text-xs text-slate-500">
+                    Subdomínio
+                    <input
+                      v-model="tenantEditForm.subdomain"
+                      type="text"
+                      class="border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 w-full"
+                    >
+                  </label>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <button
+                    type="submit"
+                    :disabled="savingTenant"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 py-2 text-sm disabled:opacity-60"
+                  >
+                    {{ savingTenant ? 'Salvando...' : 'Salvar' }}
+                  </button>
+                  <button
+                    type="button"
+                    @click="cancelTenantEdit"
+                    :disabled="savingTenant"
+                    class="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors disabled:opacity-60"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </div>
+            <div v-else class="text-sm text-slate-400">Selecione um tenant para visualizar os detalhes.</div>
+          </div>
+
+          <div v-if="authStore.canViewHealth" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center justify-between gap-3 mb-4">
               <div>
                 <h2 class="text-sm font-semibold text-slate-800 dark:text-slate-200">Saúde do tenant</h2>
                 <p class="text-xs text-slate-400">Sinais rápidos para triagem do suporte</p>
               </div>
-              <span
-                v-if="tenantHealth"
-                class="text-[10px] font-semibold px-2 py-1 rounded-full"
-                :class="tenantHealth.status === 'CRITICAL'
-                  ? 'bg-red-100 text-red-700'
-                  : tenantHealth.status === 'WARNING'
-                    ? 'bg-amber-100 text-amber-700'
-                    : 'bg-emerald-100 text-emerald-700'"
-              >
-                {{ formatHealthStatus(tenantHealth.status) }}
-              </span>
+              <div class="flex items-center gap-2">
+                <span
+                  v-if="tenantHealth"
+                  class="text-[10px] font-semibold px-2 py-1 rounded-full"
+                  :class="tenantHealth.status === 'CRITICAL'
+                    ? 'bg-red-100 text-red-700'
+                    : tenantHealth.status === 'WARNING'
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-emerald-100 text-emerald-700'"
+                >
+                  {{ formatHealthStatus(tenantHealth.status) }}
+                </span>
+                <button
+                  v-if="authStore.canEditTenants && selectedTenant"
+                  @click="toggleTenantStatus"
+                  :disabled="togglingTenantId === selectedTenant.id"
+                  class="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors disabled:opacity-60"
+                >
+                  {{ togglingTenantId === selectedTenant.id ? 'Salvando...' : selectedTenant.active ? 'Desativar' : 'Ativar' }}
+                </button>
+              </div>
             </div>
 
             <div v-if="loadingHealth" class="text-sm text-slate-400">Carregando...</div>
@@ -358,6 +803,7 @@ onMounted(async () => {
                           <p class="text-xs text-slate-400">{{ user.email }}</p>
                         </div>
                         <button
+                          v-if="authStore.canEditTenantUsers"
                           @click="resendTenantInvitation(user.id)"
                           :disabled="resendingInvitationUserId === user.id"
                           class="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-700/40 disabled:opacity-60"
@@ -408,7 +854,7 @@ onMounted(async () => {
             </div>
           </div>
 
-          <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
+          <div v-if="authStore.canViewTenantUsers" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center justify-between mb-4">
               <div>
                 <h2 class="text-sm font-semibold text-slate-800 dark:text-slate-200">Usuários do tenant selecionado</h2>
@@ -431,41 +877,117 @@ onMounted(async () => {
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-                  <tr v-for="user in tenantUsers" :key="user.id">
-                    <td class="px-4 py-3">
-                      <p class="font-semibold text-slate-800 dark:text-slate-200">{{ user.firstName }} {{ user.lastName }}</p>
-                      <p class="text-xs text-slate-400">{{ user.email }}</p>
-                    </td>
-                    <td class="px-4 py-3 text-xs text-slate-600 dark:text-slate-300">
-                      <span v-if="user.systemRole" class="inline-flex items-center gap-1">
-                        <span class="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-indigo-700">Interno</span>
-                        {{ systemRoleLabel(user.systemRole) }}
-                      </span>
-                      <span v-else>{{ user.tenantRoleName ?? '—' }}</span>
-                    </td>
-                    <td class="px-4 py-3">
-                      <span class="text-xs px-2 py-1 rounded-full"
-                            :class="user.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'">
-                        {{ user.active ? 'Ativo' : 'Inativo' }}
-                      </span>
-                      <span v-if="user.verificationStatus === 'PENDING'" class="ml-2 text-[10px] px-2 py-1 rounded-full bg-amber-100 text-amber-700">
-                        Convite pendente
-                      </span>
-                    </td>
-                    <td class="px-4 py-3 text-xs text-slate-400">{{ formatDate(user.createdAt) }}</td>
-                    <td class="px-4 py-3">
-                      <button
-                        v-if="user.active && user.verificationStatus !== 'PENDING'"
-                        @click="resetTenantUserAccess(user.id)"
-                        :disabled="resettingAccessUserId === user.id"
-                        class="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium hover:bg-amber-50 hover:border-amber-200 hover:text-amber-700 dark:hover:bg-amber-900/20 dark:hover:text-amber-400 transition-colors disabled:opacity-60"
-                        title="Força o usuário a redefinir a senha no próximo login e invalida a sessão atual"
-                      >
-                        {{ resettingAccessUserId === user.id ? 'Resetando...' : 'Resetar acesso' }}
-                      </button>
-                      <span v-else class="text-slate-300 dark:text-slate-600 text-xs">—</span>
-                    </td>
-                  </tr>
+                  <template v-for="user in tenantUsers" :key="user.id">
+                    <tr>
+                      <td class="px-4 py-3">
+                        <p class="font-semibold text-slate-800 dark:text-slate-200">{{ user.firstName }} {{ user.lastName }}</p>
+                        <p class="text-xs text-slate-400">{{ user.email }}</p>
+                        <p v-if="user.phone" class="text-xs text-slate-400">{{ user.phone }}</p>
+                      </td>
+                      <td class="px-4 py-3 text-xs text-slate-600 dark:text-slate-300">
+                        <span v-if="user.systemRole" class="inline-flex items-center gap-1">
+                          <span class="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-indigo-700">Interno</span>
+                          {{ systemRoleLabel(user.systemRole) }}
+                        </span>
+                        <span v-else>{{ user.tenantRoleName ?? '—' }}</span>
+                      </td>
+                      <td class="px-4 py-3">
+                        <span class="text-xs px-2 py-1 rounded-full"
+                              :class="user.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'">
+                          {{ user.active ? 'Ativo' : 'Inativo' }}
+                        </span>
+                        <span v-if="user.verificationStatus === 'PENDING'" class="ml-2 text-[10px] px-2 py-1 rounded-full bg-amber-100 text-amber-700">
+                          Convite pendente
+                        </span>
+                      </td>
+                      <td class="px-4 py-3 text-xs text-slate-400">{{ formatDate(user.createdAt) }}</td>
+                      <td class="px-4 py-3">
+                        <div class="flex flex-wrap items-center gap-2">
+                          <button
+                            v-if="authStore.canEditTenantUsers"
+                            @click="toggleTenantUserEdit(user)"
+                            :disabled="savingTenantUserId === user.id"
+                            class="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors disabled:opacity-60"
+                          >
+                            {{ editingTenantUserId === user.id ? 'Fechar' : 'Editar' }}
+                          </button>
+                          <button
+                            v-if="authStore.canEditTenantUsers"
+                            @click="toggleTenantUserStatus(user)"
+                            :disabled="togglingUserId === user.id"
+                            class="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors disabled:opacity-60"
+                          >
+                            {{ togglingUserId === user.id ? 'Salvando...' : user.active ? 'Desativar' : 'Ativar' }}
+                          </button>
+                          <button
+                            v-if="authStore.canEditTenantUsers && user.active && user.verificationStatus !== 'PENDING'"
+                            @click="resetTenantUserAccess(user.id)"
+                            :disabled="resettingAccessUserId === user.id"
+                            class="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium hover:bg-amber-50 hover:border-amber-200 hover:text-amber-700 dark:hover:bg-amber-900/20 dark:hover:text-amber-400 transition-colors disabled:opacity-60"
+                            title="Força o usuário a redefinir a senha no próximo login e invalida a sessão atual"
+                          >
+                            {{ resettingAccessUserId === user.id ? 'Resetando...' : 'Resetar acesso' }}
+                          </button>
+                          <span v-else-if="!authStore.canEditTenantUsers" class="text-slate-300 dark:text-slate-600 text-xs">—</span>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr v-if="editingTenantUserId === user.id">
+                      <td colspan="5" class="bg-slate-50/80 px-4 py-4 dark:bg-slate-900/30">
+                        <form class="grid gap-3 lg:grid-cols-2" @submit.prevent="saveTenantUserChanges(user.id)">
+                          <label class="flex flex-col gap-1 text-xs text-slate-500">
+                            Nome
+                            <input
+                              v-model="tenantUserEditForm.firstName"
+                              type="text"
+                              class="border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 w-full"
+                            >
+                          </label>
+                          <label class="flex flex-col gap-1 text-xs text-slate-500">
+                            Sobrenome
+                            <input
+                              v-model="tenantUserEditForm.lastName"
+                              type="text"
+                              class="border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 w-full"
+                            >
+                          </label>
+                          <label class="flex flex-col gap-1 text-xs text-slate-500">
+                            E-mail
+                            <input
+                              v-model="tenantUserEditForm.email"
+                              type="email"
+                              class="border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 w-full"
+                            >
+                          </label>
+                          <label class="flex flex-col gap-1 text-xs text-slate-500">
+                            Telefone
+                            <input
+                              v-model="tenantUserEditForm.phone"
+                              type="tel"
+                              class="border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 w-full"
+                            >
+                          </label>
+                          <div class="lg:col-span-2 flex flex-wrap items-center gap-2">
+                            <button
+                              type="submit"
+                              :disabled="savingTenantUserId === user.id"
+                              class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 py-2 text-sm disabled:opacity-60"
+                            >
+                              {{ savingTenantUserId === user.id ? 'Salvando...' : 'Salvar' }}
+                            </button>
+                            <button
+                              type="button"
+                              @click="cancelTenantUserEdit"
+                              :disabled="savingTenantUserId === user.id"
+                              class="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors disabled:opacity-60"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </form>
+                      </td>
+                    </tr>
+                  </template>
                 </tbody>
               </table>
             </div>
@@ -473,15 +995,16 @@ onMounted(async () => {
         </div>
       </section>
 
-      <section v-else-if="activeTab === 'operators'" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
+      <section v-else-if="activeTab === 'operators' && authStore.canViewOperators" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
         <div class="flex items-center justify-between mb-4">
           <div>
             <h2 class="text-sm font-semibold text-slate-800 dark:text-slate-200">Operadores internos</h2>
-            <p class="text-xs text-slate-400">Usuários com SystemRole interno no modelo fixo (somente leitura)</p>
+            <p class="text-xs text-slate-400">Usuários com SystemRole interno no modelo fixo</p>
           </div>
           <span class="text-xs text-slate-400">{{ operators.length }}</span>
         </div>
 
+        <p v-if="authStore.canEditOperators" class="mb-4 text-xs text-slate-400">Clique em um operador para gerenciar permissões granulares.</p>
         <div v-if="loadingOperators" class="text-sm text-slate-400">Carregando...</div>
         <div v-else-if="operators.length === 0" class="text-sm text-slate-400">Nenhum operador encontrado.</div>
         <div v-else class="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
@@ -495,33 +1018,102 @@ onMounted(async () => {
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-              <tr v-for="user in operators" :key="user.id">
-                <td class="px-4 py-3">
-                  <p class="font-semibold text-slate-800 dark:text-slate-200">{{ user.firstName }} {{ user.lastName }}</p>
-                  <p class="text-xs text-slate-400">{{ user.email }}</p>
-                </td>
-                <td class="px-4 py-3">
-                  <span class="text-xs text-slate-600 dark:text-slate-300">{{ systemRoleLabel(user.systemRole) }}</span>
-                </td>
-                <td class="px-4 py-3 text-xs text-slate-400">
-                  <div class="flex flex-col">
-                    <span class="font-medium text-slate-600 dark:text-slate-300">{{ getTenantDisplayName(user) }}</span>
-                    <span class="font-mono text-[11px]">{{ user.tenantId }}</span>
-                  </div>
-                </td>
-                <td class="px-4 py-3">
-                  <span class="text-xs px-2 py-1 rounded-full"
-                        :class="user.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'">
-                    {{ user.active ? 'Ativo' : 'Inativo' }}
-                  </span>
-                </td>
-              </tr>
+              <template v-for="user in operators" :key="user.id">
+                <tr
+                  @click="toggleOperatorPermissions(user)"
+                  :class="authStore.canEditOperators ? 'cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/20' : ''"
+                >
+                  <td class="px-4 py-3">
+                    <p class="font-semibold text-slate-800 dark:text-slate-200">{{ user.firstName }} {{ user.lastName }}</p>
+                    <p class="text-xs text-slate-400">{{ user.email }}</p>
+                  </td>
+                  <td class="px-4 py-3">
+                    <select
+                      v-if="authStore.canEditOperators"
+                      :value="user.systemRole ?? ''"
+                      @click.stop
+                      @change="handleOperatorRoleChange(user.id, $event)"
+                      :disabled="changingRoleUserId === user.id"
+                      class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-700 px-3 py-2 text-xs text-slate-700 dark:text-slate-200 disabled:opacity-60"
+                    >
+                      <option
+                        v-for="option in INTERNAL_SYSTEM_ROLE_OPTIONS"
+                        :key="option.value"
+                        :value="option.value"
+                      >
+                        {{ option.label }}
+                      </option>
+                    </select>
+                    <span v-else class="text-xs text-slate-600 dark:text-slate-300">{{ systemRoleLabel(user.systemRole) }}</span>
+                  </td>
+                  <td class="px-4 py-3 text-xs text-slate-400">
+                    <div class="flex flex-col">
+                      <span class="font-medium text-slate-600 dark:text-slate-300">{{ getTenantDisplayName(user) }}</span>
+                      <span class="font-mono text-[11px]">{{ user.tenantId }}</span>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <span class="text-xs px-2 py-1 rounded-full"
+                          :class="user.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'">
+                      {{ user.active ? 'Ativo' : 'Inativo' }}
+                    </span>
+                  </td>
+                </tr>
+                <tr v-if="editingOperatorId === user.id && authStore.canEditOperators">
+                  <td colspan="4" class="bg-slate-50/80 px-4 py-4 dark:bg-slate-900/30">
+                    <div @click.stop class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700 dark:bg-slate-800/80">
+                      <div class="mb-4 flex items-start justify-between gap-3">
+                        <div>
+                          <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-200">Permissões de suporte</h3>
+                          <p class="text-xs text-slate-400">{{ user.firstName }} {{ user.lastName }} · {{ editingPermissions.length }} selecionada(s)</p>
+                        </div>
+                        <button
+                          @click.stop="toggleOperatorPermissions(user)"
+                          class="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700/40"
+                        >
+                          Fechar
+                        </button>
+                      </div>
+
+                      <div v-if="loadingOperatorPermissions" class="text-sm text-slate-400">Carregando...</div>
+                      <div v-else class="space-y-4">
+                        <div class="grid gap-3 md:grid-cols-2">
+                          <label
+                            v-for="permission in SUPPORT_PERMISSIONS"
+                            :key="permission.value"
+                            class="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 transition-colors hover:border-indigo-200 hover:bg-indigo-50/60 dark:border-slate-700 dark:text-slate-200 dark:hover:border-indigo-500/40 dark:hover:bg-indigo-900/20"
+                          >
+                            <input
+                              :checked="editingPermissions.includes(permission.value)"
+                              :disabled="savingPermissions"
+                              @change="handleSupportPermissionToggle(permission.value, $event)"
+                              type="checkbox"
+                              class="h-4 w-4 accent-indigo-600"
+                            >
+                            <span>{{ permission.label }}</span>
+                          </label>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                          <button
+                            @click.stop="saveOperatorPermissions"
+                            :disabled="savingPermissions"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 py-2 text-sm disabled:opacity-60"
+                          >
+                            {{ savingPermissions ? 'Salvando...' : 'Salvar' }}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </template>
             </tbody>
           </table>
         </div>
       </section>
 
-      <section v-else class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
+      <section v-else-if="activeTab === 'audit' && authStore.canViewAudit" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
         <div class="flex items-center justify-between mb-4">
           <div>
             <h2 class="text-sm font-semibold text-slate-800 dark:text-slate-200">Auditoria</h2>

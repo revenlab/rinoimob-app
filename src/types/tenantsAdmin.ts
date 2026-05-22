@@ -17,6 +17,7 @@ export interface TenantUserSummary {
   email: string
   firstName: string
   lastName: string
+  phone?: string | null
   active: boolean
   systemRole: SystemRole | null
   tenantRoleId: string | null
@@ -48,6 +49,14 @@ export interface TenantAuditLogFilters {
   to?: string | null
 }
 
+export interface SupportDashboard {
+  totalTenants: number
+  activeTenants: number
+  inactiveTenants: number
+  totalUsers: number
+  recentActivity: TenantAuditLog[]
+}
+
 export interface TenantHealthFailure {
   executionId: string
   workflowId: string
@@ -77,3 +86,16 @@ export interface TenantHealth {
   inactiveUsersSample: TenantUserSummary[]
   recentFailures: TenantHealthFailure[]
 }
+
+export const SUPPORT_PERMISSIONS = [
+  { value: 'support:tenants:read', label: 'Ver tenants' },
+  { value: 'support:tenants:write', label: 'Editar tenants' },
+  { value: 'support:tenant_users:read', label: 'Ver usuários de tenants' },
+  { value: 'support:tenant_users:write', label: 'Editar usuários de tenants' },
+  { value: 'support:operators:read', label: 'Ver operadores' },
+  { value: 'support:operators:write', label: 'Editar operadores' },
+  { value: 'support:audit:read', label: 'Ver auditoria' },
+  { value: 'support:health:read', label: 'Ver saúde dos tenants' },
+] as const
+
+export type SupportPermissionValue = typeof SUPPORT_PERMISSIONS[number]['value']

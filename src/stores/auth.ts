@@ -30,6 +30,21 @@ export const useAuthStore = defineStore('auth', () => {
   const currentUser = computed(() => user.value)
   const isInternalStaff = computed(() => isInternalSystemRole(user.value?.systemRole))
   const hasPendingWorkspaceSelection = computed(() => preAuthToken.value !== null && availableTenants.value.length > 0)
+  const hasSupportPermission = (permission: string) =>
+    user.value?.supportPermissions?.includes(permission) ?? false
+  const canViewTenants = computed(() => hasSupportPermission('support:tenants:read'))
+  const canEditTenants = computed(() => hasSupportPermission('support:tenants:write'))
+  const canViewTenantUsers = computed(() => hasSupportPermission('support:tenant_users:read'))
+  const canEditTenantUsers = computed(() => hasSupportPermission('support:tenant_users:write'))
+  const canViewOperators = computed(() => hasSupportPermission('support:operators:read'))
+  const canEditOperators = computed(() => hasSupportPermission('support:operators:write'))
+  const canViewAudit = computed(() => hasSupportPermission('support:audit:read'))
+  const canViewHealth = computed(() => hasSupportPermission('support:health:read'))
+
+  const normalizeUser = (userData: User): User => ({
+    ...userData,
+    supportPermissions: userData.supportPermissions ?? [],
+  })
 
   const initializeAuth = () => {
     const storedToken = localStorage.getItem(TOKEN_KEY)
@@ -40,7 +55,7 @@ export const useAuthStore = defineStore('auth', () => {
     if (storedRefreshToken) refreshToken.value = storedRefreshToken
     if (storedUser) {
       try {
-        user.value = JSON.parse(storedUser)
+        user.value = normalizeUser(JSON.parse(storedUser) as User)
       } catch {
         localStorage.removeItem(USER_KEY)
       }
@@ -213,6 +228,7 @@ export const useAuthStore = defineStore('auth', () => {
         active: me.active,
         systemRole: me.systemRole,
         createdAt: me.createdAt,
+        supportPermissions: me.supportPermissions ?? [],
       }
       currentTenantId.value = me.tenantId
       currentTenantName.value = me.tenantName
@@ -230,7 +246,7 @@ export const useAuthStore = defineStore('auth', () => {
       isLoading.value = true
       error.value = null
       if (!accessToken.value) throw new Error('Não autenticado')
-      const updatedUser = await authService.updateProfile(firstName, lastName)
+      const updatedUser = normalizeUser(await authService.updateProfile(firstName, lastName))
       user.value = updatedUser
       localStorage.setItem(USER_KEY, JSON.stringify(updatedUser))
       return true
@@ -264,11 +280,11 @@ export const useAuthStore = defineStore('auth', () => {
   function _applyLoginResponse(response: LoginResponse) {
     accessToken.value = response.accessToken
     refreshToken.value = response.refreshToken
-    user.value = response.user
+    user.value = normalizeUser(response.user)
     forcePasswordReset.value = response.forcePasswordReset ?? false
     localStorage.setItem(TOKEN_KEY, response.accessToken)
     localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken)
-    localStorage.setItem(USER_KEY, JSON.stringify(response.user))
+    localStorage.setItem(USER_KEY, JSON.stringify(user.value))
     
     // Connect WebSocket — on auth failure (expired token), force logout
     connectWebSocket(response.accessToken, undefined, () => {
@@ -292,6 +308,15 @@ export const useAuthStore = defineStore('auth', () => {
     currentUser,
     isInternalStaff,
     hasPendingWorkspaceSelection,
+    hasSupportPermission,
+    canViewTenants,
+    canEditTenants,
+    canViewTenantUsers,
+    canEditTenantUsers,
+    canViewOperators,
+    canEditOperators,
+    canViewAudit,
+    canViewHealth,
     initializeAuth,
     fetchMe,
     signup,

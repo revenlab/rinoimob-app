@@ -1,5 +1,6 @@
 import { apiFetch, API_BASE } from '@/lib/api'
 import type {
+  SupportDashboard,
   TenantAuditLog,
   TenantAuditLogFilters,
   TenantHealth,
@@ -10,6 +11,10 @@ import type {
 const BASE = `${API_BASE}/support`
 
 class TenantsAdminService {
+  async getDashboard(): Promise<SupportDashboard> {
+    return apiFetch<SupportDashboard>(`${BASE}/dashboard`)
+  }
+
   async listTenants(): Promise<TenantSummary[]> {
     return apiFetch<TenantSummary[]>(`${BASE}/tenants`)
   }
@@ -61,6 +66,57 @@ class TenantsAdminService {
   async resetAccess(tenantId: string, userId: string): Promise<TenantUserSummary> {
     return apiFetch<TenantUserSummary>(`${BASE}/tenants/${tenantId}/users/${userId}/reset-access`, {
       method: 'POST',
+    })
+  }
+
+  async updateTenant(tenantId: string, data: { name: string; subdomain: string }): Promise<TenantSummary> {
+    return apiFetch<TenantSummary>(`${BASE}/tenants/${tenantId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async setTenantStatus(tenantId: string, active: boolean): Promise<TenantSummary> {
+    const params = new URLSearchParams({ active: String(active) })
+    return apiFetch<TenantSummary>(`${BASE}/tenants/${tenantId}/status?${params.toString()}`, {
+      method: 'PATCH',
+    })
+  }
+
+  async updateTenantUser(
+    tenantId: string,
+    userId: string,
+    data: { firstName: string; lastName: string; email: string; phone?: string }
+  ): Promise<TenantUserSummary> {
+    return apiFetch<TenantUserSummary>(`${BASE}/tenants/${tenantId}/users/${userId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async setUserStatus(tenantId: string, userId: string, active: boolean): Promise<TenantUserSummary> {
+    const params = new URLSearchParams({ active: String(active) })
+    return apiFetch<TenantUserSummary>(`${BASE}/tenants/${tenantId}/users/${userId}/status?${params.toString()}`, {
+      method: 'PATCH',
+    })
+  }
+
+  async setOperatorRole(userId: string, systemRole: string): Promise<TenantUserSummary> {
+    const params = new URLSearchParams({ systemRole })
+    return apiFetch<TenantUserSummary>(`${BASE}/operators/${userId}/role?${params.toString()}`, {
+      method: 'PATCH',
+    })
+  }
+
+  async getOperatorPermissions(userId: string): Promise<string[]> {
+    return apiFetch<string[]>(`${BASE}/operators/${userId}/permissions`)
+  }
+
+  async setOperatorPermissions(userId: string, permissions: string[]): Promise<string[]> {
+    return apiFetch<string[]>(`${BASE}/operators/${userId}/permissions`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ permissions }),
     })
   }
 }

@@ -8,6 +8,7 @@ export interface User {
   active: boolean
   systemRole: SystemRole | null
   createdAt: string
+  supportPermissions: string[]
 }
 
 export interface TenantInfo {
@@ -85,6 +86,7 @@ export interface MeResponse {
   active: boolean
   systemRole: SystemRole | null
   createdAt: string
+  supportPermissions: string[]
   tenantId: string | null
   tenantName: string | null
   tenantSubdomain: string | null
