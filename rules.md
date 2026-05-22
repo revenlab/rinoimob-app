@@ -87,6 +87,40 @@ Dual-mode:
 
 ---
 
+## Website Config (`src/views/WebsiteConfig.vue`)
+
+Rota: `/website-config` | Nav: `Site` (`clientOnly: true`)
+
+4 seções: Identidade, Conteúdo, Contato, Redes Sociais.
+
+- Upload de logo/favicon com preview.
+- Color pickers para `primaryColor` e `secondaryColor`.
+- Live preview card com as configurações atuais.
+- Serviço: `src/services/websiteConfig.ts`
+
+### Serviço (`src/services/websiteConfig.ts`) — métodos disponíveis
+
+| Método | Endpoint |
+|--------|----------|
+| `getConfig()` | GET /website-config |
+| `updateConfig(data)` | PUT /website-config |
+| `uploadLogo(file)` | POST /website-config/logo |
+| `uploadFavicon(file)` | POST /website-config/favicon |
+| `deleteLogo()` | DELETE /website-config/logo |
+| `deleteFavicon()` | DELETE /website-config/favicon |
+| `getSupportConfig(tenantId)` | GET /support/tenants/{id}/website-config |
+| `updateSupportConfig(tenantId, data)` | PUT /support/tenants/{id}/website-config |
+
+### Aba Site no TenantsAdmin (`TenantsAdmin.vue`)
+
+Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-config` de qualquer tenant.
+
+### Types (`src/types/tenantsAdmin.ts`)
+
+- `TenantWebsiteConfig` — DTO completo com todos os campos de branding
+
+---
+
 ## Convenções
 
 - TypeScript strict — sem `any`.
