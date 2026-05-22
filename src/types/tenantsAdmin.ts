@@ -87,6 +87,23 @@ export interface TenantHealth {
   recentFailures: TenantHealthFailure[]
 }
 
+export interface TenantWebsiteConfig {
+  companyName?: string | null
+  logoUrl?: string | null
+  faviconUrl?: string | null
+  primaryColor?: string | null
+  secondaryColor?: string | null
+  description?: string | null
+  heroTitle?: string | null
+  heroSubtitle?: string | null
+  phone?: string | null
+  email?: string | null
+  address?: string | null
+  instagramUrl?: string | null
+  whatsappNumber?: string | null
+  facebookUrl?: string | null
+}
+
 export const SUPPORT_PERMISSIONS = [
   { value: 'support:tenants:read', label: 'Ver tenants' },
   { value: 'support:tenants:write', label: 'Editar tenants' },

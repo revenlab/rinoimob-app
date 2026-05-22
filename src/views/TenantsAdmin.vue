@@ -4,6 +4,7 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useNotification } from '@/composables/useNotification'
 import tenantsAdminService from '@/services/tenantsAdmin'
+import websiteConfigService from '@/services/websiteConfig'
 import { INTERNAL_SYSTEM_ROLE_OPTIONS, systemRoleLabel } from '@/types/role'
 import {
   SUPPORT_PERMISSIONS,
@@ -12,9 +13,10 @@ import {
   type TenantHealth,
   type TenantSummary,
   type TenantUserSummary,
+  type TenantWebsiteConfig,
 } from '@/types/tenantsAdmin'
 
-type TabKey = 'tenants' | 'operators' | 'audit'
+type TabKey = 'tenants' | 'operators' | 'audit' | 'site'
 
 const SUPPORT_PERMISSION_VALUES = new Set<SupportPermissionValue>(
   SUPPORT_PERMISSIONS.map(permission => permission.value)
@@ -58,6 +60,9 @@ const tenantEditForm = ref({ name: '', subdomain: '' })
 const editingTenantUserId = ref<string | null>(null)
 const savingTenantUserId = ref<string | null>(null)
 const tenantUserEditForm = ref({ firstName: '', lastName: '', email: '', phone: '' })
+const websiteConfig = ref<Partial<TenantWebsiteConfig> | null>(null)
+const loadingWebsiteConfig = ref(false)
+const isSavingWebsite = ref(false)
 const successMessage = ref<string | null>(null)
 const error = ref<string | null>(null)
 let successMessageTimeout: ReturnType<typeof setTimeout> | null = null
@@ -70,6 +75,9 @@ const availableTabs = computed(() => {
   }
   if (authStore.canViewOperators) {
     tabs.push({ key: 'operators', label: 'Operadores' })
+  }
+  if (authStore.canEditTenants) {
+    tabs.push({ key: 'site', label: 'Site' })
   }
   if (authStore.canViewAudit) {
     tabs.push({ key: 'audit', label: 'Auditoria' })
@@ -518,6 +526,41 @@ async function loadAuditLogs() {
   }
 }
 
+async function loadWebsiteConfig(tenantId: string) {
+  if (!tenantId || !authStore.canEditTenants) {
+    websiteConfig.value = null
+    return
+  }
+
+  loadingWebsiteConfig.value = true
+  error.value = null
+  try {
+    websiteConfig.value = await websiteConfigService.getSupportConfig(tenantId)
+  } catch (e: unknown) {
+    websiteConfig.value = null
+    showError(e instanceof Error ? e.message : 'Erro ao carregar configurações do site')
+  } finally {
+    loadingWebsiteConfig.value = false
+  }
+}
+
+async function saveWebsiteConfig() {
+  if (!selectedTenant.value || !authStore.canEditTenants || !websiteConfig.value) return
+
+  isSavingWebsite.value = true
+  error.value = null
+  try {
+    websiteConfig.value = await websiteConfigService.updateSupportConfig(selectedTenant.value.id, websiteConfig.value)
+    const message = 'Configurações do site atualizadas com sucesso.'
+    setSuccessMessage(message)
+    showSuccess(message)
+  } catch (e: unknown) {
+    showError(e instanceof Error ? e.message : 'Erro ao salvar configurações do site')
+  } finally {
+    isSavingWebsite.value = false
+  }
+}
+
 function resetAuditFilters() {
   auditTenantFilter.value = ''
   auditActorFilter.value = ''
@@ -542,6 +585,7 @@ watch(selectedTenantId, async tenantId => {
   if (!tenantId) {
     tenantUsers.value = []
     tenantHealth.value = null
+    websiteConfig.value = null
     return
   }
 
@@ -552,6 +596,9 @@ watch(selectedTenantId, async tenantId => {
   }
   if (authStore.canViewHealth) {
     loaders.push(loadTenantHealth(tenantId))
+  }
+  if (activeTab.value === 'site' && authStore.canEditTenants) {
+    loaders.push(loadWebsiteConfig(tenantId))
   }
 
   if (loaders.length > 0) {
@@ -568,6 +615,9 @@ watch(availableTabs, tabs => {
 watch(activeTab, async tab => {
   if (tab === 'operators' && authStore.canViewOperators && operators.value.length === 0) {
     await loadOperators()
+  }
+  if (tab === 'site' && authStore.canEditTenants && selectedTenant.value) {
+    await loadWebsiteConfig(selectedTenant.value.id)
   }
   if (tab === 'audit' && authStore.canViewAudit && auditLogs.value.length === 0) {
     await loadAuditLogs()
@@ -1111,6 +1161,143 @@ onMounted(async () => {
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section v-else-if="activeTab === 'site' && authStore.canEditTenants" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
+        <h2 class="text-lg font-semibold mb-4 text-slate-900 dark:text-white">Configurações do Site</h2>
+        <p v-if="!selectedTenant" class="text-slate-400 text-sm">Selecione uma tenant para editar.</p>
+        <div v-else-if="loadingWebsiteConfig" class="text-sm text-slate-400">Carregando...</div>
+        <form v-else-if="websiteConfig" class="space-y-4" @submit.prevent="saveWebsiteConfig">
+          <div class="grid gap-4 md:grid-cols-2">
+            <label class="flex flex-col gap-1 text-xs text-slate-500">
+              Nome da empresa
+              <input
+                v-model="websiteConfig.companyName"
+                type="text"
+                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
+              >
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500">
+              Cor primária
+              <input
+                v-model="websiteConfig.primaryColor"
+                type="text"
+                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
+              >
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500">
+              Cor secundária
+              <input
+                v-model="websiteConfig.secondaryColor"
+                type="text"
+                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
+              >
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500">
+              Título principal
+              <input
+                v-model="websiteConfig.heroTitle"
+                type="text"
+                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
+              >
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500 md:col-span-2">
+              Descrição
+              <textarea
+                v-model="websiteConfig.description"
+                rows="3"
+                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
+              ></textarea>
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500 md:col-span-2">
+              Subtítulo principal
+              <textarea
+                v-model="websiteConfig.heroSubtitle"
+                rows="3"
+                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
+              ></textarea>
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500">
+              Telefone
+              <input
+                v-model="websiteConfig.phone"
+                type="text"
+                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
+              >
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500">
+              E-mail
+              <input
+                v-model="websiteConfig.email"
+                type="email"
+                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
+              >
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500 md:col-span-2">
+              Endereço
+              <input
+                v-model="websiteConfig.address"
+                type="text"
+                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
+              >
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500">
+              Instagram
+              <input
+                v-model="websiteConfig.instagramUrl"
+                type="text"
+                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
+              >
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500">
+              WhatsApp
+              <input
+                v-model="websiteConfig.whatsappNumber"
+                type="text"
+                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
+              >
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500 md:col-span-2">
+              Facebook
+              <input
+                v-model="websiteConfig.facebookUrl"
+                type="text"
+                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
+              >
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500 md:col-span-2">
+              URL da logo
+              <input
+                v-model="websiteConfig.logoUrl"
+                type="text"
+                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
+              >
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500 md:col-span-2">
+              URL do favicon
+              <input
+                v-model="websiteConfig.faviconUrl"
+                type="text"
+                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
+              >
+            </label>
+          </div>
+
+          <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3">
+            <div>
+              <p class="text-sm font-medium text-slate-800 dark:text-slate-200">Tenant selecionado</p>
+              <p class="text-xs text-slate-400">{{ selectedTenant.name }} · @{{ selectedTenant.subdomain }}</p>
+            </div>
+            <button
+              type="submit"
+              :disabled="isSavingWebsite"
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg disabled:opacity-50"
+            >
+              {{ isSavingWebsite ? 'Salvando...' : 'Salvar' }}
+            </button>
+          </div>
+        </form>
+        <p v-else class="text-sm text-slate-400">Nenhuma configuração disponível.</p>
       </section>
 
       <section v-else-if="activeTab === 'audit' && authStore.canViewAudit" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">

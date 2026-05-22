@@ -153,6 +153,12 @@ const router = createRouter({
       meta: { requiresAuth: true, internalOnly: true, title: 'Tenants' }
     },
     {
+      path: '/website-config',
+      name: 'WebsiteConfig',
+      component: () => import('@/views/WebsiteConfig.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/force-password-reset',
       name: 'ForcePasswordReset',
       component: () => import('@/views/ForcePasswordReset.vue'),
