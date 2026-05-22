@@ -24,22 +24,21 @@ import { CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircl
 const { toasts } = useNotification()
 
 function toastClasses(type: string): string {
-  const baseClasses = 'border-opacity-20'
   const typeClasses: Record<string, string> = {
-    error: 'bg-red-900/20 border-red-500 text-red-100',
-    success: 'bg-green-900/20 border-green-500 text-green-100',
-    warning: 'bg-yellow-900/20 border-yellow-500 text-yellow-100',
-    info: 'bg-blue-900/20 border-blue-500 text-blue-100',
+    error:   'bg-red-50 border-red-300 text-red-800 dark:bg-red-900/20 dark:border-red-500 dark:text-red-100',
+    success: 'bg-green-50 border-green-300 text-green-800 dark:bg-green-900/20 dark:border-green-500 dark:text-green-100',
+    warning: 'bg-yellow-50 border-yellow-300 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-500 dark:text-yellow-100',
+    info:    'bg-blue-50 border-blue-300 text-blue-800 dark:bg-blue-900/20 dark:border-blue-500 dark:text-blue-100',
   }
-  return `${baseClasses} ${typeClasses[type] || typeClasses.info}`
+  return typeClasses[type] || typeClasses.info
 }
 
 function toastIconClasses(type: string): string {
   const classes: Record<string, string> = {
-    error: 'w-5 h-5 text-red-200 shrink-0',
-    success: 'w-5 h-5 text-green-200 shrink-0',
-    warning: 'w-5 h-5 text-yellow-200 shrink-0',
-    info: 'w-5 h-5 text-blue-200 shrink-0',
+    error:   'w-5 h-5 text-red-500 dark:text-red-300 shrink-0',
+    success: 'w-5 h-5 text-green-500 dark:text-green-300 shrink-0',
+    warning: 'w-5 h-5 text-yellow-500 dark:text-yellow-300 shrink-0',
+    info:    'w-5 h-5 text-blue-500 dark:text-blue-300 shrink-0',
   }
   return classes[type] || classes.info
 }

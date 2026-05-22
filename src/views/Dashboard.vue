@@ -56,42 +56,42 @@
                 <div class="flex items-center gap-2">
                     <RouterLink
                         to="/leads"
-                        class="flex-1 bg-violet-700/20 dark:bg-violet-900/40 border border-violet-500/30 rounded-xl p-3 text-center hover:opacity-90 transition-opacity"
+                        class="flex-1 bg-violet-100 dark:bg-violet-900/40 border border-violet-300 dark:border-violet-500/30 rounded-xl p-3 text-center hover:opacity-90 transition-opacity"
                     >
-                        <p class="text-2xl font-bold text-violet-300">{{ metrics.newLeads }}</p>
-                        <p class="text-xs text-violet-300 font-medium mt-0.5">NOVOS</p>
+                        <p class="text-2xl font-bold text-violet-700 dark:text-violet-300">{{ metrics.newLeads }}</p>
+                        <p class="text-xs text-violet-600 dark:text-violet-300 font-medium mt-0.5">NOVOS</p>
                     </RouterLink>
                     <span class="text-slate-400 text-xl flex-shrink-0">›</span>
                     <RouterLink
                         to="/leads"
-                        class="flex-1 bg-slate-600/30 dark:bg-slate-700/60 border border-slate-500/30 rounded-xl p-3 text-center hover:opacity-90 transition-opacity"
+                        class="flex-1 bg-slate-100 dark:bg-slate-700/60 border border-slate-300 dark:border-slate-500/30 rounded-xl p-3 text-center hover:opacity-90 transition-opacity"
                     >
-                        <p class="text-2xl font-bold text-slate-300">{{ metrics.contacted }}</p>
-                        <p class="text-xs text-slate-300 font-medium mt-0.5">CONTATO</p>
+                        <p class="text-2xl font-bold text-slate-600 dark:text-slate-300">{{ metrics.contacted }}</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-300 font-medium mt-0.5">CONTATO</p>
                     </RouterLink>
                     <span class="text-slate-400 text-xl flex-shrink-0">›</span>
                     <RouterLink
                         to="/leads"
-                        class="flex-1 bg-indigo-700/20 dark:bg-indigo-900/40 border border-indigo-500/30 rounded-xl p-3 text-center hover:opacity-90 transition-opacity"
+                        class="flex-1 bg-indigo-100 dark:bg-indigo-900/40 border border-indigo-300 dark:border-indigo-500/30 rounded-xl p-3 text-center hover:opacity-90 transition-opacity"
                     >
-                        <p class="text-2xl font-bold text-indigo-300">{{ metrics.qualified }}</p>
-                        <p class="text-xs text-indigo-300 font-medium mt-0.5">QUALIF.</p>
+                        <p class="text-2xl font-bold text-indigo-700 dark:text-indigo-300">{{ metrics.qualified }}</p>
+                        <p class="text-xs text-indigo-600 dark:text-indigo-300 font-medium mt-0.5">QUALIF.</p>
                     </RouterLink>
                     <span class="text-slate-400 text-xl flex-shrink-0">›</span>
                     <RouterLink
                         to="/leads"
-                        class="flex-1 bg-emerald-700/20 dark:bg-emerald-900/40 border border-emerald-500/30 rounded-xl p-3 text-center hover:opacity-90 transition-opacity"
+                        class="flex-1 bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-300 dark:border-emerald-500/30 rounded-xl p-3 text-center hover:opacity-90 transition-opacity"
                     >
-                        <p class="text-2xl font-bold text-emerald-300">{{ metrics.won }}</p>
-                        <p class="text-xs text-emerald-300 font-medium mt-0.5">GANHOS</p>
+                        <p class="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{{ metrics.won }}</p>
+                        <p class="text-xs text-emerald-600 dark:text-emerald-300 font-medium mt-0.5">GANHOS</p>
                     </RouterLink>
                     <span class="text-slate-400 text-xl flex-shrink-0">›</span>
                     <RouterLink
                         to="/leads"
-                        class="flex-1 bg-red-700/20 dark:bg-red-900/40 border border-red-500/30 rounded-xl p-3 text-center hover:opacity-90 transition-opacity"
+                        class="flex-1 bg-red-100 dark:bg-red-900/40 border border-red-300 dark:border-red-500/30 rounded-xl p-3 text-center hover:opacity-90 transition-opacity"
                     >
-                        <p class="text-2xl font-bold text-red-300">{{ metrics.lost }}</p>
-                        <p class="text-xs text-red-300 font-medium mt-0.5">PERDIDOS</p>
+                        <p class="text-2xl font-bold text-red-700 dark:text-red-300">{{ metrics.lost }}</p>
+                        <p class="text-xs text-red-600 dark:text-red-300 font-medium mt-0.5">PERDIDOS</p>
                     </RouterLink>
                 </div>
             </div>
