@@ -126,7 +126,7 @@
                 </span>
               </td>
               <td class="px-4 py-4 hidden lg:table-cell">
-                <span class="text-xs text-slate-400">{{ lead.source === 'PORTAL' ? 'Portal' : 'Manual' }}</span>
+                <span class="text-xs text-slate-400">{{ formatLeadSource(lead.source) }}</span>
               </td>
               <td class="px-4 py-4 hidden lg:table-cell">
                 <span class="text-xs text-slate-400">{{ formatDate(lead.createdAt) }}</span>
@@ -216,7 +216,7 @@
               <p v-if="lead.phone && !lead.email" class="text-xs text-slate-400 mt-0.5">{{ lead.phone }}</p>
               <div class="flex items-center gap-2 mt-2 flex-wrap">
                 <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
-                  {{ lead.source === 'PORTAL' ? 'Portal' : 'Manual' }}
+                  {{ formatLeadSource(lead.source) }}
                 </span>
                 <span v-if="lead.assignedToName" class="text-xs text-slate-400 truncate max-w-[120px]">
                   <UserCircleIcon class="w-3.5 h-3.5 inline-block -mt-0.5 mr-1" />
@@ -313,16 +313,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useLeadStore } from '@/stores/lead'
+import { useAuthStore } from '@/stores/auth'
+import { useWebSocketStore } from '@/stores/websocket'
 import leadService from '@/services/lead'
 import userService from '@/services/user'
-import type { LeadResponse, LeadStatus, CreateLeadRequest, UserSummary } from '@/types/lead'
+import type { LeadResponse, LeadStatus, CreateLeadRequest, UserSummary, LeadWsEvent } from '@/types/lead'
 import { PlusIcon, UserCircleIcon } from '@heroicons/vue/20/solid'
 
 const leadStore = useLeadStore()
+const authStore = useAuthStore()
+const wsStore = useWebSocketStore()
 const router = useRouter()
 
 // ── View mode ──────────────────────────────────────────────────────────────
@@ -432,6 +436,17 @@ const statusClass = (status: LeadStatus): string => {
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
+const formatLeadSource = (source: string): string => {
+  if (!source) return 'Não informado'
+  if (source.startsWith('PORTAL_')) {
+    const detailed = source.replace(/^PORTAL_/, '').replace(/_/g, ' ').toLowerCase()
+    return `Portal (${detailed})`
+  }
+  if (source === 'PORTAL') return 'Portal'
+  if (source === 'MANUAL') return 'Manual'
+  return source.replace(/_/g, ' ').toLowerCase()
+}
+
 // ── Create modal ───────────────────────────────────────────────────────────
 const showCreate = ref(false)
 const createError = ref<string | null>(null)
@@ -478,6 +493,43 @@ const loadLeads = () => {
   leadStore.fetchLeads({ status: filterStatus.value, page: currentPage.value, size: 20 })
 }
 
+function extractLeadId(event: LeadWsEvent): string | null {
+  if (!event?.payload || typeof event.payload !== 'object') return null
+  const payload = event.payload as { id?: unknown }
+  return typeof payload.id === 'string' ? payload.id : null
+}
+
+async function handleLeadRealtimeEvent(event: LeadWsEvent) {
+  if (!event || !['LEAD_CREATED', 'LEAD_UPDATED', 'LEAD_DELETED'].includes(event.type)) return
+  if (viewMode.value === 'kanban') {
+    await loadKanban()
+  } else {
+    loadLeads()
+  }
+
+  if (event.type === 'LEAD_DELETED' && leadToDelete.value?.id === extractLeadId(event)) {
+    showDeleteConfirm.value = false
+    leadToDelete.value = null
+  }
+}
+
+let unsubLeadEvents: (() => void) | null = null
+let wsRetryTimer: ReturnType<typeof setTimeout> | null = null
+
+function setupLeadRealtimeSubscription() {
+  const tenantId = authStore.currentTenantId
+  if (!tenantId) return
+
+  if (wsStore.connected) {
+    unsubLeadEvents = wsStore.subscribeToTenantLeads(tenantId, (event: LeadWsEvent) => {
+      handleLeadRealtimeEvent(event)
+    })
+    return
+  }
+
+  wsRetryTimer = setTimeout(setupLeadRealtimeSubscription, 500)
+}
+
 onMounted(async () => {
   if (viewMode.value === 'kanban') {
     loadKanban()
@@ -489,5 +541,12 @@ onMounted(async () => {
   } catch {
     // graceful degradation — broker list stays empty
   }
+
+  setupLeadRealtimeSubscription()
+})
+
+onUnmounted(() => {
+  unsubLeadEvents?.()
+  if (wsRetryTimer) clearTimeout(wsRetryTimer)
 })
 </script>

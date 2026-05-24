@@ -80,6 +80,44 @@
               </div>
             </div>
 
+            <!-- Banner Principal (Hero) -->
+            <div class="space-y-3">
+              <label class="text-sm font-medium text-slate-700 dark:text-slate-300 block">Banner Principal do Site</label>
+              <div class="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 overflow-hidden">
+                <div class="relative w-full bg-slate-100 dark:bg-slate-900" style="aspect-ratio: 16/6">
+                  <img
+                    v-if="config.heroImageUrl"
+                    :src="config.heroImageUrl"
+                    alt="Banner do hero"
+                    class="absolute inset-0 w-full h-full object-cover"
+                  >
+                  <div v-else class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-sm text-slate-400">Sem imagem de destaque</span>
+                  </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 p-3 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                  <button
+                    type="button"
+                    @click="heroImageInputRef?.click()"
+                    :disabled="isUploadingHeroImage"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg disabled:opacity-50"
+                  >
+                    {{ isUploadingHeroImage ? 'Enviando...' : 'Enviar banner' }}
+                  </button>
+                  <button
+                    type="button"
+                    @click="removeHeroImage"
+                    :disabled="isDeletingHeroImage || !config.heroImageUrl"
+                    class="px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg disabled:opacity-50"
+                  >
+                    {{ isDeletingHeroImage ? 'Removendo...' : 'Remover' }}
+                  </button>
+                  <span class="text-xs text-slate-400 ml-auto">Recomendado: 1440×560px (16:5.5)</span>
+                </div>
+              </div>
+              <input ref="heroImageInputRef" type="file" accept="image/*" class="hidden" @change="handleHeroImageSelected">
+            </div>
+
             <div class="grid gap-4 md:grid-cols-2">
               <div>
                 <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Cor primária</label>
@@ -256,8 +294,11 @@ const isUploadingLogo = ref(false)
 const isDeletingLogo = ref(false)
 const isUploadingFavicon = ref(false)
 const isDeletingFavicon = ref(false)
+const isUploadingHeroImage = ref(false)
+const isDeletingHeroImage = ref(false)
 const logoInputRef = ref<HTMLInputElement | null>(null)
 const faviconInputRef = ref<HTMLInputElement | null>(null)
+const heroImageInputRef = ref<HTMLInputElement | null>(null)
 
 const primaryColorValue = computed({
   get: () => config.value.primaryColor ?? DEFAULT_PRIMARY_COLOR,
@@ -410,6 +451,39 @@ async function removeFavicon() {
   } finally {
     isDeletingFavicon.value = false
     resetFileInput(faviconInputRef.value)
+  }
+}
+
+async function handleHeroImageSelected(event: Event) {
+  const target = event.target
+  if (!(target instanceof HTMLInputElement) || !target.files?.length) return
+
+  isUploadingHeroImage.value = true
+  try {
+    const response = await websiteConfigService.uploadHeroImage(target.files[0])
+    applyConfig(response)
+    showSuccess('Banner do hero atualizado com sucesso!')
+  } catch (error: unknown) {
+    showError(error instanceof Error ? error.message : 'Erro ao enviar banner')
+  } finally {
+    isUploadingHeroImage.value = false
+    resetFileInput(target)
+  }
+}
+
+async function removeHeroImage() {
+  if (!config.value.heroImageUrl) return
+
+  isDeletingHeroImage.value = true
+  try {
+    const response = await websiteConfigService.deleteHeroImage()
+    applyConfig(response)
+    showSuccess('Banner removido com sucesso!')
+  } catch (error: unknown) {
+    showError(error instanceof Error ? error.message : 'Erro ao remover banner')
+  } finally {
+    isDeletingHeroImage.value = false
+    resetFileInput(heroImageInputRef.value)
   }
 }
 

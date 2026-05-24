@@ -31,5 +31,10 @@ export const useWebSocketStore = defineStore('websocket', () => {
     return subscribe(topic, callback)
   }
 
-  return { connected, connect, disconnect, subscribeToLeadWhatsapp, subscribeToTenantWhatsapp }
+  function subscribeToTenantLeads(tenantId: string, callback: (event: any) => void) {
+    const topic = `/topic/${tenantId}.leads`
+    return subscribe(topic, callback)
+  }
+
+  return { connected, connect, disconnect, subscribeToLeadWhatsapp, subscribeToTenantWhatsapp, subscribeToTenantLeads }
 })

@@ -128,3 +128,10 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
 - Pinia stores: padrão `useXStore()`.
 - Tailwind: sem CSS custom quando possível, usar classes utilitárias.
 - `apiFetch<T>()` para todas as chamadas de API.
+
+---
+
+## Last Changes
+
+- Leads UI (`LeadsManagement.vue` e `LeadDetail.vue`) agora exibe `source` dinâmico, incluindo origens detalhadas como `PORTAL_HOME_FORM` e `PORTAL_PROPERTY_FORM`, ao invés de colapsar tudo em apenas "Portal" ou "Manual".
+- Realtime de leads via WebSocket: `websocket` store ganhou `subscribeToTenantLeads()`. `LeadsManagement.vue` e `LeadDetail.vue` agora assinam `/topic/{tenantId}.leads` para refletir criação, atualização de status e deleção sem refresh.

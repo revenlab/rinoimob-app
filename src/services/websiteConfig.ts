@@ -49,6 +49,22 @@ class WebsiteConfigService {
     })
   }
 
+  async uploadHeroImage(file: File): Promise<TenantWebsiteConfig> {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    return apiFetch<TenantWebsiteConfig>(`${BASE}/hero-image`, {
+      method: 'POST',
+      body: formData,
+    })
+  }
+
+  async deleteHeroImage(): Promise<TenantWebsiteConfig> {
+    return apiFetch<TenantWebsiteConfig>(`${BASE}/hero-image`, {
+      method: 'DELETE',
+    })
+  }
+
   async getSupportConfig(tenantId: string): Promise<TenantWebsiteConfig> {
     return apiFetch<TenantWebsiteConfig>(`${SUPPORT_BASE}/tenants/${tenantId}/website-config`)
   }

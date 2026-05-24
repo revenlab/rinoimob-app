@@ -102,6 +102,7 @@ export interface TenantWebsiteConfig {
   instagramUrl?: string | null
   whatsappNumber?: string | null
   facebookUrl?: string | null
+  heroImageUrl?: string | null
 }
 
 export const SUPPORT_PERMISSIONS = [

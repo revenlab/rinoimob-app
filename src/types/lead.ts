@@ -118,3 +118,14 @@ export interface LeadStatsResponse {
   thisWeek: number
   conversionRate: number
 }
+
+export type LeadWsEventType = 'LEAD_CREATED' | 'LEAD_UPDATED' | 'LEAD_DELETED'
+
+export interface LeadDeletedWsPayload {
+  id: string
+}
+
+export interface LeadWsEvent {
+  type: LeadWsEventType
+  payload: LeadResponse | LeadDeletedWsPayload
+}

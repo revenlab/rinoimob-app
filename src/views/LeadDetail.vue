@@ -347,7 +347,7 @@
               <div class="grid grid-cols-2 gap-3">
                 <div>
                   <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-1">Origem</p>
-                  <p class="text-sm text-slate-700 dark:text-slate-300">{{ store.currentLead.source === 'PORTAL' ? 'Portal' : 'Manual' }}</p>
+                  <p class="text-sm text-slate-700 dark:text-slate-300">{{ formatLeadSource(store.currentLead.source) }}</p>
                 </div>
                 <div>
                   <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-1">Criado em</p>
@@ -609,7 +609,7 @@ import type { TaskTypeResponse } from '@/types/task'
 import type { TaskResponse } from '@/types/task'
 import whatsappService from '@/services/whatsapp'
 import type { WhatsappInstance, WhatsappMessage } from '@/types/whatsapp'
-import type { LeadStatus, LeadEventType, InterestLevel, LeadPropertyResponse, UpdateLeadRequest, UserSummary } from '@/types/lead'
+import type { LeadStatus, LeadEventType, InterestLevel, LeadPropertyResponse, UpdateLeadRequest, UserSummary, LeadWsEvent } from '@/types/lead'
 import type { PropertySummaryResponse } from '@/types/property'
 import { ArrowLeftIcon } from '@heroicons/vue/20/solid'
 
@@ -634,6 +634,17 @@ const statusClass = (status: LeadStatus): string => allStatuses.find(s => s.valu
 
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+
+const formatLeadSource = (source: string): string => {
+  if (!source) return 'Não informado'
+  if (source.startsWith('PORTAL_')) {
+    const detailed = source.replace(/^PORTAL_/, '').replace(/_/g, ' ').toLowerCase()
+    return `Portal (${detailed})`
+  }
+  if (source === 'PORTAL') return 'Portal'
+  if (source === 'MANUAL') return 'Manual'
+  return source.replace(/_/g, ' ').toLowerCase()
+}
 
 const daysAgo = (date: string) => {
   const days = Math.floor((Date.now() - new Date(date).getTime()) / 86_400_000)
@@ -902,6 +913,42 @@ watch(waMessages, async () => {
 }, { deep: true })
 
 let unsubWa: (() => void) | null = null
+let unsubLeadEvents: (() => void) | null = null
+let wsRetryTimer: ReturnType<typeof setTimeout> | null = null
+
+function extractLeadId(event: LeadWsEvent): string | null {
+  if (!event?.payload || typeof event.payload !== 'object') return null
+  const payload = event.payload as { id?: unknown }
+  return typeof payload.id === 'string' ? payload.id : null
+}
+
+async function handleLeadRealtimeEvent(event: LeadWsEvent) {
+  if (!event || !['LEAD_CREATED', 'LEAD_UPDATED', 'LEAD_DELETED'].includes(event.type)) return
+  const eventLeadId = extractLeadId(event)
+  if (eventLeadId !== leadId) return
+
+  if (event.type === 'LEAD_DELETED') {
+    router.replace('/leads')
+    return
+  }
+
+  await store.fetchLead(leadId)
+  await store.fetchEvents(leadId)
+}
+
+function setupLeadRealtimeSubscription() {
+  const tenantId = authStore.currentTenantId
+  if (!tenantId) return
+
+  if (wsStore.connected) {
+    unsubLeadEvents = wsStore.subscribeToTenantLeads(tenantId, (event: LeadWsEvent) => {
+      handleLeadRealtimeEvent(event)
+    })
+    return
+  }
+
+  wsRetryTimer = setTimeout(setupLeadRealtimeSubscription, 500)
+}
 
 onMounted(async () => {
   store.currentLead = null
@@ -935,9 +982,13 @@ onMounted(async () => {
       }
     })
   }
+
+  setupLeadRealtimeSubscription()
 })
 
 onUnmounted(() => {
   unsubWa?.()
+  unsubLeadEvents?.()
+  if (wsRetryTimer) clearTimeout(wsRetryTimer)
 })
 </script>
