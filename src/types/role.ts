@@ -83,8 +83,12 @@ export interface PermissionDef {
 }
 
 export const ALL_PERMISSIONS: PermissionDef[] = [
-  { value: 'leads:read',        label: 'Visualizar',           module: 'Leads' },
-  { value: 'leads:write',       label: 'Criar / Editar',        module: 'Leads' },
+  { value: 'leads:read',        label: 'Visualizar todos',         module: 'Leads' },
+  { value: 'leads:write',       label: 'Criar / Editar todos',     module: 'Leads' },
+  { value: 'leads:read_all',    label: 'Visualizar todos (explícito)', module: 'Leads' },
+  { value: 'leads:write_all',   label: 'Editar todos (explícito)', module: 'Leads' },
+  { value: 'leads:read_own',    label: 'Visualizar apenas os próprios', module: 'Leads' },
+  { value: 'leads:write_own',   label: 'Editar apenas os próprios', module: 'Leads' },
   { value: 'properties:read',   label: 'Visualizar',           module: 'Imóveis' },
   { value: 'properties:write',  label: 'Criar / Editar',        module: 'Imóveis' },
   { value: 'tasks:read',        label: 'Visualizar',           module: 'Tarefas' },
