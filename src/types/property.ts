@@ -56,6 +56,7 @@ export interface PropertySummaryResponse {
 export interface PropertyResponse {
   id: string
   title: string
+  slug?: string | null
   description: string | null
   operation: PropertyOperation
   propertyType: PropertyType
@@ -95,6 +96,7 @@ export interface PropertyResponse {
 
 export interface CreatePropertyRequest {
   title: string
+  slug?: string | null
   description?: string
   operation: PropertyOperation
   propertyType: PropertyType
@@ -151,4 +153,25 @@ export interface PageResponse<T> {
   totalPages: number
   number: number
   size: number
+}
+
+export interface GeneratePropertyContentRequest {
+  bedrooms?: string
+  bathrooms?: string
+  suites?: string
+  parking?: string
+  areaTotal?: string
+  propertyType?: string
+  city?: string
+  neighborhood?: string
+  price?: number
+  currency?: string
+  operation?: string
+  photoDescription?: string
+}
+
+export interface GeneratePropertyContentResponse {
+  title?: string | null
+  description?: string | null
+  generatedAtMs: number
 }

@@ -4,6 +4,9 @@ export interface WhatsappInstance {
   displayName: string
   phoneNumber: string | null
   status: 'DISCONNECTED' | 'CONNECTING' | 'CONNECTED'
+  autoCreateLeadsFromUnknownNumbers?: boolean
+  assignedToUserId?: string | null
+  assignedToUserName?: string | null
   createdAt: string
 }
 

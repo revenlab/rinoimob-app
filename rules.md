@@ -91,10 +91,12 @@ Dual-mode:
 
 Rota: `/website-config` | Nav: `Site` (`clientOnly: true`)
 
-4 seções: Identidade, Conteúdo, Contato, Redes Sociais.
+4 abas: Visual, Conteúdo, Contato, Blog.
 
 - Upload de logo/favicon com preview.
 - Color pickers para `primaryColor` e `secondaryColor`.
+- Aba Conteúdo agora edita hero + blocos da home (`featured`, `launches`, `categories`, `services`, `stats`, `blog`, `cta`).
+- Aba Blog usa `BlogPostsManager.vue` com editor WYSIWYG (Quill) para criar/editar/publicar posts.
 - Live preview card com as configurações atuais.
 - Serviço: `src/services/websiteConfig.ts`
 
@@ -113,11 +115,13 @@ Rota: `/website-config` | Nav: `Site` (`clientOnly: true`)
 
 ### Aba Site no TenantsAdmin (`TenantsAdmin.vue`)
 
-Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-config` de qualquer tenant.
+Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-config` e posts de blog de qualquer tenant (subaba Blog).
 
 ### Types (`src/types/tenantsAdmin.ts`)
 
 - `TenantWebsiteConfig` — DTO completo com todos os campos de branding
+- `TenantWebsiteConfig` — DTO completo com branding + campos CMS da home
+- `BlogPost` / `BlogPostFormInput` / `BlogPostStatus` — tipos do CMS de blog
 
 ---
 

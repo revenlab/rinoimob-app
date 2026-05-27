@@ -32,6 +32,14 @@ class WhatsappService {
     return this.request<void>(`${BASE}/instances/${instanceId}`, { method: 'DELETE' })
   }
 
+  async updateInstanceConfig(instanceId: string, config: { autoCreateLeadsFromUnknownNumbers?: boolean; assignedToUserId?: string | null }): Promise<WhatsappInstance> {
+    return this.request<WhatsappInstance>(`${BASE}/instances/${instanceId}/config`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(config),
+    })
+  }
+
   async getMessages(leadId: string): Promise<WhatsappMessage[]> {
     return this.request<WhatsappMessage[]>(`${BASE}/leads/${leadId}/messages`)
   }

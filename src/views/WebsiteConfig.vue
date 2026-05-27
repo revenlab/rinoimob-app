@@ -14,7 +14,42 @@
 
       <div v-else class="grid gap-6 xl:grid-cols-3">
         <form class="space-y-6 xl:col-span-2" @submit.prevent="saveConfig">
-          <section class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-5">
+          <div class="flex flex-wrap gap-2">
+            <button
+              type="button"
+              @click="siteTab = 'visual'"
+              class="rounded-full px-4 py-2 text-sm font-medium transition-colors"
+              :class="siteTab === 'visual' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'"
+            >
+              Visual
+            </button>
+            <button
+              type="button"
+              @click="siteTab = 'content'"
+              class="rounded-full px-4 py-2 text-sm font-medium transition-colors"
+              :class="siteTab === 'content' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'"
+            >
+              Conteúdo
+            </button>
+            <button
+              type="button"
+              @click="siteTab = 'contact'"
+              class="rounded-full px-4 py-2 text-sm font-medium transition-colors"
+              :class="siteTab === 'contact' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'"
+            >
+              Contato
+            </button>
+            <button
+              type="button"
+              @click="siteTab = 'blog'"
+              class="rounded-full px-4 py-2 text-sm font-medium transition-colors"
+              :class="siteTab === 'blog' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'"
+            >
+              Blog
+            </button>
+          </div>
+
+          <section v-if="siteTab === 'visual'" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-5">
             <div>
               <h2 class="text-base font-semibold text-slate-900 dark:text-white">Identidade Visual</h2>
               <p class="text-sm text-slate-500 dark:text-slate-400">Atualize logotipo, favicon e paleta do site.</p>
@@ -136,37 +171,115 @@
             </div>
           </section>
 
-          <section class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
-            <div>
-              <h2 class="text-base font-semibold text-slate-900 dark:text-white">Informações da Empresa</h2>
-              <p class="text-sm text-slate-500 dark:text-slate-400">Defina textos institucionais exibidos na home.</p>
-            </div>
-
-            <div class="grid gap-4 md:grid-cols-2">
+          <section v-else-if="siteTab === 'content'" class="space-y-6">
+            <section class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
               <div>
-                <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Nome da empresa</label>
-                <input v-model="config.companyName" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                <h2 class="text-base font-semibold text-slate-900 dark:text-white">Conteúdo da Home</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Edite os textos principais exibidos no site público.</p>
               </div>
+
+              <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Nome da empresa</label>
+                  <input v-model="config.companyName" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Título principal</label>
+                  <input v-model="config.heroTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                </div>
+              </div>
+
               <div>
-                <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Título principal</label>
-                <input v-model="config.heroTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Subtítulo principal</label>
+                <textarea v-model="config.heroSubtitle" rows="3" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"></textarea>
               </div>
-            </div>
 
-            <div>
-              <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Descrição</label>
-              <textarea v-model="config.description" rows="4" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"></textarea>
-            </div>
+              <div>
+                <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Descrição</label>
+                <textarea v-model="config.description" rows="3" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"></textarea>
+              </div>
+            </section>
 
-            <div>
-              <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Subtítulo principal</label>
-              <textarea v-model="config.heroSubtitle" rows="3" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"></textarea>
-            </div>
+            <section class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
+              <div>
+                <h2 class="text-base font-semibold text-slate-900 dark:text-white">Seções da página</h2>
+              </div>
+
+              <div class="grid gap-4 md:grid-cols-2">
+                <label class="flex flex-col gap-1 text-xs text-slate-500">
+                  Destaques - título
+                  <input v-model="config.featuredSectionTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                </label>
+                <label class="flex flex-col gap-1 text-xs text-slate-500">
+                  Destaques - subtítulo
+                  <input v-model="config.featuredSectionSubtitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                </label>
+                <label class="flex flex-col gap-1 text-xs text-slate-500">
+                  Lançamentos - título
+                  <input v-model="config.launchesSectionTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                </label>
+                <label class="flex flex-col gap-1 text-xs text-slate-500">
+                  Lançamentos - subtítulo
+                  <input v-model="config.launchesSectionSubtitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                </label>
+                <label class="flex flex-col gap-1 text-xs text-slate-500">
+                  Categorias - título
+                  <input v-model="config.categoriesSectionTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                </label>
+                <label class="flex flex-col gap-1 text-xs text-slate-500">
+                  Categorias - subtítulo
+                  <input v-model="config.categoriesSectionSubtitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                </label>
+                <label class="flex flex-col gap-1 text-xs text-slate-500">
+                  Serviços - título
+                  <input v-model="config.servicesSectionTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                </label>
+                <label class="flex flex-col gap-1 text-xs text-slate-500">
+                  Serviços - subtítulo
+                  <input v-model="config.servicesSectionSubtitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                </label>
+                <label class="flex flex-col gap-1 text-xs text-slate-500">
+                  Formulário - título
+                  <input v-model="config.servicesFormTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                </label>
+                <label class="flex flex-col gap-1 text-xs text-slate-500">
+                  Formulário - subtítulo
+                  <input v-model="config.servicesFormSubtitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                </label>
+                <label class="flex flex-col gap-1 text-xs text-slate-500">
+                  Estatísticas - título
+                  <input v-model="config.statsSectionTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                </label>
+                <label class="flex flex-col gap-1 text-xs text-slate-500">
+                  Estatísticas - subtítulo
+                  <input v-model="config.statsSectionSubtitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                </label>
+                <label class="flex flex-col gap-1 text-xs text-slate-500">
+                  Blog - título
+                  <input v-model="config.blogSectionTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                </label>
+                <label class="flex flex-col gap-1 text-xs text-slate-500">
+                  Blog - subtítulo
+                  <input v-model="config.blogSectionSubtitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                </label>
+                <label class="flex flex-col gap-1 text-xs text-slate-500">
+                  CTA - título
+                  <input v-model="config.ctaSectionTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                </label>
+                <label class="flex flex-col gap-1 text-xs text-slate-500">
+                  CTA - subtítulo
+                  <input v-model="config.ctaSectionSubtitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                </label>
+              </div>
+            </section>
           </section>
 
-          <section class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
+          <BlogPostsManager v-else-if="siteTab === 'blog'" />
+
+          <section v-else class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
             <div>
-              <h2 class="text-base font-semibold text-slate-900 dark:text-white">Contato</h2>
+              <h2 class="text-base font-semibold text-slate-900 dark:text-white">Contato e redes</h2>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Atualize os dados de contato exibidos no site.</p>
             </div>
 
             <div class="grid gap-4 md:grid-cols-2">
@@ -183,12 +296,6 @@
             <div>
               <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Endereço</label>
               <input v-model="config.address" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
-            </div>
-          </section>
-
-          <section class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
-            <div>
-              <h2 class="text-base font-semibold text-slate-900 dark:text-white">Redes Sociais</h2>
             </div>
 
             <div class="grid gap-4 md:grid-cols-2">
@@ -208,7 +315,7 @@
             </div>
           </section>
 
-          <div class="flex justify-end">
+          <div v-if="siteTab !== 'blog'" class="flex justify-end">
             <button type="submit" :disabled="isSaving" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg disabled:opacity-50">
               {{ isSaving ? 'Salvando...' : 'Salvar configurações' }}
             </button>
@@ -275,6 +382,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
+import BlogPostsManager from '@/components/site/BlogPostsManager.vue'
 import { useNotification } from '@/composables/useNotification'
 import websiteConfigService from '@/services/websiteConfig'
 import { useAuthStore } from '@/stores/auth'
@@ -296,6 +404,7 @@ const isUploadingFavicon = ref(false)
 const isDeletingFavicon = ref(false)
 const isUploadingHeroImage = ref(false)
 const isDeletingHeroImage = ref(false)
+const siteTab = ref<'visual' | 'content' | 'contact' | 'blog'>('visual')
 const logoInputRef = ref<HTMLInputElement | null>(null)
 const faviconInputRef = ref<HTMLInputElement | null>(null)
 const heroImageInputRef = ref<HTMLInputElement | null>(null)

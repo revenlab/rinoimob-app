@@ -5,19 +5,22 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { usePropertyStore } from '@/stores/property'
 import { useCategoryStore } from '@/stores/category'
 import propertyService from '@/services/property'
+import { usePropertyAiGeneration } from '@/composables/usePropertyAiGeneration'
 import type { CreatePropertyRequest, PropertyCondition, PropertyStatus } from '@/types/property'
 
 const router = useRouter()
 const route = useRoute()
 const store = usePropertyStore()
 const catStore = useCategoryStore()
+const { generateTitle: aiGenerateTitle, generateDescription: aiGenerateDescription, isLoadingTitle, isLoadingDescription } = usePropertyAiGeneration()
 
 const isEdit = computed(() => !!route.params.id)
 const propertyId = computed(() => route.params.id as string | undefined)
 
-const form = ref<CreatePropertyRequest & { status?: PropertyStatus }>({
+const form = ref<CreatePropertyRequest & { status?: PropertyStatus; slug?: string }>({
   title: '',
   description: '',
+  slug: '',
   operation: 'SALE',
   propertyType: 'HOUSE',
   status: 'DRAFT',
@@ -228,6 +231,7 @@ onMounted(async () => {
       form.value = {
         title: p.title,
         description: p.description ?? '',
+        slug: (p as any).slug ?? '',
         operation: p.operation,
         propertyType: p.propertyType,
         status: p.status,
@@ -278,6 +282,95 @@ onMounted(async () => {
 const isSaving = ref(false)
 const formError = ref<string | null>(null)
 
+const generatedTitle = computed(() => {
+  const parts: string[] = []
+  
+  if (form.value.bedrooms && form.value.bedrooms > 0) {
+    parts.push(`${form.value.bedrooms}q`)
+  }
+  
+  if (form.value.propertyType) {
+    const typeMap: Record<string, string> = {
+      'HOUSE': 'Casa',
+      'APARTMENT': 'Apartamento',
+      'LAND': 'Terreno',
+      'COMMERCIAL': 'Comercial',
+      'RURAL': 'Rural'
+    }
+    parts.push(typeMap[form.value.propertyType] || form.value.propertyType)
+  }
+  
+  if (form.value.addressCity) {
+    parts.push(`em ${form.value.addressCity}`)
+  }
+  
+  if (form.value.operation) {
+    const opMap: Record<string, string> = {
+      'SALE': 'Venda',
+      'RENT': 'Aluguel',
+      'SEASONAL': 'Temporada'
+    }
+    parts.push(opMap[form.value.operation] || form.value.operation)
+  }
+  
+  return parts.join(' - ')
+})
+
+const generatedDescription = computed(() => {
+  const parts: string[] = ['Imóvel']
+  
+  if (form.value.areaTotal) {
+    parts.push(`com ${form.value.areaTotal} m²`)
+  }
+  
+  const features: string[] = []
+  if (form.value.bedrooms && form.value.bedrooms > 0) {
+    features.push(`${form.value.bedrooms} quarto(s)`)
+  }
+  if (form.value.suites && form.value.suites > 0) {
+    features.push(`${form.value.suites} suíte(s)`)
+  }
+  if (form.value.bathrooms && form.value.bathrooms > 0) {
+    features.push(`${form.value.bathrooms} banheiro(s)`)
+  }
+  if (form.value.parking && form.value.parking > 0) {
+    features.push(`${form.value.parking} vaga(s) de garagem`)
+  }
+  
+  if (features.length > 0) {
+    return `${parts[0]} ${parts.slice(1).join(', ')}, ${features.join(', ')}.`
+  }
+  
+  return parts.join(', ') + '.'
+})
+
+const generatedSlug = computed(() => {
+  if (!form.value.title?.trim() && !form.value.bedrooms && !form.value.propertyType) {
+    return ''
+  }
+  
+  // Use provided title or fall back to generated title
+  const titleToSlugify = form.value.title?.trim() || generatedTitle.value
+  
+  if (!titleToSlugify) {
+    return ''
+  }
+  
+  const base = titleToSlugify
+    .toLowerCase()
+    .replaceAll(/[àáäâã]/g, 'a')
+    .replaceAll(/[èéëê]/g, 'e')
+    .replaceAll(/[ìíïî]/g, 'i')
+    .replaceAll(/[òóöôõ]/g, 'o')
+    .replaceAll(/[ùúüû]/g, 'u')
+    .replaceAll(/[ç]/g, 'c')
+    .replaceAll(/[^a-z0-9]+/g, '-')       // Replace non-alphanumeric with single dash
+    .replaceAll(/-+/g, '-')               // Collapse multiple dashes to single dash
+    .replaceAll(/^-|-$/g, '')             // Remove leading/trailing dashes
+  
+  return base
+})
+
 const AMENITIES = [
   { key: 'piscina', label: 'Piscina' },
   { key: 'varanda', label: 'Varanda' },
@@ -307,6 +400,42 @@ function toggleCategory(id: string) {
     form.value.categoryIds = ids.filter(i => i !== id)
   } else {
     form.value.categoryIds = [...ids, id]
+  }
+}
+
+async function generateTitleWithAi() {
+  const title = await aiGenerateTitle({
+    bedrooms: form.value.bedrooms?.toString(),
+    bathrooms: form.value.bathrooms?.toString(),
+    suites: form.value.suites?.toString(),
+    propertyType: form.value.propertyType,
+    city: form.value.addressCity,
+    neighborhood: form.value.addressNeighborhood,
+    price: form.value.price,
+    currency: form.value.currency,
+    operation: form.value.operation,
+  })
+  if (title) {
+    form.value.title = title
+  }
+}
+
+async function generateDescriptionWithAi() {
+  const description = await aiGenerateDescription({
+    bedrooms: form.value.bedrooms?.toString(),
+    bathrooms: form.value.bathrooms?.toString(),
+    suites: form.value.suites?.toString(),
+    parking: form.value.parking?.toString(),
+    areaTotal: form.value.areaTotal?.toString(),
+    propertyType: form.value.propertyType,
+    city: form.value.addressCity,
+    neighborhood: form.value.addressNeighborhood,
+    price: form.value.price,
+    currency: form.value.currency,
+    operation: form.value.operation,
+  })
+  if (description) {
+    form.value.description = description
   }
 }
 
@@ -389,79 +518,7 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
         {{ formError }}
       </div>
 
-      <!-- Basic info -->
-      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
-        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500 mb-5">Informações básicas</h2>
-        <div class="grid grid-cols-1 gap-4">
-          <div>
-            <label :class="labelClass">Título *</label>
-            <input v-model="form.title" type="text" :class="inputClass" placeholder="Ex.: Apartamento 3 quartos no centro" required />
-          </div>
-          <div>
-            <label :class="labelClass">Descrição</label>
-            <textarea v-model="form.description" rows="4" :class="inputClass" placeholder="Descreva o imóvel..." />
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label :class="labelClass">Operação *</label>
-              <select v-model="form.operation" :class="inputClass" required>
-                <option value="SALE">Venda</option>
-                <option value="RENT">Aluguel</option>
-                <option value="SEASONAL">Temporada</option>
-              </select>
-            </div>
-            <div>
-              <label :class="labelClass">Tipo *</label>
-              <select v-model="form.propertyType" :class="inputClass" required>
-                <option value="HOUSE">Casa</option>
-                <option value="APARTMENT">Apartamento</option>
-                <option value="LAND">Terreno</option>
-                <option value="COMMERCIAL">Comercial</option>
-                <option value="RURAL">Rural</option>
-              </select>
-            </div>
-            <div>
-              <label :class="labelClass">Status</label>
-              <select v-model="form.status" :class="inputClass">
-                <option value="DRAFT">Rascunho</option>
-                <option value="ACTIVE">Ativo</option>
-                <option value="RESERVED">Reservado</option>
-                <option value="SOLD">Vendido</option>
-                <option value="ARCHIVED">Arquivado</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pricing -->
-      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
-        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500 mb-5">Valores</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div>
-            <label :class="labelClass">Preço</label>
-            <input v-model.number="form.price" type="number" min="0" step="0.01" :class="inputClass" placeholder="0,00" />
-          </div>
-          <div>
-            <label :class="labelClass">Moeda</label>
-            <select v-model="form.currency" :class="inputClass">
-              <option value="BRL">BRL</option>
-              <option value="USD">USD</option>
-              <option value="EUR">EUR</option>
-            </select>
-          </div>
-          <div>
-            <label :class="labelClass">IPTU/mês</label>
-            <input v-model.number="form.taxes" type="number" min="0" step="0.01" :class="inputClass" placeholder="0,00" />
-          </div>
-          <div>
-            <label :class="labelClass">Condomínio</label>
-            <input v-model.number="form.condoFee" type="number" min="0" step="0.01" :class="inputClass" placeholder="0,00" />
-          </div>
-        </div>
-      </div>
-
-      <!-- Characteristics -->
+      <!-- Characteristics (FIRST) -->
       <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
         <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500 mb-5">Características</h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -506,6 +563,73 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
             <label :class="labelClass">Código de referência</label>
             <input v-model="form.referenceCode" type="text" :class="inputClass" placeholder="Ex.: AP-001" />
           </div>
+        </div>
+      </div>
+
+      <!-- Pricing -->
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
+        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500 mb-5">Valores</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div>
+            <label :class="labelClass">Preço</label>
+            <input v-model.number="form.price" type="number" min="0" step="0.01" :class="inputClass" placeholder="0,00" />
+          </div>
+          <div>
+            <label :class="labelClass">Moeda</label>
+            <select v-model="form.currency" :class="inputClass">
+              <option value="BRL">BRL</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+            </select>
+          </div>
+          <div>
+            <label :class="labelClass">IPTU/mês</label>
+            <input v-model.number="form.taxes" type="number" min="0" step="0.01" :class="inputClass" placeholder="0,00" />
+          </div>
+          <div>
+            <label :class="labelClass">Condomínio</label>
+            <input v-model.number="form.condoFee" type="number" min="0" step="0.01" :class="inputClass" placeholder="0,00" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Operation/Type with Preview -->
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
+        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500 mb-5">Operação e tipo</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div>
+            <label :class="labelClass">Operação *</label>
+            <select v-model="form.operation" :class="inputClass" required>
+              <option value="SALE">Venda</option>
+              <option value="RENT">Aluguel</option>
+              <option value="SEASONAL">Temporada</option>
+            </select>
+          </div>
+          <div>
+            <label :class="labelClass">Tipo *</label>
+            <select v-model="form.propertyType" :class="inputClass" required>
+              <option value="HOUSE">Casa</option>
+              <option value="APARTMENT">Apartamento</option>
+              <option value="LAND">Terreno</option>
+              <option value="COMMERCIAL">Comercial</option>
+              <option value="RURAL">Rural</option>
+            </select>
+          </div>
+          <div>
+            <label :class="labelClass">Status</label>
+            <select v-model="form.status" :class="inputClass">
+              <option value="DRAFT">Rascunho</option>
+              <option value="ACTIVE">Ativo</option>
+              <option value="RESERVED">Reservado</option>
+              <option value="SOLD">Vendido</option>
+              <option value="ARCHIVED">Arquivado</option>
+            </select>
+          </div>
+        </div>
+        <div v-if="generatedTitle" class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <p class="text-xs text-blue-900 dark:text-blue-300">
+            <strong>Preview do título:</strong> {{ generatedTitle }}
+          </p>
         </div>
       </div>
 
@@ -746,6 +870,90 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
         </div>
       </div>
 
+      <!-- Final: Title, Description, Slug (LAST) -->
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
+        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500 mb-5">Título, descrição e URL</h2>
+        
+        <!-- Title with Auto-generated Preview and AI Button -->
+        <div class="grid grid-cols-1 gap-4 mb-6">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label :class="labelClass">Título *</label>
+              <button
+                type="button"
+                @click="generateTitleWithAi"
+                :disabled="isLoadingTitle"
+                title="Gerar título com IA"
+                class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                <svg v-if="!isLoadingTitle" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <svg v-else class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </button>
+            </div>
+            <div v-if="generatedTitle && !form.title" class="mb-2 text-xs italic text-slate-400 dark:text-slate-500">
+              Sugestão: <span class="text-slate-600 dark:text-slate-300">{{ generatedTitle }}</span>
+            </div>
+            <input 
+              v-model="form.title" 
+              type="text" 
+              :class="inputClass" 
+              :placeholder="generatedTitle || 'Ex.: Apartamento 3 quartos no centro'" 
+              required 
+            />
+          </div>
+          
+          <!-- Description with Auto-generated and AI Button -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label :class="labelClass">Descrição</label>
+              <button
+                type="button"
+                @click="generateDescriptionWithAi"
+                :disabled="isLoadingDescription"
+                title="Gerar descrição com IA"
+                class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                <svg v-if="!isLoadingDescription" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <svg v-else class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </button>
+            </div>
+            <div v-if="generatedDescription && !form.description" class="mb-2 text-xs italic text-slate-400 dark:text-slate-500">
+              Sugestão: <span class="text-slate-600 dark:text-slate-300">{{ generatedDescription }}</span>
+            </div>
+            <textarea 
+              v-model="form.description" 
+              rows="4" 
+              :class="inputClass" 
+              :placeholder="generatedDescription || 'Descreva o imóvel...'" 
+            />
+          </div>
+          
+          <!-- Slug -->
+          <div>
+            <label :class="labelClass">URL amigável (slug)</label>
+            <div v-if="generatedSlug && !form.slug" class="mb-2 text-xs italic text-slate-400 dark:text-slate-500">
+              Sugestão: <code class="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded">{{ generatedSlug }}</code>
+            </div>
+            <input 
+              v-model="form.slug" 
+              type="text" 
+              :class="inputClass" 
+              :placeholder="generatedSlug || 'auto-gerado-a-partir-do-titulo'" 
+            />
+          </div>
+        </div>
+      </div>
+
       <!-- Actions -->
       <div class="flex items-center gap-3 pb-8">
         <RouterLink
@@ -770,5 +978,6 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
         </button>
       </div>
     </form>
+
   </AppLayout>
 </template>

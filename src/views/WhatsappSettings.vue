@@ -199,6 +199,16 @@
           <!-- Actions -->
           <div class="flex items-center gap-2 flex-shrink-0">
             <button
+              @click="openConfigModal(instance)"
+              class="px-3 py-1.5 text-xs font-medium border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              title="Configurações da instância"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.592c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.041.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.542-.56.94-1.11.94h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.005-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.145-.086.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+            <button
               v-if="instance.status !== 'CONNECTED'"
               @click="openQrModal(instance)"
               class="px-3 py-1.5 text-xs font-medium border border-indigo-300 dark:border-indigo-600 text-indigo-600 dark:text-indigo-400 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
@@ -222,6 +232,72 @@
         </div>
       </div>
     </div>
+
+    <!-- Config Modal -->
+    <div v-if="showConfigModal && configInstance" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 w-full max-w-md shadow-xl">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-base font-semibold text-slate-900 dark:text-white">Configurar: {{ configInstance.displayName }}</h2>
+          <button @click="closeConfigModal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="space-y-5">
+          <!-- Auto-create leads toggle -->
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="text-sm font-medium text-slate-800 dark:text-slate-200">Criar leads automaticamente</p>
+              <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Mensagens de números desconhecidos criam novos leads</p>
+            </div>
+            <button
+              @click="configAutoCreate = !configAutoCreate"
+              :class="configAutoCreate ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-600'"
+              class="relative flex-shrink-0 w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none"
+            >
+              <span
+                :class="configAutoCreate ? 'translate-x-5' : 'translate-x-0.5'"
+                class="absolute top-0.5 left-0 w-5 h-5 bg-white rounded-full shadow transform transition-transform duration-200"
+              />
+            </button>
+          </div>
+
+          <!-- User assignment -->
+          <div>
+            <label class="block text-sm font-medium text-slate-800 dark:text-slate-200 mb-1.5">Atribuir a corretor</label>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mb-2">Deixe em branco para que qualquer usuário possa usar este número</p>
+            <select
+              v-model="configAssignedUserId"
+              :disabled="loadingUsers"
+              class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 disabled:opacity-50"
+            >
+              <option value="">Aberto para todos</option>
+              <option v-for="user in tenantUsers" :key="user.id" :value="user.id">
+                {{ user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.email }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-6">
+          <button
+            @click="closeConfigModal"
+            class="flex-1 px-4 py-2.5 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            @click="saveInstanceConfig"
+            :disabled="savingConfig"
+            class="flex-1 px-4 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl text-sm font-semibold disabled:opacity-50 transition-all"
+          >
+            {{ savingConfig ? 'Salvando...' : 'Salvar' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </AppLayout>
 </template>
 
@@ -230,7 +306,9 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import QRCode from 'qrcode'
 import AppLayout from '@/layouts/AppLayout.vue'
 import whatsappService from '@/services/whatsapp'
+import userService from '@/services/user'
 import type { WhatsappInstance, QrCodeResponse } from '@/types/whatsapp'
+import type { UserSummary } from '@/types/lead'
 
 const instances = ref<WhatsappInstance[]>([])
 const loading = ref(false)
@@ -247,6 +325,15 @@ const qrInstance = ref<WhatsappInstance | null>(null)
 const qrData = ref<QrCodeResponse | null>(null)
 const loadingQr = ref(false)
 const qrImageUrl = ref<string | null>(null)
+
+// Config modal state
+const showConfigModal = ref(false)
+const configInstance = ref<WhatsappInstance | null>(null)
+const configAutoCreate = ref(false)
+const configAssignedUserId = ref('')
+const savingConfig = ref(false)
+const tenantUsers = ref<UserSummary[]>([])
+const loadingUsers = ref(false)
 
 // Polling intervals
 let statusPollInterval: ReturnType<typeof setInterval> | null = null
@@ -376,6 +463,46 @@ function startStatusPolling() {
       instances.value = await whatsappService.listInstances()
     } catch { /* best-effort */ }
   }, 30000)
+}
+
+// ── Config modal ──────────────────────────────────────────────────────────
+async function openConfigModal(instance: WhatsappInstance) {
+  configInstance.value = instance
+  configAutoCreate.value = instance.autoCreateLeadsFromUnknownNumbers ?? false
+  configAssignedUserId.value = instance.assignedToUserId ?? ''
+  showConfigModal.value = true
+
+  if (tenantUsers.value.length === 0) {
+    loadingUsers.value = true
+    try {
+      tenantUsers.value = await userService.listActive()
+    } catch { /* best-effort */ } finally {
+      loadingUsers.value = false
+    }
+  }
+}
+
+function closeConfigModal() {
+  showConfigModal.value = false
+  configInstance.value = null
+}
+
+async function saveInstanceConfig() {
+  if (!configInstance.value) return
+  savingConfig.value = true
+  try {
+    const updated = await whatsappService.updateInstanceConfig(configInstance.value.id, {
+      autoCreateLeadsFromUnknownNumbers: configAutoCreate.value,
+      assignedToUserId: configAssignedUserId.value || null,
+    })
+    const idx = instances.value.findIndex(i => i.id === updated.id)
+    if (idx !== -1) instances.value[idx] = updated
+    closeConfigModal()
+  } catch (e: any) {
+    alert(e?.message ?? 'Erro ao salvar configurações')
+  } finally {
+    savingConfig.value = false
+  }
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────

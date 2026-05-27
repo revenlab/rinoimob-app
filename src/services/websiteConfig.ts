@@ -76,6 +76,18 @@ class WebsiteConfigService {
       headers: { 'Content-Type': 'application/json' },
     })
   }
+
+  async getCustomDomain(): Promise<{ customDomain: string | null }> {
+    return apiFetch<{ customDomain: string | null }>(`${BASE}/domain`)
+  }
+
+  async updateCustomDomain(customDomain: string | null): Promise<{ customDomain: string | null }> {
+    return apiFetch<{ customDomain: string | null }>(`${BASE}/domain`, {
+      method: 'PUT',
+      body: JSON.stringify({ customDomain: customDomain?.trim() || null }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
 }
 
 export default new WebsiteConfigService()

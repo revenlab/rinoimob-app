@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
+import BlogPostsManager from '@/components/site/BlogPostsManager.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useNotification } from '@/composables/useNotification'
 import tenantsAdminService from '@/services/tenantsAdmin'
@@ -62,6 +63,7 @@ const savingTenantUserId = ref<string | null>(null)
 const tenantUserEditForm = ref({ firstName: '', lastName: '', email: '', phone: '' })
 const websiteConfig = ref<Partial<TenantWebsiteConfig> | null>(null)
 const loadingWebsiteConfig = ref(false)
+const siteConfigTab = ref<'visual' | 'content' | 'contact' | 'blog'>('visual')
 const isSavingWebsite = ref(false)
 const successMessage = ref<string | null>(null)
 const error = ref<string | null>(null)
@@ -1168,122 +1170,178 @@ onMounted(async () => {
         <p v-if="!selectedTenant" class="text-slate-400 text-sm">Selecione uma tenant para editar.</p>
         <div v-else-if="loadingWebsiteConfig" class="text-sm text-slate-400">Carregando...</div>
         <form v-else-if="websiteConfig" class="space-y-4" @submit.prevent="saveWebsiteConfig">
-          <div class="grid gap-4 md:grid-cols-2">
-            <label class="flex flex-col gap-1 text-xs text-slate-500">
-              Nome da empresa
-              <input
-                v-model="websiteConfig.companyName"
-                type="text"
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
-              >
-            </label>
-            <label class="flex flex-col gap-1 text-xs text-slate-500">
-              Cor primária
-              <input
-                v-model="websiteConfig.primaryColor"
-                type="text"
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
-              >
-            </label>
-            <label class="flex flex-col gap-1 text-xs text-slate-500">
-              Cor secundária
-              <input
-                v-model="websiteConfig.secondaryColor"
-                type="text"
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
-              >
-            </label>
-            <label class="flex flex-col gap-1 text-xs text-slate-500">
-              Título principal
-              <input
-                v-model="websiteConfig.heroTitle"
-                type="text"
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
-              >
-            </label>
-            <label class="flex flex-col gap-1 text-xs text-slate-500 md:col-span-2">
-              Descrição
-              <textarea
-                v-model="websiteConfig.description"
-                rows="3"
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
-              ></textarea>
-            </label>
-            <label class="flex flex-col gap-1 text-xs text-slate-500 md:col-span-2">
-              Subtítulo principal
-              <textarea
-                v-model="websiteConfig.heroSubtitle"
-                rows="3"
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
-              ></textarea>
-            </label>
-            <label class="flex flex-col gap-1 text-xs text-slate-500">
-              Telefone
-              <input
-                v-model="websiteConfig.phone"
-                type="text"
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
-              >
-            </label>
-            <label class="flex flex-col gap-1 text-xs text-slate-500">
-              E-mail
-              <input
-                v-model="websiteConfig.email"
-                type="email"
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
-              >
-            </label>
-            <label class="flex flex-col gap-1 text-xs text-slate-500 md:col-span-2">
-              Endereço
-              <input
-                v-model="websiteConfig.address"
-                type="text"
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
-              >
-            </label>
-            <label class="flex flex-col gap-1 text-xs text-slate-500">
-              Instagram
-              <input
-                v-model="websiteConfig.instagramUrl"
-                type="text"
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
-              >
-            </label>
-            <label class="flex flex-col gap-1 text-xs text-slate-500">
-              WhatsApp
-              <input
-                v-model="websiteConfig.whatsappNumber"
-                type="text"
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
-              >
-            </label>
-            <label class="flex flex-col gap-1 text-xs text-slate-500 md:col-span-2">
-              Facebook
-              <input
-                v-model="websiteConfig.facebookUrl"
-                type="text"
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
-              >
-            </label>
+          <div class="flex flex-wrap gap-2">
+            <button
+              type="button"
+              @click="siteConfigTab = 'visual'"
+              class="rounded-full px-4 py-2 text-sm font-medium transition-colors"
+              :class="siteConfigTab === 'visual' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'"
+            >
+              Visual
+            </button>
+            <button
+              type="button"
+              @click="siteConfigTab = 'content'"
+              class="rounded-full px-4 py-2 text-sm font-medium transition-colors"
+              :class="siteConfigTab === 'content' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'"
+            >
+              Conteúdo
+            </button>
+            <button
+              type="button"
+              @click="siteConfigTab = 'contact'"
+              class="rounded-full px-4 py-2 text-sm font-medium transition-colors"
+              :class="siteConfigTab === 'contact' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'"
+            >
+              Contato
+            </button>
+            <button
+              type="button"
+              @click="siteConfigTab = 'blog'"
+              class="rounded-full px-4 py-2 text-sm font-medium transition-colors"
+              :class="siteConfigTab === 'blog' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'"
+            >
+              Blog
+            </button>
+          </div>
+
+          <div v-if="siteConfigTab === 'visual'" class="grid gap-4 md:grid-cols-2">
             <label class="flex flex-col gap-1 text-xs text-slate-500 md:col-span-2">
               URL da logo
-              <input
-                v-model="websiteConfig.logoUrl"
-                type="text"
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
-              >
+              <input v-model="websiteConfig.logoUrl" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
             </label>
             <label class="flex flex-col gap-1 text-xs text-slate-500 md:col-span-2">
               URL do favicon
-              <input
-                v-model="websiteConfig.faviconUrl"
-                type="text"
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"
-              >
+              <input v-model="websiteConfig.faviconUrl" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500">
+              Cor primária
+              <input v-model="websiteConfig.primaryColor" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500">
+              Cor secundária
+              <input v-model="websiteConfig.secondaryColor" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
             </label>
           </div>
 
-          <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3">
+          <div v-else-if="siteConfigTab === 'content'" class="space-y-4">
+            <div class="grid gap-4 md:grid-cols-2">
+              <label class="flex flex-col gap-1 text-xs text-slate-500">
+                Nome da empresa
+                <input v-model="websiteConfig.companyName" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </label>
+              <label class="flex flex-col gap-1 text-xs text-slate-500">
+                Título principal
+                <input v-model="websiteConfig.heroTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </label>
+              <label class="flex flex-col gap-1 text-xs text-slate-500 md:col-span-2">
+                Subtítulo principal
+                <textarea v-model="websiteConfig.heroSubtitle" rows="3" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"></textarea>
+              </label>
+              <label class="flex flex-col gap-1 text-xs text-slate-500 md:col-span-2">
+                Descrição
+                <textarea v-model="websiteConfig.description" rows="3" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm"></textarea>
+              </label>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2">
+              <label class="flex flex-col gap-1 text-xs text-slate-500">
+                Destaques - título
+                <input v-model="websiteConfig.featuredSectionTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </label>
+              <label class="flex flex-col gap-1 text-xs text-slate-500">
+                Destaques - subtítulo
+                <input v-model="websiteConfig.featuredSectionSubtitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </label>
+              <label class="flex flex-col gap-1 text-xs text-slate-500">
+                Lançamentos - título
+                <input v-model="websiteConfig.launchesSectionTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </label>
+              <label class="flex flex-col gap-1 text-xs text-slate-500">
+                Lançamentos - subtítulo
+                <input v-model="websiteConfig.launchesSectionSubtitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </label>
+              <label class="flex flex-col gap-1 text-xs text-slate-500">
+                Categorias - título
+                <input v-model="websiteConfig.categoriesSectionTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </label>
+              <label class="flex flex-col gap-1 text-xs text-slate-500">
+                Categorias - subtítulo
+                <input v-model="websiteConfig.categoriesSectionSubtitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </label>
+              <label class="flex flex-col gap-1 text-xs text-slate-500">
+                Serviços - título
+                <input v-model="websiteConfig.servicesSectionTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </label>
+              <label class="flex flex-col gap-1 text-xs text-slate-500">
+                Serviços - subtítulo
+                <input v-model="websiteConfig.servicesSectionSubtitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </label>
+              <label class="flex flex-col gap-1 text-xs text-slate-500">
+                Formulário - título
+                <input v-model="websiteConfig.servicesFormTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </label>
+              <label class="flex flex-col gap-1 text-xs text-slate-500">
+                Formulário - subtítulo
+                <input v-model="websiteConfig.servicesFormSubtitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </label>
+              <label class="flex flex-col gap-1 text-xs text-slate-500">
+                Estatísticas - título
+                <input v-model="websiteConfig.statsSectionTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </label>
+              <label class="flex flex-col gap-1 text-xs text-slate-500">
+                Estatísticas - subtítulo
+                <input v-model="websiteConfig.statsSectionSubtitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </label>
+              <label class="flex flex-col gap-1 text-xs text-slate-500">
+                Blog - título
+                <input v-model="websiteConfig.blogSectionTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </label>
+              <label class="flex flex-col gap-1 text-xs text-slate-500">
+                Blog - subtítulo
+                <input v-model="websiteConfig.blogSectionSubtitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </label>
+              <label class="flex flex-col gap-1 text-xs text-slate-500">
+                CTA - título
+                <input v-model="websiteConfig.ctaSectionTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </label>
+              <label class="flex flex-col gap-1 text-xs text-slate-500">
+                CTA - subtítulo
+                <input v-model="websiteConfig.ctaSectionSubtitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </label>
+            </div>
+          </div>
+
+          <BlogPostsManager v-else-if="siteConfigTab === 'blog'" :tenant-id="selectedTenant.id" />
+
+          <div v-else class="grid gap-4 md:grid-cols-2">
+            <label class="flex flex-col gap-1 text-xs text-slate-500">
+              Telefone
+              <input v-model="websiteConfig.phone" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500">
+              E-mail
+              <input v-model="websiteConfig.email" type="email" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500 md:col-span-2">
+              Endereço
+              <input v-model="websiteConfig.address" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500">
+              Instagram
+              <input v-model="websiteConfig.instagramUrl" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500">
+              WhatsApp
+              <input v-model="websiteConfig.whatsappNumber" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-slate-500 md:col-span-2">
+              Facebook
+              <input v-model="websiteConfig.facebookUrl" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+            </label>
+          </div>
+
+          <div v-if="siteConfigTab !== 'blog'" class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3">
             <div>
               <p class="text-sm font-medium text-slate-800 dark:text-slate-200">Tenant selecionado</p>
               <p class="text-xs text-slate-400">{{ selectedTenant.name }} · @{{ selectedTenant.subdomain }}</p>

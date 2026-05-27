@@ -103,6 +103,22 @@ export interface TenantWebsiteConfig {
   whatsappNumber?: string | null
   facebookUrl?: string | null
   heroImageUrl?: string | null
+  featuredSectionTitle?: string | null
+  featuredSectionSubtitle?: string | null
+  launchesSectionTitle?: string | null
+  launchesSectionSubtitle?: string | null
+  categoriesSectionTitle?: string | null
+  categoriesSectionSubtitle?: string | null
+  servicesSectionTitle?: string | null
+  servicesSectionSubtitle?: string | null
+  servicesFormTitle?: string | null
+  servicesFormSubtitle?: string | null
+  statsSectionTitle?: string | null
+  statsSectionSubtitle?: string | null
+  blogSectionTitle?: string | null
+  blogSectionSubtitle?: string | null
+  ctaSectionTitle?: string | null
+  ctaSectionSubtitle?: string | null
 }
 
 export const SUPPORT_PERMISSIONS = [
