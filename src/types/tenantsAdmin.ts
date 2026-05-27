@@ -119,6 +119,16 @@ export interface TenantWebsiteConfig {
   blogSectionSubtitle?: string | null
   ctaSectionTitle?: string | null
   ctaSectionSubtitle?: string | null
+  aboutPageTitle?: string | null
+  aboutPageSubtitle?: string | null
+  aboutPageDescription?: string | null
+  aboutImageUrl?: string | null
+  aboutMission?: string | null
+  aboutVision?: string | null
+  aboutValues?: string | null
+  aboutFoundedYear?: string | null
+  aboutTeamCount?: string | null
+  aboutPropertiesCount?: string | null
 }
 
 export const SUPPORT_PERMISSIONS = [

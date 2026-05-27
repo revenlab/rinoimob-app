@@ -47,6 +47,14 @@
             >
               Blog
             </button>
+            <button
+              type="button"
+              @click="siteTab = 'about'"
+              class="rounded-full px-4 py-2 text-sm font-medium transition-colors"
+              :class="siteTab === 'about' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'"
+            >
+              Sobre
+            </button>
           </div>
 
           <section v-if="siteTab === 'visual'" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-5">
@@ -276,6 +284,94 @@
 
           <BlogPostsManager v-else-if="siteTab === 'blog'" />
 
+          <section v-else-if="siteTab === 'about'" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-5">
+            <div>
+              <h2 class="text-base font-semibold text-slate-900 dark:text-white">Página Sobre</h2>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Conte a história da sua imobiliária para os visitantes do site.</p>
+            </div>
+
+            <!-- Image -->
+            <div>
+              <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">Foto / Imagem da equipe</label>
+              <div class="flex items-center gap-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 p-4">
+                <div class="flex h-24 w-36 items-center justify-center overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-900 shrink-0">
+                  <img v-if="config.aboutImageUrl" :src="config.aboutImageUrl" alt="Imagem sobre" class="h-full w-full object-cover">
+                  <span v-else class="text-xs text-slate-400 text-center px-2">Sem imagem</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <button type="button" @click="aboutImageInputRef?.click()" :disabled="isUploadingAboutImage"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg disabled:opacity-50">
+                    {{ isUploadingAboutImage ? 'Enviando...' : 'Enviar imagem' }}
+                  </button>
+                  <button type="button" @click="removeAboutImage" :disabled="isDeletingAboutImage || !config.aboutImageUrl"
+                    class="px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg disabled:opacity-50">
+                    {{ isDeletingAboutImage ? 'Removendo...' : 'Remover' }}
+                  </button>
+                  <input ref="aboutImageInputRef" type="file" accept="image/*" class="hidden" @change="handleAboutImageSelected">
+                </div>
+              </div>
+            </div>
+
+            <!-- Title / Subtitle -->
+            <div class="grid gap-4 md:grid-cols-2">
+              <div>
+                <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Título da página</label>
+                <input v-model="config.aboutPageTitle" type="text" placeholder="Sobre Nós"
+                  class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </div>
+              <div>
+                <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Subtítulo</label>
+                <input v-model="config.aboutPageSubtitle" type="text" placeholder="Conheça nossa história"
+                  class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+              <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Descrição / História</label>
+              <textarea v-model="config.aboutPageDescription" rows="4" placeholder="Conte a história da sua imobiliária..."
+                class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm resize-y" />
+            </div>
+
+            <!-- Mission / Vision / Values -->
+            <div class="grid gap-4 md:grid-cols-3">
+              <div>
+                <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Missão</label>
+                <textarea v-model="config.aboutMission" rows="3" placeholder="Nossa missão é..."
+                  class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm resize-y" />
+              </div>
+              <div>
+                <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Visão</label>
+                <textarea v-model="config.aboutVision" rows="3" placeholder="Nossa visão é..."
+                  class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm resize-y" />
+              </div>
+              <div>
+                <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Valores</label>
+                <textarea v-model="config.aboutValues" rows="3" placeholder="Ética, transparência, comprometimento..."
+                  class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm resize-y" />
+              </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid gap-4 md:grid-cols-3">
+              <div>
+                <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Ano de fundação</label>
+                <input v-model="config.aboutFoundedYear" type="text" placeholder="2015"
+                  class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </div>
+              <div>
+                <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Nº de corretores</label>
+                <input v-model="config.aboutTeamCount" type="text" placeholder="50+"
+                  class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </div>
+              <div>
+                <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Imóveis negociados</label>
+                <input v-model="config.aboutPropertiesCount" type="text" placeholder="1.000+"
+                  class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              </div>
+            </div>
+          </section>
+
           <section v-else class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
             <div>
               <h2 class="text-base font-semibold text-slate-900 dark:text-white">Contato e redes</h2>
@@ -404,10 +500,13 @@ const isUploadingFavicon = ref(false)
 const isDeletingFavicon = ref(false)
 const isUploadingHeroImage = ref(false)
 const isDeletingHeroImage = ref(false)
-const siteTab = ref<'visual' | 'content' | 'contact' | 'blog'>('visual')
+const isUploadingAboutImage = ref(false)
+const isDeletingAboutImage = ref(false)
+const siteTab = ref<'visual' | 'content' | 'contact' | 'blog' | 'about'>('visual')
 const logoInputRef = ref<HTMLInputElement | null>(null)
 const faviconInputRef = ref<HTMLInputElement | null>(null)
 const heroImageInputRef = ref<HTMLInputElement | null>(null)
+const aboutImageInputRef = ref<HTMLInputElement | null>(null)
 
 const primaryColorValue = computed({
   get: () => config.value.primaryColor ?? DEFAULT_PRIMARY_COLOR,
@@ -593,6 +692,39 @@ async function removeHeroImage() {
   } finally {
     isDeletingHeroImage.value = false
     resetFileInput(heroImageInputRef.value)
+  }
+}
+
+async function handleAboutImageSelected(event: Event) {
+  const target = event.target
+  if (!(target instanceof HTMLInputElement) || !target.files?.length) return
+
+  isUploadingAboutImage.value = true
+  try {
+    const response = await websiteConfigService.uploadAboutImage(target.files[0])
+    applyConfig(response)
+    showSuccess('Imagem da página Sobre atualizada com sucesso!')
+  } catch (error: unknown) {
+    showError(error instanceof Error ? error.message : 'Erro ao enviar imagem')
+  } finally {
+    isUploadingAboutImage.value = false
+    resetFileInput(target)
+  }
+}
+
+async function removeAboutImage() {
+  if (!config.value.aboutImageUrl) return
+
+  isDeletingAboutImage.value = true
+  try {
+    const response = await websiteConfigService.deleteAboutImage()
+    applyConfig(response)
+    showSuccess('Imagem removida com sucesso!')
+  } catch (error: unknown) {
+    showError(error instanceof Error ? error.message : 'Erro ao remover imagem')
+  } finally {
+    isDeletingAboutImage.value = false
+    resetFileInput(aboutImageInputRef.value)
   }
 }
 
