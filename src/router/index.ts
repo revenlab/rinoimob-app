@@ -159,6 +159,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/meu-plano',
+      name: 'BillingPlan',
+      component: () => import('@/views/BillingPlan.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/force-password-reset',
       name: 'ForcePasswordReset',
       component: () => import('@/views/ForcePasswordReset.vue'),

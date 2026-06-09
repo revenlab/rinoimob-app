@@ -137,5 +137,33 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
 
 ## Last Changes
 
+- DDI padronizado no app:
+  - Novo composable `src/composables/useCountryDDI.ts` com países e DDI (default Brasil +55).
+  - Novo componente reutilizável `src/components/ui/PhoneInput.vue` (seletor de país + campo numérico).
+  - Campos de telefone migrados para `PhoneInput` em:
+    - `LeadsManagement.vue` (novo lead),
+    - `LeadDetail.vue` (edição de lead),
+    - `TenantsAdmin.vue` (edição de usuário do tenant e contato do website do tenant),
+    - `WebsiteConfig.vue` (contato do website),
+    - `SendWhatsappActionPanel.vue` (recipientPhone e recipientValue).
+  - Ajuste adicional: `WhatsappSettings.vue` (criação de instância) e campos `whatsappNumber` em `WebsiteConfig.vue` e `TenantsAdmin.vue` também usam `PhoneInput` com DDI.
 - Leads UI (`LeadsManagement.vue` e `LeadDetail.vue`) agora exibe `source` dinâmico, incluindo origens detalhadas como `PORTAL_HOME_FORM` e `PORTAL_PROPERTY_FORM`, ao invés de colapsar tudo em apenas "Portal" ou "Manual".
 - Realtime de leads via WebSocket: `websocket` store ganhou `subscribeToTenantLeads()`. `LeadsManagement.vue` e `LeadDetail.vue` agora assinam `/topic/{tenantId}.leads` para refletir criação, atualização de status e deleção sem refresh.
+- `TenantsAdmin.vue` ganhou seção **Plano e limites** para suporte visualizar e editar billing por tenant (plano, limites numéricos e flags de recursos).
+- `tenantsAdminService` ganhou:
+  - `getTenantBilling(tenantId)` → `GET /support/tenants/{id}/billing`
+  - `updateTenantBilling(tenantId, payload)` → `PUT /support/tenants/{id}/billing`
+- `src/types/tenantsAdmin.ts` agora inclui os tipos `BillingPlanOption`, `TenantBilling` e `UpdateTenantBillingPayload`.
+- Correção de integração: `updateTenantBilling` agora envia header `Content-Type: application/json` para evitar `HttpMediaTypeNotSupportedException` no backend (`text/plain`).
+- UX de billing no suporte: ao trocar `planCode` em `TenantsAdmin.vue`, o formulário auto-preenche limites e flags com os valores padrão do plano selecionado (converte `null` para `-1` = ilimitado), mantendo possibilidade de edição manual antes de salvar.
+- Portal de billing para tenant:
+  - Nova tela `src/views/BillingPlan.vue` em rota `/meu-plano`.
+  - Novo item de menu client-only “Meu Plano” no `AppLayout.vue`.
+  - Novo serviço `src/services/billing.ts` com:
+    - `getMyBilling()` → `GET /billing/me`
+    - `startCheckout(payload)` → `POST /billing/checkout`
+  - Novos tipos em `src/types/billing.ts`.
+- Reorganização do menu lateral em `AppLayout.vue`:
+  - Itens “WhatsApp”, “Meu Plano” e “Equipe” agora ficam no grupo **Configurações**.
+  - Menu principal continua exibindo os demais itens no grupo **Principal**.
+  - Filtro de visibilidade (`internalOnly/clientOnly`) foi centralizado em `visibleNavItems` e reaproveitado para separar `mainNavItems` e `settingsNavItems`.

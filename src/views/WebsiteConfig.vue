@@ -381,7 +381,7 @@
             <div class="grid gap-4 md:grid-cols-2">
               <div>
                 <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">Telefone</label>
-                <input v-model="config.phone" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+                <PhoneInput v-model="config.phone" placeholder="(11) 99999-9999" />
               </div>
               <div>
                 <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">E-mail</label>
@@ -407,7 +407,7 @@
 
             <div>
               <label class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">WhatsApp</label>
-              <input v-model="config.whatsappNumber" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              <PhoneInput v-model="config.whatsappNumber" placeholder="11 99999-9999" />
             </div>
           </section>
 
@@ -479,6 +479,7 @@
 import { computed, onMounted, ref } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import BlogPostsManager from '@/components/site/BlogPostsManager.vue'
+import PhoneInput from '@/components/ui/PhoneInput.vue'
 import { useNotification } from '@/composables/useNotification'
 import websiteConfigService from '@/services/websiteConfig'
 import { useAuthStore } from '@/stores/auth'

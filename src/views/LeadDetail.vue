@@ -340,8 +340,7 @@
               </div>
               <div>
                 <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-1">Telefone</p>
-                <input v-if="isEditing" v-model="editForm.phone" type="tel"
-                  class="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
+                <PhoneInput v-if="isEditing" v-model="editForm.phone" placeholder="(11) 99999-9999" />
                 <p v-else class="text-sm text-slate-700 dark:text-slate-300">{{ store.currentLead.phone ?? '—' }}</p>
               </div>
               <div class="grid grid-cols-2 gap-3">
@@ -601,6 +600,7 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { useLeadStore } from '@/stores/lead'
 import { useAuthStore } from '@/stores/auth'
 import { useWebSocketStore } from '@/stores/websocket'
+import PhoneInput from '@/components/ui/PhoneInput.vue'
 import userService from '@/services/user'
 import propertyService from '@/services/property'
 import taskService from '@/services/task'

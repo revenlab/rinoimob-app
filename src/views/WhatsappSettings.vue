@@ -25,12 +25,7 @@
           </div>
           <div>
             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Telefone (com DDI) <span class="text-slate-400 font-normal">— opcional</span></label>
-            <input
-              v-model="newPhoneNumber"
-              type="text"
-              placeholder="+55 11 99999-9999"
-              class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-            />
+            <PhoneInput v-model="newPhoneNumber" placeholder="11 99999-9999" />
           </div>
         </div>
         <div class="flex gap-3 mt-6">
@@ -305,6 +300,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import QRCode from 'qrcode'
 import AppLayout from '@/layouts/AppLayout.vue'
+import PhoneInput from '@/components/ui/PhoneInput.vue'
 import whatsappService from '@/services/whatsapp'
 import userService from '@/services/user'
 import type { WhatsappInstance, QrCodeResponse } from '@/types/whatsapp'

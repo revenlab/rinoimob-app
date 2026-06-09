@@ -260,8 +260,7 @@
             </div>
             <div>
               <label class="block text-xs font-semibold tracking-widest uppercase text-slate-400 mb-1.5">Telefone</label>
-              <input v-model="createForm.phone" type="tel" placeholder="(11) 99999-9999"
-                class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
+              <PhoneInput v-model="createForm.phone" placeholder="(11) 99999-9999" />
             </div>
             <div>
               <label class="block text-xs font-semibold tracking-widest uppercase text-slate-400 mb-1.5">Mensagem</label>
@@ -319,6 +318,7 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { useLeadStore } from '@/stores/lead'
 import { useAuthStore } from '@/stores/auth'
 import { useWebSocketStore } from '@/stores/websocket'
+import PhoneInput from '@/components/ui/PhoneInput.vue'
 import leadService from '@/services/lead'
 import userService from '@/services/user'
 import type { LeadResponse, LeadStatus, CreateLeadRequest, UserSummary, LeadWsEvent } from '@/types/lead'

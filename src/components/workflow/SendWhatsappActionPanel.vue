@@ -42,12 +42,9 @@
       <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
         Telefone do Usuário (opcional)
       </label>
-      <input
-        :value="node.data?.parameters?.recipientPhone || ''"
-        @input="(e) => updateParam('recipientPhone', (e.target as HTMLInputElement).value)"
-        type="tel"
-        placeholder="+55 11 98765-4321"
-        class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm"
+      <PhoneInput
+        v-model="recipientPhoneModel"
+        placeholder="11 98765-4321"
       />
       <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">
         Se vazio, usará o telefone do usuário do sistema
@@ -59,12 +56,9 @@
       <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
         Número de Telefone
       </label>
-      <input
-        :value="node.data?.parameters?.recipientValue || ''"
-        @input="(e) => updateParam('recipientValue', (e.target as HTMLInputElement).value)"
-        type="tel"
-        placeholder="+55 11 98765-4321"
-        class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm"
+      <PhoneInput
+        v-model="recipientValueModel"
+        placeholder="11 98765-4321"
       />
       <p v-if="!node.data?.parameters?.recipientValue" class="text-xs text-amber-600 dark:text-amber-400 mt-1">
         <ExclamationTriangleIcon class="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" />
@@ -153,6 +147,7 @@ import type { Node } from '@vue-flow/core'
 import whatsappService from '@/services/whatsapp'
 import type { WhatsappInstance } from '@/types/whatsapp'
 import { ExclamationTriangleIcon } from '@heroicons/vue/20/solid'
+import PhoneInput from '@/components/ui/PhoneInput.vue'
 
 const props = defineProps<{ node: Node }>()
 const emit = defineEmits<{
@@ -187,6 +182,14 @@ const messageMode = computed({
 })
 
 const selectedTemplate = computed(() => props.node.data?.parameters?.messageTemplate)
+const recipientPhoneModel = computed({
+  get: () => props.node.data?.parameters?.recipientPhone || '',
+  set: (value: string) => updateParam('recipientPhone', value),
+})
+const recipientValueModel = computed({
+  get: () => props.node.data?.parameters?.recipientValue || '',
+  set: (value: string) => updateParam('recipientValue', value),
+})
 
 const templates: Record<string, string> = {
   welcome: 'Olá {leadName}! Bem-vindo ao nosso serviço. Como posso ajudá-lo?',

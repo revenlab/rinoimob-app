@@ -1,11 +1,13 @@
 import { apiFetch, API_BASE } from '@/lib/api'
 import type {
+  TenantBilling,
   SupportDashboard,
   TenantAuditLog,
   TenantAuditLogFilters,
   TenantHealth,
   TenantSummary,
   TenantUserSummary,
+  UpdateTenantBillingPayload,
 } from '@/types/tenantsAdmin'
 
 const BASE = `${API_BASE}/support`
@@ -55,6 +57,18 @@ class TenantsAdminService {
 
   async getTenantHealth(tenantId: string): Promise<TenantHealth> {
     return apiFetch<TenantHealth>(`${BASE}/tenants/${tenantId}/health`)
+  }
+
+  async getTenantBilling(tenantId: string): Promise<TenantBilling> {
+    return apiFetch<TenantBilling>(`${BASE}/tenants/${tenantId}/billing`)
+  }
+
+  async updateTenantBilling(tenantId: string, payload: UpdateTenantBillingPayload): Promise<TenantBilling> {
+    return apiFetch<TenantBilling>(`${BASE}/tenants/${tenantId}/billing`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
   }
 
   async resendInvitation(tenantId: string, userId: string): Promise<TenantUserSummary> {

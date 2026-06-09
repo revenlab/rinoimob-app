@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import BlogPostsManager from '@/components/site/BlogPostsManager.vue'
+import PhoneInput from '@/components/ui/PhoneInput.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useNotification } from '@/composables/useNotification'
 import tenantsAdminService from '@/services/tenantsAdmin'
@@ -11,6 +12,7 @@ import {
   SUPPORT_PERMISSIONS,
   type SupportPermissionValue,
   type TenantAuditLog,
+  type TenantBilling,
   type TenantHealth,
   type TenantSummary,
   type TenantUserSummary,
@@ -32,6 +34,7 @@ const tenantUsers = ref<TenantUserSummary[]>([])
 const operators = ref<TenantUserSummary[]>([])
 const auditLogs = ref<TenantAuditLog[]>([])
 const tenantHealth = ref<TenantHealth | null>(null)
+const tenantBilling = ref<TenantBilling | null>(null)
 
 const selectedTenantId = ref<string>('')
 const auditTenantFilter = ref<string>('')
@@ -46,6 +49,7 @@ const loadingUsers = ref(false)
 const loadingOperators = ref(false)
 const loadingAudit = ref(false)
 const loadingHealth = ref(false)
+const loadingBilling = ref(false)
 const loadingOperatorPermissions = ref(false)
 const resendingInvitationUserId = ref<string | null>(null)
 const resettingAccessUserId = ref<string | null>(null)
@@ -58,6 +62,22 @@ const savingPermissions = ref(false)
 const editingTenant = ref(false)
 const savingTenant = ref(false)
 const tenantEditForm = ref({ name: '', subdomain: '' })
+const editingTenantBilling = ref(false)
+const savingTenantBilling = ref(false)
+const tenantBillingEditForm = ref({
+  planCode: 'FREE' as TenantBilling['planCode'],
+  maxUsers: 1,
+  maxProperties: 10,
+  maxLeadsPerMonth: 20,
+  maxWhatsappNumbers: 1,
+  blogEnabled: false,
+  customDomainEnabled: false,
+  automationCrmEnabled: false,
+  publicApiEnabled: false,
+  vipSupportEnabled: false,
+  customImplementationEnabled: false,
+  notes: '',
+})
 const editingTenantUserId = ref<string | null>(null)
 const savingTenantUserId = ref<string | null>(null)
 const tenantUserEditForm = ref({ firstName: '', lastName: '', email: '', phone: '' })
@@ -132,6 +152,10 @@ function formatHealthStatus(status: TenantHealth['status']) {
   return 'OK'
 }
 
+function formatLimitValue(value: number) {
+  return value < 0 ? 'Ilimitado' : String(value)
+}
+
 function normalizeOperatorPermissions(permissions: string[]): SupportPermissionValue[] {
   return SUPPORT_PERMISSIONS
     .map(permission => permission.value)
@@ -178,9 +202,58 @@ function resetTenantEditForm(tenant: TenantSummary | null = selectedTenant.value
   }
 }
 
+function resetTenantBillingEditForm(billing: TenantBilling | null = tenantBilling.value) {
+  tenantBillingEditForm.value = {
+    planCode: billing?.planCode ?? 'FREE',
+    maxUsers: billing?.maxUsers ?? 1,
+    maxProperties: billing?.maxProperties ?? 10,
+    maxLeadsPerMonth: billing?.maxLeadsPerMonth ?? 20,
+    maxWhatsappNumbers: billing?.maxWhatsappNumbers ?? 1,
+    blogEnabled: billing?.blogEnabled ?? false,
+    customDomainEnabled: billing?.customDomainEnabled ?? false,
+    automationCrmEnabled: billing?.automationCrmEnabled ?? false,
+    publicApiEnabled: billing?.publicApiEnabled ?? false,
+    vipSupportEnabled: billing?.vipSupportEnabled ?? false,
+    customImplementationEnabled: billing?.customImplementationEnabled ?? false,
+    notes: billing?.notes ?? '',
+  }
+}
+
+function normalizePlanLimit(value: number | null) {
+  return value == null ? -1 : value
+}
+
+function applySelectedPlanDefaults(planCode: TenantBilling['planCode']) {
+  const selectedPlan = tenantBilling.value?.availablePlans.find(plan => plan.code === planCode)
+  if (!selectedPlan) return
+
+  tenantBillingEditForm.value.planCode = selectedPlan.code
+  tenantBillingEditForm.value.maxUsers = normalizePlanLimit(selectedPlan.maxUsers)
+  tenantBillingEditForm.value.maxProperties = normalizePlanLimit(selectedPlan.maxProperties)
+  tenantBillingEditForm.value.maxLeadsPerMonth = normalizePlanLimit(selectedPlan.maxLeadsPerMonth)
+  tenantBillingEditForm.value.maxWhatsappNumbers = normalizePlanLimit(selectedPlan.maxWhatsappNumbers)
+  tenantBillingEditForm.value.blogEnabled = selectedPlan.blogEnabled
+  tenantBillingEditForm.value.customDomainEnabled = selectedPlan.customDomainEnabled
+  tenantBillingEditForm.value.automationCrmEnabled = selectedPlan.automationCrmEnabled
+  tenantBillingEditForm.value.publicApiEnabled = selectedPlan.publicApiEnabled
+  tenantBillingEditForm.value.vipSupportEnabled = selectedPlan.vipSupportEnabled
+  tenantBillingEditForm.value.customImplementationEnabled = selectedPlan.customImplementationEnabled
+}
+
+function handleBillingPlanChange(event: Event) {
+  const target = event.target
+  if (!(target instanceof HTMLSelectElement)) return
+  applySelectedPlanDefaults(target.value as TenantBilling['planCode'])
+}
+
 function cancelTenantEdit() {
   editingTenant.value = false
   resetTenantEditForm()
+}
+
+function cancelTenantBillingEdit() {
+  editingTenantBilling.value = false
+  resetTenantBillingEditForm()
 }
 
 function toggleTenantEdit() {
@@ -193,6 +266,18 @@ function toggleTenantEdit() {
 
   resetTenantEditForm(selectedTenant.value)
   editingTenant.value = true
+}
+
+function toggleTenantBillingEdit() {
+  if (!selectedTenant.value || !authStore.canEditTenants) return
+
+  if (editingTenantBilling.value) {
+    cancelTenantBillingEdit()
+    return
+  }
+
+  resetTenantBillingEditForm()
+  editingTenantBilling.value = true
 }
 
 function resetTenantUserEditForm(user?: TenantUserSummary | null) {
@@ -287,6 +372,27 @@ async function loadTenantHealth(tenantId: string) {
   }
 }
 
+async function loadTenantBilling(tenantId: string) {
+  if (!tenantId || !authStore.canViewTenants) {
+    tenantBilling.value = null
+    return
+  }
+
+  loadingBilling.value = true
+  error.value = null
+  try {
+    tenantBilling.value = await tenantsAdminService.getTenantBilling(tenantId)
+    if (!editingTenantBilling.value) {
+      resetTenantBillingEditForm(tenantBilling.value)
+    }
+  } catch (e: unknown) {
+    tenantBilling.value = null
+    error.value = e instanceof Error ? e.message : 'Erro ao carregar billing do tenant'
+  } finally {
+    loadingBilling.value = false
+  }
+}
+
 async function resendTenantInvitation(userId: string) {
   if (!selectedTenantId.value || !authStore.canEditTenantUsers) return
 
@@ -345,6 +451,37 @@ async function saveTenantChanges() {
     showError(e instanceof Error ? e.message : 'Erro ao atualizar tenant')
   } finally {
     savingTenant.value = false
+  }
+}
+
+async function saveTenantBillingChanges() {
+  if (!selectedTenant.value || !authStore.canEditTenants) return
+
+  savingTenantBilling.value = true
+  error.value = null
+  try {
+    tenantBilling.value = await tenantsAdminService.updateTenantBilling(selectedTenant.value.id, {
+      planCode: tenantBillingEditForm.value.planCode,
+      maxUsers: tenantBillingEditForm.value.maxUsers,
+      maxProperties: tenantBillingEditForm.value.maxProperties,
+      maxLeadsPerMonth: tenantBillingEditForm.value.maxLeadsPerMonth,
+      maxWhatsappNumbers: tenantBillingEditForm.value.maxWhatsappNumbers,
+      blogEnabled: tenantBillingEditForm.value.blogEnabled,
+      customDomainEnabled: tenantBillingEditForm.value.customDomainEnabled,
+      automationCrmEnabled: tenantBillingEditForm.value.automationCrmEnabled,
+      publicApiEnabled: tenantBillingEditForm.value.publicApiEnabled,
+      vipSupportEnabled: tenantBillingEditForm.value.vipSupportEnabled,
+      customImplementationEnabled: tenantBillingEditForm.value.customImplementationEnabled,
+      notes: tenantBillingEditForm.value.notes?.trim() ? tenantBillingEditForm.value.notes.trim() : null,
+    })
+    cancelTenantBillingEdit()
+    const message = 'Billing do tenant atualizado com sucesso.'
+    setSuccessMessage(message)
+    showSuccess(message)
+  } catch (e: unknown) {
+    showError(e instanceof Error ? e.message : 'Erro ao atualizar billing do tenant')
+  } finally {
+    savingTenantBilling.value = false
   }
 }
 
@@ -581,12 +718,15 @@ async function clearAuditFilters() {
 
 watch(selectedTenantId, async tenantId => {
   editingTenant.value = false
+  editingTenantBilling.value = false
   resetTenantEditForm()
+  resetTenantBillingEditForm()
   cancelTenantUserEdit()
 
   if (!tenantId) {
     tenantUsers.value = []
     tenantHealth.value = null
+    tenantBilling.value = null
     websiteConfig.value = null
     return
   }
@@ -598,6 +738,9 @@ watch(selectedTenantId, async tenantId => {
   }
   if (authStore.canViewHealth) {
     loaders.push(loadTenantHealth(tenantId))
+  }
+  if (authStore.canViewTenants) {
+    loaders.push(loadTenantBilling(tenantId))
   }
   if (activeTab.value === 'site' && authStore.canEditTenants) {
     loaders.push(loadWebsiteConfig(tenantId))
@@ -629,6 +772,9 @@ watch(activeTab, async tab => {
 watch(selectedTenant, tenant => {
   if (!editingTenant.value) {
     resetTenantEditForm(tenant)
+  }
+  if (!editingTenantBilling.value) {
+    resetTenantBillingEditForm(tenantBilling.value)
   }
 })
 
@@ -765,6 +911,122 @@ onMounted(async () => {
               </form>
             </div>
             <div v-else class="text-sm text-slate-400">Selecione um tenant para visualizar os detalhes.</div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
+            <div class="flex items-center justify-between gap-3 mb-4">
+              <div>
+                <h2 class="text-sm font-semibold text-slate-800 dark:text-slate-200">Plano e limites</h2>
+                <p class="text-xs text-slate-400">Gestão de assinatura e permissões efetivas do tenant</p>
+              </div>
+              <button
+                v-if="selectedTenant && authStore.canEditTenants"
+                @click="toggleTenantBillingEdit"
+                :disabled="savingTenantBilling || loadingBilling"
+                class="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors disabled:opacity-60"
+              >
+                {{ editingTenantBilling ? 'Fechar' : 'Editar billing' }}
+              </button>
+            </div>
+
+            <div v-if="loadingBilling" class="text-sm text-slate-400">Carregando billing...</div>
+            <div v-else-if="!tenantBilling" class="text-sm text-slate-400">Nenhum dado de billing encontrado.</div>
+            <div v-else class="space-y-4">
+              <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="rounded-2xl border border-slate-200 dark:border-slate-700 p-3">
+                  <p class="text-[10px] uppercase text-slate-400">Plano</p>
+                  <p class="mt-1 text-lg font-semibold text-slate-800 dark:text-slate-200">{{ tenantBilling.planName }}</p>
+                  <p class="text-xs text-slate-400">{{ tenantBilling.planCode }}</p>
+                </div>
+                <div class="rounded-2xl border border-slate-200 dark:border-slate-700 p-3">
+                  <p class="text-[10px] uppercase text-slate-400">Assinatura</p>
+                  <p class="mt-1 text-lg font-semibold text-slate-800 dark:text-slate-200">{{ tenantBilling.subscriptionStatus }}</p>
+                  <p class="text-xs text-slate-400">{{ tenantBilling.provider }}</p>
+                </div>
+                <div class="rounded-2xl border border-slate-200 dark:border-slate-700 p-3">
+                  <p class="text-[10px] uppercase text-slate-400">Usuários</p>
+                  <p class="mt-1 text-lg font-semibold text-slate-800 dark:text-slate-200">{{ formatLimitValue(tenantBilling.maxUsers) }}</p>
+                </div>
+                <div class="rounded-2xl border border-slate-200 dark:border-slate-700 p-3">
+                  <p class="text-[10px] uppercase text-slate-400">Imóveis</p>
+                  <p class="mt-1 text-lg font-semibold text-slate-800 dark:text-slate-200">{{ formatLimitValue(tenantBilling.maxProperties) }}</p>
+                </div>
+              </div>
+
+              <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="rounded-2xl border border-slate-200 dark:border-slate-700 p-3">
+                  <p class="text-[10px] uppercase text-slate-400">Leads/mês</p>
+                  <p class="mt-1 text-lg font-semibold text-slate-800 dark:text-slate-200">{{ formatLimitValue(tenantBilling.maxLeadsPerMonth) }}</p>
+                </div>
+                <div class="rounded-2xl border border-slate-200 dark:border-slate-700 p-3">
+                  <p class="text-[10px] uppercase text-slate-400">WhatsApps</p>
+                  <p class="mt-1 text-lg font-semibold text-slate-800 dark:text-slate-200">{{ formatLimitValue(tenantBilling.maxWhatsappNumbers) }}</p>
+                </div>
+                <div class="rounded-2xl border border-slate-200 dark:border-slate-700 p-3 sm:col-span-2 xl:col-span-2">
+                  <p class="text-[10px] uppercase text-slate-400">Recursos</p>
+                  <div class="mt-2 flex flex-wrap gap-2">
+                    <span class="rounded-full px-2 py-1 text-[10px] font-semibold" :class="tenantBilling.blogEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'">Blog</span>
+                    <span class="rounded-full px-2 py-1 text-[10px] font-semibold" :class="tenantBilling.customDomainEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'">Domínio</span>
+                    <span class="rounded-full px-2 py-1 text-[10px] font-semibold" :class="tenantBilling.automationCrmEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'">Automações</span>
+                    <span class="rounded-full px-2 py-1 text-[10px] font-semibold" :class="tenantBilling.publicApiEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'">API pública</span>
+                    <span class="rounded-full px-2 py-1 text-[10px] font-semibold" :class="tenantBilling.vipSupportEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'">Suporte VIP</span>
+                    <span class="rounded-full px-2 py-1 text-[10px] font-semibold" :class="tenantBilling.customImplementationEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'">Implantação</span>
+                  </div>
+                </div>
+              </div>
+
+              <form v-if="editingTenantBilling && authStore.canEditTenants" class="space-y-4 rounded-2xl border border-slate-200 dark:border-slate-700 p-4" @submit.prevent="saveTenantBillingChanges">
+                <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  <label class="flex flex-col gap-1 text-xs text-slate-500">
+                    Plano
+                    <select v-model="tenantBillingEditForm.planCode" @change="handleBillingPlanChange" class="border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+                      <option v-for="plan in tenantBilling.availablePlans" :key="plan.code" :value="plan.code">
+                        {{ plan.planName }} ({{ plan.code }})
+                      </option>
+                    </select>
+                  </label>
+                  <label class="flex flex-col gap-1 text-xs text-slate-500">
+                    Máx. usuários (-1 = ilimitado)
+                    <input v-model.number="tenantBillingEditForm.maxUsers" type="number" min="-1" class="border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+                  </label>
+                  <label class="flex flex-col gap-1 text-xs text-slate-500">
+                    Máx. imóveis (-1 = ilimitado)
+                    <input v-model.number="tenantBillingEditForm.maxProperties" type="number" min="-1" class="border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+                  </label>
+                  <label class="flex flex-col gap-1 text-xs text-slate-500">
+                    Máx. leads/mês (-1 = ilimitado)
+                    <input v-model.number="tenantBillingEditForm.maxLeadsPerMonth" type="number" min="-1" class="border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+                  </label>
+                  <label class="flex flex-col gap-1 text-xs text-slate-500">
+                    Máx. WhatsApps (-1 = ilimitado)
+                    <input v-model.number="tenantBillingEditForm.maxWhatsappNumbers" type="number" min="-1" class="border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+                  </label>
+                </div>
+
+                <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-3 text-xs text-slate-600 dark:text-slate-300">
+                  <label class="inline-flex items-center gap-2"><input v-model="tenantBillingEditForm.blogEnabled" type="checkbox"> Blog</label>
+                  <label class="inline-flex items-center gap-2"><input v-model="tenantBillingEditForm.customDomainEnabled" type="checkbox"> Domínio customizado</label>
+                  <label class="inline-flex items-center gap-2"><input v-model="tenantBillingEditForm.automationCrmEnabled" type="checkbox"> Automação CRM</label>
+                  <label class="inline-flex items-center gap-2"><input v-model="tenantBillingEditForm.publicApiEnabled" type="checkbox"> API pública</label>
+                  <label class="inline-flex items-center gap-2"><input v-model="tenantBillingEditForm.vipSupportEnabled" type="checkbox"> Suporte VIP</label>
+                  <label class="inline-flex items-center gap-2"><input v-model="tenantBillingEditForm.customImplementationEnabled" type="checkbox"> Implantação personalizada</label>
+                </div>
+
+                <label class="flex flex-col gap-1 text-xs text-slate-500">
+                  Observações
+                  <textarea v-model="tenantBillingEditForm.notes" rows="3" class="border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"></textarea>
+                </label>
+
+                <div class="flex flex-wrap items-center gap-2">
+                  <button type="submit" :disabled="savingTenantBilling" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 py-2 text-sm disabled:opacity-60">
+                    {{ savingTenantBilling ? 'Salvando...' : 'Salvar billing' }}
+                  </button>
+                  <button type="button" @click="cancelTenantBillingEdit" :disabled="savingTenantBilling" class="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors disabled:opacity-60">
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
 
           <div v-if="authStore.canViewHealth" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
@@ -1013,11 +1275,7 @@ onMounted(async () => {
                           </label>
                           <label class="flex flex-col gap-1 text-xs text-slate-500">
                             Telefone
-                            <input
-                              v-model="tenantUserEditForm.phone"
-                              type="tel"
-                              class="border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 w-full"
-                            >
+                            <PhoneInput v-model="tenantUserEditForm.phone" placeholder="(11) 99999-9999" />
                           </label>
                           <div class="lg:col-span-2 flex flex-wrap items-center gap-2">
                             <button
@@ -1317,7 +1575,7 @@ onMounted(async () => {
           <div v-else class="grid gap-4 md:grid-cols-2">
             <label class="flex flex-col gap-1 text-xs text-slate-500">
               Telefone
-              <input v-model="websiteConfig.phone" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              <PhoneInput v-model="websiteConfig.phone" placeholder="(11) 99999-9999" />
             </label>
             <label class="flex flex-col gap-1 text-xs text-slate-500">
               E-mail
@@ -1333,7 +1591,7 @@ onMounted(async () => {
             </label>
             <label class="flex flex-col gap-1 text-xs text-slate-500">
               WhatsApp
-              <input v-model="websiteConfig.whatsappNumber" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
+              <PhoneInput v-model="websiteConfig.whatsappNumber" placeholder="11 99999-9999" />
             </label>
             <label class="flex flex-col gap-1 text-xs text-slate-500 md:col-span-2">
               Facebook

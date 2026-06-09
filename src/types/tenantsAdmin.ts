@@ -131,6 +131,66 @@ export interface TenantWebsiteConfig {
   aboutPropertiesCount?: string | null
 }
 
+export interface BillingPlanOption {
+  code: 'FREE' | 'STARTER' | 'PRIME' | 'ULTIMATE'
+  planName: string
+  monthlyPrice: number
+  annualPrice: number | null
+  maxUsers: number | null
+  maxProperties: number | null
+  maxLeadsPerMonth: number | null
+  maxWhatsappNumbers: number | null
+  blogEnabled: boolean
+  customDomainEnabled: boolean
+  automationCrmEnabled: boolean
+  publicApiEnabled: boolean
+  vipSupportEnabled: boolean
+  customImplementationEnabled: boolean
+}
+
+export interface TenantBilling {
+  tenantId: string
+  planCode: BillingPlanOption['code']
+  planName: string
+  subscriptionStatus: 'PENDING' | 'ACTIVE' | 'PAST_DUE' | 'CANCELED' | 'TRIAL'
+  provider: 'ABACATEPAY' | 'MANUAL'
+  providerCustomerId: string | null
+  providerSubscriptionId: string | null
+  providerCheckoutId: string | null
+  currentPeriodStart: string | null
+  currentPeriodEnd: string | null
+  cancelAtPeriodEnd: boolean
+  maxUsers: number
+  maxProperties: number
+  maxLeadsPerMonth: number
+  maxWhatsappNumbers: number
+  blogEnabled: boolean
+  customDomainEnabled: boolean
+  automationCrmEnabled: boolean
+  publicApiEnabled: boolean
+  vipSupportEnabled: boolean
+  customImplementationEnabled: boolean
+  notes: string | null
+  updatedByUserId: string | null
+  updatedAt: string | null
+  availablePlans: BillingPlanOption[]
+}
+
+export interface UpdateTenantBillingPayload {
+  planCode: BillingPlanOption['code']
+  maxUsers: number
+  maxProperties: number
+  maxLeadsPerMonth: number
+  maxWhatsappNumbers: number
+  blogEnabled: boolean
+  customDomainEnabled: boolean
+  automationCrmEnabled: boolean
+  publicApiEnabled: boolean
+  vipSupportEnabled: boolean
+  customImplementationEnabled: boolean
+  notes?: string | null
+}
+
 export const SUPPORT_PERMISSIONS = [
   { value: 'support:tenants:read', label: 'Ver tenants' },
   { value: 'support:tenants:write', label: 'Editar tenants' },
