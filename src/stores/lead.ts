@@ -12,6 +12,7 @@ import type {
   LeadNoteResponse,
   LeadListParams,
   PageResponse,
+  LeadPoolResponse,
 } from '@/types/lead'
 import leadService from '@/services/lead'
 
@@ -35,10 +36,15 @@ export const useLeadStore = defineStore('lead', () => {
   }
 
   async function fetchLead(id: string) {
+    // fetch lead and include pools if present
     isLoading.value = true
     error.value = null
     try {
       currentLead.value = await leadService.get(id)
+      // ensure poolId exists in the shape the UI expects (string or null)
+      if (currentLead.value && (currentLead.value as any).poolId) {
+        (currentLead.value as any).poolId = (currentLead.value as any).poolId
+      }
     } catch (e: unknown) {
       error.value = e instanceof Error ? e.message : 'Lead não encontrado'
     } finally {

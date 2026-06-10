@@ -320,6 +320,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useWebSocketStore } from '@/stores/websocket'
 import PhoneInput from '@/components/ui/PhoneInput.vue'
 import leadService from '@/services/lead'
+import leadPoolsService from '@/services/leadPools'
 import userService from '@/services/user'
 import type { LeadResponse, LeadStatus, CreateLeadRequest, UserSummary, LeadWsEvent } from '@/types/lead'
 import { PlusIcon, UserCircleIcon } from '@heroicons/vue/20/solid'
@@ -390,6 +391,14 @@ const onDrop = async (status: LeadStatus) => {
 
 // ── Brokers ─────────────────────────────────────────────────────────────
 const brokers = ref<UserSummary[]>([])
+const leadPools = ref([])
+async function loadLeadPools() {
+  try {
+    leadPools.value = await leadPoolsService.list()
+  } catch (e) {
+    leadPools.value = []
+  }
+}
 
 // ── Table view ─────────────────────────────────────────────────────────────
 const filterStatus = ref<LeadStatus | undefined>(undefined)
@@ -538,6 +547,7 @@ onMounted(async () => {
   }
   try {
     brokers.value = await userService.listActive()
+    await loadLeadPools()
   } catch {
     // graceful degradation — broker list stays empty
   }

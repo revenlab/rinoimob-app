@@ -70,6 +70,24 @@ export interface LeadResponse {
   properties: LeadPropertyResponse[]
 }
 
+export interface LeadPoolResponse {
+id: string
+tenantId: string
+name: string
+description: string | null
+createdAt: string
+}
+
+export interface CreateLeadPoolRequest {
+name: string
+description?: string
+}
+
+export interface UpdateLeadPoolRequest {
+name?: string
+description?: string
+}
+
 export interface CreateLeadRequest {
   name: string
   email?: string
