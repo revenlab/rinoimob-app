@@ -13,8 +13,8 @@ import { ref, onMounted, watch } from 'vue'
 import leadPoolsService from '@/services/leadPools'
 import type { LeadPoolResponse } from '@/types/lead'
 
-const props = defineProps<{ modelValue?: string }>()
-const emit = defineEmits<[string, string | null]>();
+const props = defineProps<{ modelValue?: string | null }>()
+const emit = defineEmits<{ (e: 'update:modelValue', value: string | null): void }>()
 
 const pools = ref<LeadPoolResponse[]>([])
 const selected = ref<string | null>(props.modelValue ?? null)

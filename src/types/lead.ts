@@ -88,6 +88,43 @@ name?: string
 description?: string
 }
 
+export interface LeadResponse {
+id: string
+tenantId: string
+propertyId: string | null
+poolId?: string | null
+name: string
+email: string | null
+phone: string | null
+message: string | null
+status: LeadStatus
+source: string
+assignedTo: string | null
+assignedToName: string | null
+createdAt: string
+updatedAt: string
+notes: LeadNoteResponse[]
+properties: LeadPropertyResponse[]
+}
+
+export interface LeadPoolResponse {
+id: string
+tenantId: string
+name: string
+description: string | null
+createdAt: string
+}
+
+export interface CreateLeadPoolRequest {
+name: string
+description?: string
+}
+
+export interface UpdateLeadPoolRequest {
+name?: string
+description?: string
+}
+
 export interface CreateLeadRequest {
   name: string
   email?: string
@@ -106,6 +143,7 @@ export interface UpdateLeadRequest {
   status?: LeadStatus
   assignedTo?: string
   propertyId?: string
+  poolId?: string | null
 }
 
 export interface LeadNoteRequest {

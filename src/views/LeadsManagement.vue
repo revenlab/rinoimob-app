@@ -322,7 +322,7 @@ import PhoneInput from '@/components/ui/PhoneInput.vue'
 import leadService from '@/services/lead'
 import leadPoolsService from '@/services/leadPools'
 import userService from '@/services/user'
-import type { LeadResponse, LeadStatus, CreateLeadRequest, UserSummary, LeadWsEvent } from '@/types/lead'
+import type { LeadResponse, LeadStatus, CreateLeadRequest, UserSummary, LeadWsEvent, LeadPoolResponse } from '@/types/lead'
 import { PlusIcon, UserCircleIcon } from '@heroicons/vue/20/solid'
 
 const leadStore = useLeadStore()
@@ -391,7 +391,7 @@ const onDrop = async (status: LeadStatus) => {
 
 // ── Brokers ─────────────────────────────────────────────────────────────
 const brokers = ref<UserSummary[]>([])
-const leadPools = ref([])
+const leadPools = ref<LeadPoolResponse[]>([])
 async function loadLeadPools() {
   try {
     leadPools.value = await leadPoolsService.list()
