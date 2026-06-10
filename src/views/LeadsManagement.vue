@@ -46,6 +46,7 @@
             <PlusIcon class="w-4 h-4" />
             Novo lead
           </button>
+          <LeadPoolsManager @updated="loadLeadPools" />
         </div>
       </div>
     </template>
@@ -321,6 +322,7 @@ import { useWebSocketStore } from '@/stores/websocket'
 import PhoneInput from '@/components/ui/PhoneInput.vue'
 import leadService from '@/services/lead'
 import leadPoolsService from '@/services/leadPools'
+import LeadPoolsManager from '@/components/LeadPoolsManager.vue'
 import userService from '@/services/user'
 import type { LeadResponse, LeadStatus, CreateLeadRequest, UserSummary, LeadWsEvent, LeadPoolResponse } from '@/types/lead'
 import { PlusIcon, UserCircleIcon } from '@heroicons/vue/20/solid'
