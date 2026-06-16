@@ -167,3 +167,9 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
   - Itens “WhatsApp”, “Meu Plano” e “Equipe” agora ficam no grupo **Configurações**.
   - Menu principal continua exibindo os demais itens no grupo **Principal**.
   - Filtro de visibilidade (`internalOnly/clientOnly`) foi centralizado em `visibleNavItems` e reaproveitado para separar `mainNavItems` e `settingsNavItems`.
+- **Bolsão de Leads — frontend completo** (`LeadPoolsManager.vue`, `types/lead.ts`):
+  - `LeadPoolResponse`, `CreateLeadPoolRequest`, `UpdateLeadPoolRequest` agora incluem `brokerSelectionMode`, `brokerIds`, `triggerAfterInactiveDays`.
+  - Formulário ganhou campo **"Executar após X dias sem interações"** (`triggerAfterInactiveDays`).
+  - Dropdown de distribuição agora inclui **"Aberto para Todos"** (`OPEN_TO_ALL`) além de Round Robin.
+  - Seleção de corretores: select `ALL_BROKERS` / `SPECIFIC_BROKERS`; quando específico, carrega lista via `userManagementService.list()` e exibe checkboxes.
+  - Critérios com **modo duplo**: toggle Básico (campos individuais: source, city, propertyType, minPrice, maxPrice, keywordContains — serializa para JSON automaticamente) / Avançado (textarea JSON raw). Ao editar, tenta parse do JSON para popular modo básico.

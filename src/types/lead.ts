@@ -61,14 +61,20 @@ export interface LeadPoolResponse {
   criteria?: string
   priority?: number
   routingStrategy?: string
+  brokerSelectionMode?: string
+  triggerAfterInactiveDays?: number | null
+  brokerIds?: string[]
 }
 
 export interface CreateLeadPoolRequest {
   name: string
   description?: string
-  criteria?: string // JSON string with matching criteria
+  criteria?: string
   priority?: number
   routingStrategy?: string
+  brokerSelectionMode?: string
+  triggerAfterInactiveDays?: number | null
+  brokerIds?: string[]
 }
 
 export interface UpdateLeadPoolRequest {
@@ -77,6 +83,9 @@ export interface UpdateLeadPoolRequest {
   criteria?: string
   priority?: number
   routingStrategy?: string
+  brokerSelectionMode?: string
+  triggerAfterInactiveDays?: number | null
+  brokerIds?: string[]
 }
 
 export interface LeadResponse {
