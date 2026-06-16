@@ -52,10 +52,47 @@ export interface LeadNoteResponse {
   createdAt: string
 }
 
+export interface LeadPoolResponse {
+  id: string
+  tenantId: string
+  name: string
+  description: string | null
+  createdAt: string
+  criteria?: string
+  priority?: number
+  routingStrategy?: string
+  brokerSelectionMode?: string
+  triggerAfterInactiveDays?: number | null
+  brokerIds?: string[]
+}
+
+export interface CreateLeadPoolRequest {
+  name: string
+  description?: string
+  criteria?: string
+  priority?: number
+  routingStrategy?: string
+  brokerSelectionMode?: string
+  triggerAfterInactiveDays?: number | null
+  brokerIds?: string[]
+}
+
+export interface UpdateLeadPoolRequest {
+  name?: string
+  description?: string
+  criteria?: string
+  priority?: number
+  routingStrategy?: string
+  brokerSelectionMode?: string
+  triggerAfterInactiveDays?: number | null
+  brokerIds?: string[]
+}
+
 export interface LeadResponse {
   id: string
   tenantId: string
   propertyId: string | null
+  poolId?: string | null
   name: string
   email: string | null
   phone: string | null
@@ -88,6 +125,7 @@ export interface UpdateLeadRequest {
   status?: LeadStatus
   assignedTo?: string
   propertyId?: string
+  poolId?: string | null
 }
 
 export interface LeadNoteRequest {

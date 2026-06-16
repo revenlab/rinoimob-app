@@ -45,10 +45,9 @@ class AutomationService {
   }
 
   async toggleActive(id: string, isActive: boolean): Promise<AutomationWorkflow> {
-    return this.request<AutomationWorkflow>(`/${id}/active`, {
+    return this.request<AutomationWorkflow>(`/${id}/active?isActive=${isActive}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isActive }),
+      headers: { 'Content-Type': 'application/json' }
     })
   }
 

@@ -26,6 +26,7 @@
           </span>
         </div>
         <div v-if="store.currentLead" class="flex items-center gap-2">
+          <LeadPoolSelector v-model="store.currentLead.poolId" />
           <button
             @click="handleDelete"
             class="px-4 py-2 border border-red-200 text-red-600 rounded-xl text-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
