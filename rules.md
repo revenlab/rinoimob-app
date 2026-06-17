@@ -173,3 +173,4 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
   - Dropdown de distribuição agora inclui **"Aberto para Todos"** (`OPEN_TO_ALL`) além de Round Robin.
   - Seleção de corretores: select `ALL_BROKERS` / `SPECIFIC_BROKERS`; quando específico, carrega lista via `userManagementService.list()` e exibe checkboxes.
   - Critérios com **modo duplo**: toggle Básico (campos individuais: source, city, propertyType, minPrice, maxPrice, keywordContains — serializa para JSON automaticamente) / Avançado (textarea JSON raw). Ao editar, tenta parse do JSON para popular modo básico.
+  - Hardening #49: `LeadPoolsManager.vue` agora diferencia carregamento, lista vazia e erro; falha ao carregar corretores mostra retry inline; JSON inválido em critérios avançados fica em erro inline sem quebrar o modal.

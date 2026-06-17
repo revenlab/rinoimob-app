@@ -27,18 +27,26 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="p in pools" :key="p.id" class="border-t border-slate-100">
-                  <td class="py-2 font-medium">{{ p.name }}</td>
-                  <td>{{ p.priority ?? 100 }}</td>
-                  <td>{{ routingLabel(p.routingStrategy) }}</td>
-                  <td>{{ p.triggerAfterInactiveDays ? `${p.triggerAfterInactiveDays}d` : '—' }}</td>
-                  <td class="truncate max-w-[200px] text-slate-500">{{ p.description }}</td>
-                  <td class="text-right whitespace-nowrap">
-                    <button @click="edit(p)" class="text-xs px-2 py-1 mr-2 bg-slate-100 rounded">Editar</button>
-                    <button @click="remove(p)" class="text-xs px-2 py-1 bg-red-100 rounded text-red-600">Remover</button>
-                  </td>
+                <tr v-if="loadingPools">
+                  <td colspan="6" class="py-6 text-center text-slate-400">Carregando bolsões...</td>
                 </tr>
-                <tr v-if="!pools.length">
+                <tr v-else-if="poolLoadError">
+                  <td colspan="6" class="py-6 text-center text-red-500">{{ poolLoadError }}</td>
+                </tr>
+                <template v-if="!loadingPools && !poolLoadError">
+                  <tr v-for="p in pools" :key="p.id" class="border-t border-slate-100">
+                    <td class="py-2 font-medium">{{ p.name }}</td>
+                    <td>{{ p.priority ?? 100 }}</td>
+                    <td>{{ routingLabel(p.routingStrategy) }}</td>
+                    <td>{{ p.triggerAfterInactiveDays ? `${p.triggerAfterInactiveDays}d` : '—' }}</td>
+                    <td class="truncate max-w-[200px] text-slate-500">{{ p.description }}</td>
+                    <td class="text-right whitespace-nowrap">
+                      <button @click="edit(p)" class="text-xs px-2 py-1 mr-2 bg-slate-100 rounded">Editar</button>
+                      <button @click="remove(p)" class="text-xs px-2 py-1 bg-red-100 rounded text-red-600">Remover</button>
+                    </td>
+                  </tr>
+                </template>
+                <tr v-if="!loadingPools && !poolLoadError && !pools.length">
                   <td colspan="6" class="py-6 text-center text-slate-400">Nenhum bolsão criado</td>
                 </tr>
               </tbody>
@@ -91,6 +99,10 @@
                 </select>
                 <div v-if="form.brokerSelectionMode === 'SPECIFIC_BROKERS'">
                   <div v-if="loadingBrokers" class="text-xs text-slate-400 py-2">Carregando corretores...</div>
+                  <div v-else-if="brokerLoadError" class="text-xs text-red-500 py-2">
+                    {{ brokerLoadError }}
+                    <button @click="loadBrokers" class="ml-2 underline">Tentar novamente</button>
+                  </div>
                   <div v-else class="border rounded max-h-40 overflow-y-auto p-2 space-y-1 bg-white dark:bg-slate-900">
                     <label
                       v-for="b in brokers"
@@ -166,6 +178,7 @@
                     placeholder='{"source":"PORTAL","city":"São Paulo","minPrice":500000}'
                   ></textarea>
                   <p class="text-xs text-slate-400 mt-1">Campos suportados: source, city, propertyType, minPrice, maxPrice, keywordContains</p>
+                  <p v-if="criteriaError" class="text-xs text-red-500 mt-1">{{ criteriaError }}</p>
                 </div>
               </div>
 
@@ -190,10 +203,14 @@ import type { UserManagementResponse } from '@/types/role'
 
 const showManager = ref(false)
 const pools = ref<LeadPoolResponse[]>([])
+const loadingPools = ref(false)
+const poolLoadError = ref('')
 const showForm = ref(false)
 const editing = ref<LeadPoolResponse | null>(null)
 const brokers = ref<UserManagementResponse[]>([])
 const loadingBrokers = ref(false)
+const brokerLoadError = ref('')
+const criteriaError = ref('')
 
 type CriteriaMode = 'basic' | 'advanced'
 const criteriaMode = ref<CriteriaMode>('basic')
@@ -235,6 +252,7 @@ watch(basicCriteria, (v) => {
 
 // When switching to basic mode, parse existing JSON into fields
 watch(criteriaMode, (mode) => {
+  criteriaError.value = ''
   if (mode === 'basic' && form.value.criteria) {
     try {
       const parsed = JSON.parse(form.value.criteria)
@@ -247,7 +265,7 @@ watch(criteriaMode, (mode) => {
         maxPrice: parsed.maxPrice ?? null,
       }
     } catch {
-      // invalid JSON — stay in advanced
+      criteriaError.value = 'JSON mal formado. Corrija no modo avançado para voltar ao básico.'
       criteriaMode.value = 'advanced'
     }
   }
@@ -256,22 +274,33 @@ watch(criteriaMode, (mode) => {
 // Load brokers when SPECIFIC_BROKERS is selected
 watch(() => form.value.brokerSelectionMode, async (mode) => {
   if (mode === 'SPECIFIC_BROKERS' && brokers.value.length === 0) {
-    loadingBrokers.value = true
-    try {
-      brokers.value = await userManagementService.list()
-    } catch {
-      brokers.value = []
-    } finally {
-      loadingBrokers.value = false
-    }
+    await loadBrokers()
   }
 })
 
 async function load() {
+  loadingPools.value = true
+  poolLoadError.value = ''
   try {
     pools.value = await leadPoolsService.list()
-  } catch {
+  } catch (e: unknown) {
     pools.value = []
+    poolLoadError.value = e instanceof Error ? e.message : 'Erro ao carregar bolsões.'
+  } finally {
+    loadingPools.value = false
+  }
+}
+
+async function loadBrokers() {
+  loadingBrokers.value = true
+  brokerLoadError.value = ''
+  try {
+    brokers.value = await userManagementService.list()
+  } catch (e: unknown) {
+    brokers.value = []
+    brokerLoadError.value = e instanceof Error ? e.message : 'Erro ao carregar corretores.'
+  } finally {
+    loadingBrokers.value = false
   }
 }
 
@@ -288,6 +317,7 @@ function openManager() {
 
 function openCreate() {
   editing.value = null
+  criteriaError.value = ''
   form.value = emptyForm()
   basicCriteria.value = { source: '', city: '', propertyType: '', keywordContains: '', minPrice: null, maxPrice: null }
   criteriaMode.value = 'basic'
@@ -296,6 +326,7 @@ function openCreate() {
 
 function edit(p: LeadPoolResponse) {
   editing.value = p
+  criteriaError.value = ''
   form.value = {
     name: p.name,
     description: p.description ?? '',
@@ -332,14 +363,16 @@ function edit(p: LeadPoolResponse) {
 function cancelForm() {
   showForm.value = false
   editing.value = null
+  criteriaError.value = ''
 }
 
 async function save() {
+  criteriaError.value = ''
   if (criteriaMode.value === 'advanced' && form.value.criteria) {
     try {
       JSON.parse(form.value.criteria)
     } catch {
-      alert('Critérios inválidos: JSON mal formado')
+      criteriaError.value = 'Critérios inválidos: JSON mal formado.'
       return
     }
   }
