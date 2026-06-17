@@ -2,6 +2,7 @@ export type PropertyOperation = 'SALE' | 'RENT' | 'SEASONAL'
 export type PropertyType = 'HOUSE' | 'APARTMENT' | 'LAND' | 'COMMERCIAL' | 'RURAL'
 export type PropertyStatus = 'DRAFT' | 'ACTIVE' | 'RESERVED' | 'SOLD' | 'ARCHIVED'
 export type PropertyCondition = 'NEW' | 'USED' | 'UNDER_CONSTRUCTION'
+export type PropertyVideoSource = 'UPLOAD' | 'YOUTUBE'
 
 import type { CategoryResponse } from '@/types/category'
 export type { CategoryResponse }
@@ -29,6 +30,16 @@ export interface FloorPlanResponse {
   area: number | null
   createdAt: string
   photos: FloorPlanPhotoResponse[]
+}
+
+export interface PropertyVideoResponse {
+  id: string
+  source: PropertyVideoSource
+  url: string
+  youtubeVideoId: string | null
+  title: string | null
+  position: number
+  createdAt: string
 }
 
 export interface PropertySummaryResponse {
@@ -92,6 +103,7 @@ export interface PropertyResponse {
   updatedAt: string
   photos: PropertyPhotoResponse[]
   floorPlans: FloorPlanResponse[]
+  videos: PropertyVideoResponse[]
 }
 
 export interface CreatePropertyRequest {
@@ -133,6 +145,11 @@ export type UpdatePropertyRequest = Partial<CreatePropertyRequest & { status: Pr
 export interface CreateFloorPlanRequest {
   name: string
   area?: number
+}
+
+export interface CreateYoutubeVideoRequest {
+  url: string
+  title?: string
 }
 
 export interface PropertyListParams {

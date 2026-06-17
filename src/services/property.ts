@@ -7,6 +7,8 @@ import type {
   FloorPlanResponse,
   FloorPlanPhotoResponse,
   CreateFloorPlanRequest,
+  CreateYoutubeVideoRequest,
+  PropertyVideoResponse,
   PropertyListParams,
   PageResponse,
 } from '@/types/property'
@@ -74,6 +76,28 @@ class PropertyService {
 
   async deletePhoto(propertyId: string, photoId: string): Promise<void> {
     return this.request<void>(`/${propertyId}/photos/${photoId}`, { method: 'DELETE' })
+  }
+
+  async uploadVideo(propertyId: string, file: File, title?: string): Promise<PropertyVideoResponse> {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (title) formData.append('title', title)
+    return this.request<PropertyVideoResponse>(`/${propertyId}/videos/upload`, {
+      method: 'POST',
+      body: formData,
+    })
+  }
+
+  async addYoutubeVideo(propertyId: string, data: CreateYoutubeVideoRequest): Promise<PropertyVideoResponse> {
+    return this.request<PropertyVideoResponse>(`/${propertyId}/videos/youtube`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteVideo(propertyId: string, videoId: string): Promise<void> {
+    return this.request<void>(`/${propertyId}/videos/${videoId}`, { method: 'DELETE' })
   }
 
   async addFloorPlan(propertyId: string, data: CreateFloorPlanRequest): Promise<FloorPlanResponse> {

@@ -12,8 +12,15 @@ const propertyId = route.params.id as string
 const uploadingPhoto = ref(false)
 const photoError = ref<string | null>(null)
 const deletingPhotoId = ref<string | null>(null)
+const uploadingVideo = ref(false)
+const videoError = ref<string | null>(null)
+const deletingVideoId = ref<string | null>(null)
+const youtubeVideoUrl = ref('')
+const youtubeVideoTitle = ref('')
+const savingYoutubeVideo = ref(false)
 const uploadingFloorPlanPhotoId = ref<string | null>(null)
 const deletingFloorPlanPhotoId = ref<string | null>(null)
+const MAX_VIDEO_UPLOAD_BYTES = 25 * 1024 * 1024
 
 // Floor plan modal
 const showFloorPlanModal = ref(false)
@@ -98,6 +105,57 @@ async function deletePhoto(photoId: string) {
     await store.fetchProperty(propertyId)
   } finally {
     deletingPhotoId.value = null
+  }
+}
+
+async function handleVideoUpload(event: Event) {
+  const files = (event.target as HTMLInputElement).files
+  if (!files?.length) return
+  const file = files[0]
+  videoError.value = null
+  if (file.size > MAX_VIDEO_UPLOAD_BYTES) {
+    videoError.value = 'O vídeo deve ter no máximo 25MB'
+    ;(event.target as HTMLInputElement).value = ''
+    return
+  }
+  uploadingVideo.value = true
+  try {
+    await propertyService.uploadVideo(propertyId, file)
+    await store.fetchProperty(propertyId)
+  } catch (e: unknown) {
+    videoError.value = e instanceof Error ? e.message : 'Erro ao enviar vídeo'
+  } finally {
+    uploadingVideo.value = false
+    ;(event.target as HTMLInputElement).value = ''
+  }
+}
+
+async function saveYoutubeVideo() {
+  if (!youtubeVideoUrl.value.trim()) return
+  savingYoutubeVideo.value = true
+  videoError.value = null
+  try {
+    await propertyService.addYoutubeVideo(propertyId, {
+      url: youtubeVideoUrl.value.trim(),
+      title: youtubeVideoTitle.value.trim() || undefined,
+    })
+    await store.fetchProperty(propertyId)
+    youtubeVideoUrl.value = ''
+    youtubeVideoTitle.value = ''
+  } catch (e: unknown) {
+    videoError.value = e instanceof Error ? e.message : 'Erro ao cadastrar vídeo do YouTube'
+  } finally {
+    savingYoutubeVideo.value = false
+  }
+}
+
+async function deleteVideo(videoId: string) {
+  deletingVideoId.value = videoId
+  try {
+    await propertyService.deleteVideo(propertyId, videoId)
+    await store.fetchProperty(propertyId)
+  } finally {
+    deletingVideoId.value = null
   }
 }
 
@@ -356,6 +414,91 @@ async function setFloorPlanCover(planId: string, photoId: string) {
               </div>
               <div v-if="photo.isCover" class="absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-500 text-white">
                 CAPA
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Videos -->
+        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
+          <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-5">
+            <div>
+              <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500">Vídeos</h2>
+              <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">Envie arquivos de até 25MB ou cadastre um link do YouTube.</p>
+            </div>
+            <label class="shrink-0 flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-100 dark:border-indigo-800 cursor-pointer transition">
+              <span>{{ uploadingVideo ? 'Enviando...' : 'Enviar vídeo' }}</span>
+              <input type="file" accept="video/*" class="hidden" :disabled="uploadingVideo" @change="handleVideoUpload" />
+            </label>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 mb-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input
+                v-model="youtubeVideoUrl"
+                type="url"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                placeholder="URL do YouTube"
+              />
+              <input
+                v-model="youtubeVideoTitle"
+                type="text"
+                maxlength="120"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                placeholder="Título opcional"
+              />
+            </div>
+            <button
+              type="button"
+              @click="saveYoutubeVideo"
+              :disabled="savingYoutubeVideo || !youtubeVideoUrl.trim()"
+              class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition"
+            >
+              {{ savingYoutubeVideo ? 'Salvando...' : 'Cadastrar YouTube' }}
+            </button>
+          </div>
+
+          <div v-if="videoError" class="mb-4 text-sm text-red-600 bg-red-50 rounded-xl p-3">{{ videoError }}</div>
+
+          <div v-if="!(store.currentProperty.videos?.length ?? 0)" class="text-center text-sm text-slate-300 dark:text-slate-600 py-8">
+            Nenhum vídeo adicionado
+          </div>
+
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div
+              v-for="video in store.currentProperty.videos ?? []"
+              :key="video.id"
+              class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/40 overflow-hidden"
+            >
+              <div class="aspect-video bg-black">
+                <iframe
+                  v-if="video.source === 'YOUTUBE'"
+                  :src="video.url"
+                  :title="video.title ?? 'Vídeo do imóvel'"
+                  class="w-full h-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen
+                ></iframe>
+                <video
+                  v-else
+                  :src="video.url"
+                  class="w-full h-full object-contain"
+                  controls
+                  preload="metadata"
+                ></video>
+              </div>
+              <div class="flex items-center justify-between gap-3 p-3">
+                <div class="min-w-0">
+                  <p class="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{{ video.title || (video.source === 'YOUTUBE' ? 'YouTube' : 'Vídeo enviado') }}</p>
+                  <p class="text-xs text-slate-400 dark:text-slate-500">{{ video.source === 'YOUTUBE' ? 'YouTube' : 'Arquivo' }}</p>
+                </div>
+                <button
+                  @click="deleteVideo(video.id)"
+                  :disabled="deletingVideoId === video.id"
+                  class="px-3 py-2 rounded-xl text-xs font-semibold text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 transition"
+                >
+                  Remover
+                </button>
               </div>
             </div>
           </div>

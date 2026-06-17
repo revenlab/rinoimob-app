@@ -137,6 +137,11 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
 
 ## Last Changes
 
+- **Vídeos em imóveis (#47)**:
+  - `types/property.ts` agora inclui `PropertyVideoSource`, `PropertyVideoResponse` e `CreateYoutubeVideoRequest`.
+  - `propertyService` ganhou `uploadVideo(propertyId, file, title?)`, `addYoutubeVideo(propertyId, data)` e `deleteVideo(propertyId, videoId)`.
+  - `PropertyForm.vue` permite anexar vídeos de até 25MB e cadastrar URLs do YouTube antes de salvar o imóvel; em edição, mostra vídeos existentes e remove pelo endpoint novo.
+  - `PropertyDetail.vue` permite upload, cadastro de YouTube, preview/player e remoção de vídeos já cadastrados.
 - Cadastro de imóvel: seção Endereço ganhou máscara/consulta ViaCEP para `addressZip`, estados de busca/erro e campos manuais `lat`/`lng` para controlar o ponto exato no mapa público.
 - DDI padronizado no app:
   - Novo composable `src/composables/useCountryDDI.ts` com países e DDI (default Brasil +55).

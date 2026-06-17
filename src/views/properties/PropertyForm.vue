@@ -55,6 +55,15 @@ type FloorPlanDraft = {
   photos: FloorPlanPhotoDraft[]
 }
 
+type PropertyVideoDraft = {
+  id: string
+  source: 'UPLOAD' | 'YOUTUBE'
+  file?: File
+  url: string
+  title: string
+  persisted: boolean
+}
+
 type CepStatus = 'idle' | 'loading' | 'success' | 'not_found' | 'error'
 
 type ViaCepResponse = {
@@ -68,9 +77,13 @@ type ViaCepResponse = {
 
 const propertyPhotos = ref<PropertyPhotoDraft[]>([])
 const floorPlansDraft = ref<FloorPlanDraft[]>([])
+const videosDraft = ref<PropertyVideoDraft[]>([])
+const youtubeVideoUrl = ref('')
+const youtubeVideoTitle = ref('')
 const cepStatus = ref<CepStatus>('idle')
 let cepLookupTimer: ReturnType<typeof setTimeout> | undefined
 let cepLookupSequence = 0
+const MAX_VIDEO_UPLOAD_BYTES = 25 * 1024 * 1024
 
 function createDraftId() {
   return crypto.randomUUID()
@@ -118,6 +131,68 @@ function setPropertyCover(id: string) {
     ...photo,
     isCover: photo.id === id,
   }))
+}
+
+function addPropertyVideos(files: FileList | null) {
+  if (!files?.length) return
+  const next: PropertyVideoDraft[] = []
+
+  for (const file of Array.from(files)) {
+    if (file.size > MAX_VIDEO_UPLOAD_BYTES) {
+      formError.value = 'Cada vídeo deve ter no máximo 25MB'
+      continue
+    }
+    next.push({
+      id: createDraftId(),
+      source: 'UPLOAD',
+      file,
+      url: URL.createObjectURL(file),
+      title: file.name,
+      persisted: false,
+    })
+  }
+
+  videosDraft.value = [...videosDraft.value, ...next]
+}
+
+function handlePropertyVideosChange(event: Event) {
+  addPropertyVideos((event.target as HTMLInputElement).files)
+  ;(event.target as HTMLInputElement).value = ''
+}
+
+function addYoutubeVideoDraft() {
+  if (!youtubeVideoUrl.value.trim()) return
+  videosDraft.value = [
+    ...videosDraft.value,
+    {
+      id: createDraftId(),
+      source: 'YOUTUBE',
+      url: youtubeVideoUrl.value.trim(),
+      title: youtubeVideoTitle.value.trim(),
+      persisted: false,
+    },
+  ]
+  youtubeVideoUrl.value = ''
+  youtubeVideoTitle.value = ''
+}
+
+async function removePropertyVideo(videoId: string) {
+  const video = videosDraft.value.find(item => item.id === videoId)
+  if (!video) return
+
+  if (video.persisted && propertyId.value) {
+    try {
+      await propertyService.deleteVideo(propertyId.value, video.id)
+    } catch (e: unknown) {
+      formError.value = e instanceof Error ? e.message : 'Erro ao remover vídeo'
+      return
+    }
+  }
+
+  if (video.source === 'UPLOAD' && video.url.startsWith('blob:')) {
+    URL.revokeObjectURL(video.url)
+  }
+  videosDraft.value = videosDraft.value.filter(item => item.id !== videoId)
 }
 
 function addFloorPlan() {
@@ -237,6 +312,9 @@ onBeforeUnmount(() => {
   }
   propertyPhotos.value.forEach(revokeDraft)
   floorPlansDraft.value.forEach(plan => plan.photos.forEach(revokeDraft))
+  videosDraft.value
+    .filter(video => video.source === 'UPLOAD' && video.url.startsWith('blob:'))
+    .forEach(video => URL.revokeObjectURL(video.url))
 })
 
 onMounted(async () => {
@@ -291,6 +369,14 @@ onMounted(async () => {
           persisted: true,
           isCover: photo.isCover,
         })),
+      }))
+
+      videosDraft.value = (p.videos ?? []).map(video => ({
+        id: video.id,
+        source: video.source,
+        url: video.url,
+        title: video.title ?? '',
+        persisted: true,
       }))
     }
   }
@@ -574,6 +660,18 @@ async function uploadPropertyMedia(id: string) {
       }
     }
   }
+
+  for (const videoDraft of videosDraft.value) {
+    if (videoDraft.persisted) continue
+    if (videoDraft.source === 'UPLOAD' && videoDraft.file) {
+      await propertyService.uploadVideo(id, videoDraft.file, videoDraft.title || undefined)
+    } else if (videoDraft.source === 'YOUTUBE' && videoDraft.url.trim()) {
+      await propertyService.addYoutubeVideo(id, {
+        url: videoDraft.url.trim(),
+        title: videoDraft.title.trim() || undefined,
+      })
+    }
+  }
 }
 
 const inputClass = 'w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:bg-white dark:focus:bg-slate-600 transition'
@@ -814,6 +912,98 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
             </div>
           </div>
           <p v-else class="text-sm text-slate-400 dark:text-slate-500">Nenhuma foto selecionada.</p>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">Vídeos</p>
+              <p class="text-xs text-slate-400 dark:text-slate-500">Arquivos de até 25MB ou URL do YouTube.</p>
+            </div>
+            <label class="px-4 py-2 rounded-xl text-sm font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-100 dark:border-indigo-800 cursor-pointer transition">
+              Enviar vídeo
+              <input type="file" accept="video/*" multiple class="hidden" @change="handlePropertyVideosChange" />
+            </label>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input
+                v-model="youtubeVideoUrl"
+                type="url"
+                :class="inputClass"
+                placeholder="URL do YouTube"
+              />
+              <input
+                v-model="youtubeVideoTitle"
+                type="text"
+                maxlength="120"
+                :class="inputClass"
+                placeholder="Título opcional"
+              />
+            </div>
+            <button
+              type="button"
+              @click="addYoutubeVideoDraft"
+              :disabled="!youtubeVideoUrl.trim()"
+              class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition"
+            >
+              Adicionar YouTube
+            </button>
+          </div>
+
+          <div v-if="videosDraft.length" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div
+              v-for="video in videosDraft"
+              :key="video.id"
+              class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/40 overflow-hidden"
+            >
+              <div class="aspect-video bg-black">
+                <iframe
+                  v-if="video.source === 'YOUTUBE' && video.persisted"
+                  :src="video.url"
+                  :title="video.title || 'Vídeo do YouTube'"
+                  class="w-full h-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen
+                ></iframe>
+                <div
+                  v-else-if="video.source === 'YOUTUBE'"
+                  class="w-full h-full flex items-center justify-center px-4 text-center text-sm text-slate-300"
+                >
+                  Vídeo do YouTube será validado ao salvar
+                </div>
+                <video
+                  v-else
+                  :src="video.url"
+                  class="w-full h-full object-contain"
+                  controls
+                  preload="metadata"
+                ></video>
+              </div>
+              <div class="p-3 space-y-3">
+                <input
+                  v-model="video.title"
+                  type="text"
+                  maxlength="120"
+                  :class="inputClass"
+                  placeholder="Título do vídeo"
+                  :disabled="video.persisted"
+                />
+                <div class="flex items-center justify-between gap-3">
+                  <span class="text-xs text-slate-400 dark:text-slate-500">{{ video.source === 'YOUTUBE' ? 'YouTube' : 'Arquivo' }}</span>
+                  <button
+                    type="button"
+                    @click="removePropertyVideo(video.id)"
+                    class="px-3 py-2 rounded-xl text-xs font-semibold text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30"
+                  >
+                    Remover
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p v-else class="text-sm text-slate-400 dark:text-slate-500">Nenhum vídeo adicionado.</p>
         </div>
 
         <div class="space-y-3">
