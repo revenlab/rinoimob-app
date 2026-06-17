@@ -87,6 +87,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/tipos-de-imoveis',
+      name: 'PropertyTypesManagement',
+      component: () => import('@/views/PropertyTypesManagement.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/leads',
       name: 'LeadsManagement',
       component: () => import('@/views/LeadsManagement.vue'),

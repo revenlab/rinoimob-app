@@ -115,6 +115,21 @@ class PropertyService {
     })
   }
 
+  async uploadPropertyTypeCoverImage(code: PropertyType, file: File): Promise<PropertyTypeResponse> {
+    const formData = new FormData()
+    formData.append('file', file)
+    return apiFetch<PropertyTypeResponse>(`/api/v1/property-types/${code}/cover-image`, {
+      method: 'POST',
+      body: formData,
+    })
+  }
+
+  async deletePropertyTypeCoverImage(code: PropertyType): Promise<PropertyTypeResponse> {
+    return apiFetch<PropertyTypeResponse>(`/api/v1/property-types/${code}/cover-image`, {
+      method: 'DELETE',
+    })
+  }
+
   async addFloorPlan(propertyId: string, data: CreateFloorPlanRequest): Promise<FloorPlanResponse> {
     return this.request<FloorPlanResponse>(`/${propertyId}/floor-plans`, {
       method: 'POST',

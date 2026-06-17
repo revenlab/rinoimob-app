@@ -48,12 +48,15 @@ export interface PropertyTypeResponse {
   label: string
   position: number
   active: boolean
+  cardColor: string | null
+  coverImageUrl: string | null
 }
 
 export interface UpdatePropertyTypeRequest {
   label?: string
   position?: number
   active?: boolean
+  cardColor?: string | null
 }
 
 export const DEFAULT_PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
@@ -70,6 +73,8 @@ export const DEFAULT_PROPERTY_TYPES: PropertyTypeResponse[] = Object.entries(DEF
   label,
   position: (index + 1) * 10,
   active: true,
+  cardColor: null,
+  coverImageUrl: null,
 }))
 
 export function propertyTypeLabel(code: PropertyType | string, types: PropertyTypeResponse[] = DEFAULT_PROPERTY_TYPES): string {

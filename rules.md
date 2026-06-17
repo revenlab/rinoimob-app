@@ -137,6 +137,11 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
 
 ## Last Changes
 
+- **Tipos de imóveis desacoplados de categorias**:
+  - Nova rota/tela `src/views/PropertyTypesManagement.vue` em `/tipos-de-imoveis`, separada da gestão de categorias.
+  - `propertyService` ganhou `uploadPropertyTypeCoverImage()` e `deletePropertyTypeCoverImage()` para a nova API de capa.
+  - `src/types/property.ts` agora modela `cardColor` e `coverImageUrl` em `PropertyTypeResponse`.
+  - `CategoriesManagement.vue` voltou a tratar apenas categorias; o menu lateral ganhou item próprio “Tipos de Imóveis” e depois foi promovido para a navegação principal.
 - **Tipos de imóveis gerenciáveis pelo tenant (#40)**:
   - `propertyService` expõe `listPropertyTypes(activeOnly?)` e `updatePropertyType(code, payload)` para `/property-types`.
   - `src/types/property.ts` centraliza `PropertyTypeResponse`, fallbacks e `propertyTypeLabel`.
