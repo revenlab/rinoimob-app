@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { usePropertyStore } from '@/stores/property'
@@ -55,8 +55,22 @@ type FloorPlanDraft = {
   photos: FloorPlanPhotoDraft[]
 }
 
+type CepStatus = 'idle' | 'loading' | 'success' | 'not_found' | 'error'
+
+type ViaCepResponse = {
+  cep?: string
+  logradouro?: string
+  bairro?: string
+  localidade?: string
+  uf?: string
+  erro?: boolean
+}
+
 const propertyPhotos = ref<PropertyPhotoDraft[]>([])
 const floorPlansDraft = ref<FloorPlanDraft[]>([])
+const cepStatus = ref<CepStatus>('idle')
+let cepLookupTimer: ReturnType<typeof setTimeout> | undefined
+let cepLookupSequence = 0
 
 function createDraftId() {
   return crypto.randomUUID()
@@ -218,6 +232,9 @@ async function setFloorPlanCover(planId: string, photoId: string) {
 }
 
 onBeforeUnmount(() => {
+  if (cepLookupTimer) {
+    clearTimeout(cepLookupTimer)
+  }
   propertyPhotos.value.forEach(revokeDraft)
   floorPlansDraft.value.forEach(plan => plan.photos.forEach(revokeDraft))
 })
@@ -402,6 +419,74 @@ function toggleCategory(id: string) {
     form.value.categoryIds = [...ids, id]
   }
 }
+
+function onlyDigits(value: string | undefined) {
+  return (value ?? '').replace(/\D/g, '')
+}
+
+function formatCep(value: string | undefined) {
+  const digits = onlyDigits(value).slice(0, 8)
+  if (digits.length <= 5) {
+    return digits
+  }
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`
+}
+
+async function fetchAddressByCep(digits: string, currentSequence: number) {
+  cepStatus.value = 'loading'
+
+  try {
+    const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`)
+    if (!response.ok) {
+      throw new Error('ViaCEP request failed')
+    }
+
+    const data = await response.json() as ViaCepResponse
+    if (currentSequence !== cepLookupSequence) return
+
+    if (data.erro) {
+      cepStatus.value = 'not_found'
+      return
+    }
+
+    form.value.addressStreet = data.logradouro || form.value.addressStreet
+    form.value.addressNeighborhood = data.bairro || form.value.addressNeighborhood
+    form.value.addressCity = data.localidade || form.value.addressCity
+    form.value.addressState = data.uf || form.value.addressState
+    form.value.addressCountry = 'BR'
+    cepStatus.value = 'success'
+  } catch {
+    if (currentSequence === cepLookupSequence) {
+      cepStatus.value = 'error'
+    }
+  }
+}
+
+watch(
+  () => form.value.addressZip,
+  (value) => {
+    const formatted = formatCep(value)
+    if ((value ?? '') !== formatted) {
+      form.value.addressZip = formatted
+      return
+    }
+
+    if (cepLookupTimer) {
+      clearTimeout(cepLookupTimer)
+    }
+
+    const currentSequence = ++cepLookupSequence
+    const digits = onlyDigits(value)
+    if (digits.length !== 8) {
+      cepStatus.value = 'idle'
+      return
+    }
+
+    cepLookupTimer = setTimeout(() => {
+      void fetchAddressByCep(digits, currentSequence)
+    }, 350)
+  }
+)
 
 async function generateTitleWithAi() {
   const title = await aiGenerateTitle({
@@ -839,6 +924,26 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
       <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
         <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500 mb-5">Endereço</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label :class="labelClass">CEP</label>
+            <input
+              v-model="form.addressZip"
+              type="text"
+              :class="inputClass"
+              placeholder="00000-000"
+              inputmode="numeric"
+              autocomplete="postal-code"
+              maxlength="9"
+            />
+            <p v-if="cepStatus === 'loading'" class="mt-1 text-xs text-indigo-600 dark:text-indigo-300">Buscando CEP...</p>
+            <p v-else-if="cepStatus === 'not_found'" class="mt-1 text-xs text-amber-600 dark:text-amber-300">CEP não encontrado. Preencha o endereço manualmente.</p>
+            <p v-else-if="cepStatus === 'error'" class="mt-1 text-xs text-red-600 dark:text-red-300">Não foi possível consultar o CEP agora.</p>
+            <p v-else-if="cepStatus === 'success'" class="mt-1 text-xs text-emerald-600 dark:text-emerald-300">Endereço preenchido pelo CEP.</p>
+          </div>
+          <div>
+            <label :class="labelClass">País</label>
+            <input v-model="form.addressCountry" type="text" :class="inputClass" placeholder="BR" maxlength="2" />
+          </div>
           <div class="sm:col-span-2">
             <label :class="labelClass">Rua / Av.</label>
             <input v-model="form.addressStreet" type="text" :class="inputClass" />
@@ -856,16 +961,25 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
             <input v-model="form.addressNeighborhood" type="text" :class="inputClass" />
           </div>
           <div>
-            <label :class="labelClass">CEP</label>
-            <input v-model="form.addressZip" type="text" :class="inputClass" placeholder="00000-000" />
-          </div>
-          <div>
             <label :class="labelClass">Cidade</label>
             <input v-model="form.addressCity" type="text" :class="inputClass" />
           </div>
           <div>
             <label :class="labelClass">Estado</label>
             <input v-model="form.addressState" type="text" :class="inputClass" placeholder="SP" maxlength="2" />
+          </div>
+          <div class="sm:col-span-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+            <p class="text-xs text-slate-400 dark:text-slate-500 mb-3">Coordenadas opcionais controlam o ponto exato exibido no mapa público.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label :class="labelClass">Latitude</label>
+                <input v-model.number="form.lat" type="number" step="any" :class="inputClass" placeholder="-23.55052" />
+              </div>
+              <div>
+                <label :class="labelClass">Longitude</label>
+                <input v-model.number="form.lng" type="number" step="any" :class="inputClass" placeholder="-46.63331" />
+              </div>
+            </div>
           </div>
         </div>
       </div>

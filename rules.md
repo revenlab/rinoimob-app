@@ -137,6 +137,7 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
 
 ## Last Changes
 
+- Cadastro de imóvel: seção Endereço ganhou máscara/consulta ViaCEP para `addressZip`, estados de busca/erro e campos manuais `lat`/`lng` para controlar o ponto exato no mapa público.
 - DDI padronizado no app:
   - Novo composable `src/composables/useCountryDDI.ts` com países e DDI (default Brasil +55).
   - Novo componente reutilizável `src/components/ui/PhoneInput.vue` (seletor de país + campo numérico).
