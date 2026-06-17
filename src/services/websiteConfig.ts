@@ -4,6 +4,12 @@ import type { TenantWebsiteConfig } from '@/types/tenantsAdmin'
 const BASE = `${API_BASE}/website-config`
 const SUPPORT_BASE = `${API_BASE}/support`
 
+export interface CustomDomainResponse {
+  customDomain: string | null
+  customDomainStatus?: string | null
+  customDomainTarget?: string | null
+}
+
 class WebsiteConfigService {
   async getConfig(): Promise<TenantWebsiteConfig> {
     return apiFetch<TenantWebsiteConfig>(BASE)
@@ -92,12 +98,12 @@ class WebsiteConfigService {
     })
   }
 
-  async getCustomDomain(): Promise<{ customDomain: string | null }> {
-    return apiFetch<{ customDomain: string | null }>(`${BASE}/domain`)
+  async getCustomDomain(): Promise<CustomDomainResponse> {
+    return apiFetch<CustomDomainResponse>(`${BASE}/domain`)
   }
 
-  async updateCustomDomain(customDomain: string | null): Promise<{ customDomain: string | null }> {
-    return apiFetch<{ customDomain: string | null }>(`${BASE}/domain`, {
+  async updateCustomDomain(customDomain: string | null): Promise<CustomDomainResponse> {
+    return apiFetch<CustomDomainResponse>(`${BASE}/domain`, {
       method: 'PUT',
       body: JSON.stringify({ customDomain: customDomain?.trim() || null }),
       headers: { 'Content-Type': 'application/json' },

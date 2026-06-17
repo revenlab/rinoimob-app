@@ -164,6 +164,9 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
 - Leads UI (`LeadsManagement.vue` e `LeadDetail.vue`) agora exibe `source` dinâmico, incluindo origens detalhadas como `PORTAL_HOME_FORM` e `PORTAL_PROPERTY_FORM`, ao invés de colapsar tudo em apenas "Portal" ou "Manual".
 - Realtime de leads via WebSocket: `websocket` store ganhou `subscribeToTenantLeads()`. `LeadsManagement.vue` e `LeadDetail.vue` agora assinam `/topic/{tenantId}.leads` para refletir criação, atualização de status e deleção sem refresh.
 - `TenantsAdmin.vue` ganhou seção **Plano e limites** para suporte visualizar e editar billing por tenant (plano, limites numéricos e flags de recursos).
+- **Domínio customizado Cloudflare**: `pages/account/website-domain.vue` agora exibe `customDomainStatus` e `customDomainTarget`, e `services/websiteConfig.ts` passou a consumir o payload expandido do backend para o fluxo de custom hostnames.
+- **Domínio customizado UX cleanup**: `WebsiteConfig.vue` agora mostra resumo real do domínio/status/CNAME dentro da gestão do site; `website-domain.vue` alinha preview com o domínio normalizado, limpa `status/target` ao remover e troca o botão de “atualizar status” por recarga dos dados salvos.
+- **Domínio customizado copy/UI**: `website-domain.vue` e o resumo em `WebsiteConfig.vue` agora usam linguagem voltada ao cliente, sem expor Cloudflare, CNAME ou jargão de infraestrutura, e com paleta visual mais neutra.
 - `tenantsAdminService` ganhou:
   - `getTenantBilling(tenantId)` → `GET /support/tenants/{id}/billing`
   - `updateTenantBilling(tenantId, payload)` → `PUT /support/tenants/{id}/billing`

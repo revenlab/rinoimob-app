@@ -159,6 +159,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/website-domain',
+      name: 'WebsiteDomain',
+      component: () => import('@/pages/account/website-domain.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/meu-plano',
       name: 'BillingPlan',
       component: () => import('@/views/BillingPlan.vue'),

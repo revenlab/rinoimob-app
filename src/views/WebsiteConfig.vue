@@ -14,6 +14,68 @@
 
       <div v-else class="grid gap-6 xl:grid-cols-3">
         <form class="space-y-6 xl:col-span-2" @submit.prevent="saveConfig">
+          <section class="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.16),_transparent_34%),linear-gradient(135deg,_#fffdf8_0%,_#f8fafc_48%,_#eaf1ff_100%)] text-slate-900 shadow-sm dark:bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_34%),linear-gradient(135deg,_#0f172a_0%,_#172033_48%,_#111827_100%)] dark:text-white">
+            <div class="p-5 sm:p-6">
+              <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                <div class="max-w-2xl">
+                  <p class="text-xs uppercase tracking-[0.25em] text-blue-700/80 dark:text-blue-200/80">Domínio do site</p>
+                  <h2 class="mt-2 text-xl font-semibold text-slate-900 dark:text-white">Use um domínio próprio com ativação simples</h2>
+                  <p class="mt-2 text-sm text-slate-600 dark:text-slate-200">
+                    Veja o andamento da configuração por aqui e abra a tela detalhada apenas quando precisar editar.
+                  </p>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                  <RouterLink
+                    to="/website-domain"
+                    class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                  >
+                    Abrir domínio
+                  </RouterLink>
+                </div>
+              </div>
+
+              <div class="mt-6 grid gap-3 md:grid-cols-3">
+                <div class="rounded-2xl border border-slate-200/80 bg-white/80 p-4 backdrop-blur dark:border-white/10 dark:bg-white/10">
+                  <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-blue-100/80">Domínio atual</p>
+                  <p class="mt-2 break-all text-sm font-semibold text-slate-900 dark:text-white">
+                    {{ domainSummary.customDomain || 'Nenhum domínio configurado' }}
+                  </p>
+                </div>
+                <div class="rounded-2xl border border-slate-200/80 bg-white/80 p-4 backdrop-blur dark:border-white/10 dark:bg-white/10">
+                  <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-blue-100/80">Status</p>
+                  <div class="mt-2">
+                    <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold" :class="domainStatusBadgeClass">
+                      {{ domainStatusLabel }}
+                    </span>
+                  </div>
+                  <p class="mt-2 text-xs text-slate-600 dark:text-slate-200">
+                    {{ domainStatusDescription }}
+                  </p>
+                </div>
+                <div class="rounded-2xl border border-slate-200/80 bg-white/80 p-4 backdrop-blur dark:border-white/10 dark:bg-white/10">
+                  <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-blue-100/80">Endereço para conexão</p>
+                  <p class="mt-2 break-all font-mono text-xs text-slate-700 dark:text-blue-100">
+                    {{ domainSummary.customDomainTarget || 'Disponível após salvar o domínio' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="grid gap-px border-t border-slate-200/80 bg-slate-200/80 dark:border-white/10 dark:bg-white/10 sm:grid-cols-3">
+              <div class="bg-white/85 p-4 dark:bg-slate-950/20">
+                <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-blue-100/80">1. Salvar</p>
+                <p class="mt-1 text-sm text-slate-700 dark:text-slate-200">Informe o domínio do site e salve a configuração.</p>
+              </div>
+              <div class="bg-white/85 p-4 dark:bg-slate-950/20">
+                <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-blue-100/80">2. Apontar</p>
+                <p class="mt-1 text-sm text-slate-700 dark:text-slate-200">Use o endereço de conexão no painel onde o domínio é administrado.</p>
+              </div>
+              <div class="bg-white/85 p-4 dark:bg-slate-950/20">
+                <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-blue-100/80">3. Ativar</p>
+                <p class="mt-1 text-sm text-slate-700 dark:text-slate-200">Aguarde a ativação e depois teste o acesso ao site.</p>
+              </div>
+            </div>
+          </section>
+
           <div class="flex flex-wrap gap-2">
             <button
               type="button"
@@ -493,6 +555,15 @@ const authStore = useAuthStore()
 const { showError, showSuccess } = useNotification()
 
 const config = ref<Partial<TenantWebsiteConfig>>({})
+const domainSummary = ref<{
+  customDomain: string | null
+  customDomainStatus: string | null
+  customDomainTarget: string | null
+}>({
+  customDomain: null,
+  customDomainStatus: null,
+  customDomainTarget: null,
+})
 const isLoading = ref(false)
 const isSaving = ref(false)
 const isUploadingLogo = ref(false)
@@ -527,6 +598,29 @@ const previewPrimaryColor = computed(() => normalizeHexColor(config.value.primar
 const previewSecondaryColor = computed(() => normalizeHexColor(config.value.secondaryColor) ?? DEFAULT_SECONDARY_COLOR)
 const previewCompanyInitial = computed(() => (config.value.companyName?.trim().charAt(0) || 'R').toUpperCase())
 const publicWebsiteUrl = computed(() => buildWebsiteUrl(authStore.currentTenantSubdomain))
+const domainStatusLabel = computed(() => {
+  const status = (domainSummary.value.customDomainStatus || '').toUpperCase()
+  if (!domainSummary.value.customDomain) return 'Não configurado'
+  if (status === 'ACTIVE') return 'Ativo'
+  if (status === 'PENDING') return 'Em configuração'
+  if (status === 'FAILED') return 'Precisa de atenção'
+  return domainSummary.value.customDomainStatus || 'Pendente'
+})
+const domainStatusBadgeClass = computed(() => {
+  const status = (domainSummary.value.customDomainStatus || '').toUpperCase()
+  if (status === 'ACTIVE') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-100'
+  if (status === 'FAILED') return 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-100'
+  if (status === 'PENDING') return 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-100'
+  return 'bg-slate-100 text-slate-700 dark:bg-white/15 dark:text-slate-100'
+})
+const domainStatusDescription = computed(() => {
+  const status = (domainSummary.value.customDomainStatus || '').toUpperCase()
+  if (!domainSummary.value.customDomain) return 'Nenhum domínio foi configurado para o site até agora.'
+  if (status === 'ACTIVE') return 'O domínio está ativo e pronto para receber visitas com acesso seguro.'
+  if (status === 'PENDING') return 'A configuração foi iniciada e depende apenas da conclusão do apontamento do domínio.'
+  if (status === 'FAILED') return 'A configuração não foi concluída. Revise o domínio salvo antes de tentar novamente.'
+  return 'Abra a tela de domínio para editar ou revisar essa configuração.'
+})
 
 function normalizeHexColor(value?: string | null): string | null {
   if (!value) return null
@@ -553,6 +647,14 @@ function applyConfig(data: TenantWebsiteConfig) {
   config.value = { ...data }
 }
 
+function applyDomainSummary(data: { customDomain: string | null; customDomainStatus?: string | null; customDomainTarget?: string | null }) {
+  domainSummary.value = {
+    customDomain: data.customDomain,
+    customDomainStatus: data.customDomainStatus ?? null,
+    customDomainTarget: data.customDomainTarget ?? null,
+  }
+}
+
 function updateColor(field: 'primaryColor' | 'secondaryColor', event: Event) {
   const target = event.target
   if (!(target instanceof HTMLInputElement)) return
@@ -573,8 +675,12 @@ function resetFileInput(target: HTMLInputElement | null) {
 async function loadConfig() {
   isLoading.value = true
   try {
-    const response = await websiteConfigService.getConfig()
+    const [response, domainResponse] = await Promise.all([
+      websiteConfigService.getConfig(),
+      websiteConfigService.getCustomDomain(),
+    ])
     applyConfig(response)
+    applyDomainSummary(domainResponse)
   } catch (error: unknown) {
     showError(error instanceof Error ? error.message : 'Erro ao carregar configurações do site')
   } finally {

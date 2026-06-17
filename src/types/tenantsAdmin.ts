@@ -119,6 +119,10 @@ export interface TenantWebsiteConfig {
   blogSectionSubtitle?: string | null
   ctaSectionTitle?: string | null
   ctaSectionSubtitle?: string | null
+  customDomain?: string | null
+  customDomainStatus?: string | null
+  customDomainProviderId?: string | null
+  customDomainTarget?: string | null
   aboutPageTitle?: string | null
   aboutPageSubtitle?: string | null
   aboutPageDescription?: string | null
