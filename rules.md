@@ -137,6 +137,9 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
 
 ## Last Changes
 
+- **Regras granulares para corretores (#38)**:
+  - `src/types/role.ts` inclui permissões explícitas de tarefas `tasks:read_all`, `tasks:write_all`, `tasks:read_own` e `tasks:write_own`.
+  - A matriz de funções exibe essas permissões para montar papéis de corretores com escopo próprio ou amplo.
 - **Vídeos em imóveis (#47)**:
   - `types/property.ts` agora inclui `PropertyVideoSource`, `PropertyVideoResponse` e `CreateYoutubeVideoRequest`.
   - `propertyService` ganhou `uploadVideo(propertyId, file, title?)`, `addYoutubeVideo(propertyId, data)` e `deleteVideo(propertyId, videoId)`.
