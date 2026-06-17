@@ -4,6 +4,8 @@ import { useRoute } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { usePropertyStore } from '@/stores/property'
 import propertyService from '@/services/property'
+import type { PropertyTypeResponse } from '@/types/property'
+import { DEFAULT_PROPERTY_TYPES, propertyTypeLabel } from '@/types/property'
 
 const route = useRoute()
 const store = usePropertyStore()
@@ -18,6 +20,7 @@ const deletingVideoId = ref<string | null>(null)
 const youtubeVideoUrl = ref('')
 const youtubeVideoTitle = ref('')
 const savingYoutubeVideo = ref(false)
+const propertyTypes = ref<PropertyTypeResponse[]>(DEFAULT_PROPERTY_TYPES)
 const uploadingFloorPlanPhotoId = ref<string | null>(null)
 const deletingFloorPlanPhotoId = ref<string | null>(null)
 const MAX_VIDEO_UPLOAD_BYTES = 25 * 1024 * 1024
@@ -41,8 +44,8 @@ const statusClass: Record<string, string> = {
 const operationLabel: Record<string, string> = {
   SALE: 'Venda', RENT: 'Aluguel', SEASONAL: 'Temporada',
 }
-const typeLabel: Record<string, string> = {
-  HOUSE: 'Casa', APARTMENT: 'Apartamento', LAND: 'Terreno', COMMERCIAL: 'Comercial', RURAL: 'Rural',
+function typeLabel(code: string) {
+  return propertyTypeLabel(code, propertyTypes.value)
 }
 
 const AMENITY_LABELS: Record<string, string> = {
@@ -75,7 +78,14 @@ function formatPrice(price: number | null, currency: string) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency }).format(price)
 }
 
-onMounted(() => store.fetchProperty(propertyId))
+onMounted(async () => {
+  try {
+    propertyTypes.value = await propertyService.listPropertyTypes(false)
+  } catch {
+    propertyTypes.value = DEFAULT_PROPERTY_TYPES
+  }
+  await store.fetchProperty(propertyId)
+})
 
 async function handlePhotoUpload(event: Event) {
   const files = (event.target as HTMLInputElement).files
@@ -222,7 +232,7 @@ async function setFloorPlanCover(planId: string, photoId: string) {
             <span class="text-xs px-2 py-0.5 rounded-full font-semibold" :class="statusClass[store.currentProperty.status]">
               {{ statusLabel[store.currentProperty.status] }}
             </span>
-            <span class="text-xs text-slate-400 dark:text-slate-500">{{ typeLabel[store.currentProperty.propertyType] }} · {{ operationLabel[store.currentProperty.operation] }}</span>
+            <span class="text-xs text-slate-400 dark:text-slate-500">{{ typeLabel(store.currentProperty.propertyType) }} · {{ operationLabel[store.currentProperty.operation] }}</span>
           </div>
         </div>
         <RouterLink

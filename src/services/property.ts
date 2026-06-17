@@ -9,6 +9,9 @@ import type {
   CreateFloorPlanRequest,
   CreateYoutubeVideoRequest,
   PropertyVideoResponse,
+  PropertyType,
+  PropertyTypeResponse,
+  UpdatePropertyTypeRequest,
   PropertyListParams,
   PageResponse,
 } from '@/types/property'
@@ -98,6 +101,18 @@ class PropertyService {
 
   async deleteVideo(propertyId: string, videoId: string): Promise<void> {
     return this.request<void>(`/${propertyId}/videos/${videoId}`, { method: 'DELETE' })
+  }
+
+  async listPropertyTypes(activeOnly = false): Promise<PropertyTypeResponse[]> {
+    return apiFetch<PropertyTypeResponse[]>(`/api/v1/property-types${activeOnly ? '?activeOnly=true' : ''}`)
+  }
+
+  async updatePropertyType(code: PropertyType, data: UpdatePropertyTypeRequest): Promise<PropertyTypeResponse> {
+    return apiFetch<PropertyTypeResponse>(`/api/v1/property-types/${code}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
   }
 
   async addFloorPlan(propertyId: string, data: CreateFloorPlanRequest): Promise<FloorPlanResponse> {

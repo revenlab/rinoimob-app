@@ -2,12 +2,15 @@
 import { ref, onMounted, watch } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { usePropertyStore } from '@/stores/property'
-import type { PropertyListParams } from '@/types/property'
+import propertyService from '@/services/property'
+import type { PropertyListParams, PropertyTypeResponse } from '@/types/property'
+import { DEFAULT_PROPERTY_TYPES, propertyTypeLabel } from '@/types/property'
 import { ArrowsPointingOutIcon, HomeModernIcon, MapPinIcon, PhotoIcon, PlusIcon, TrashIcon } from '@heroicons/vue/20/solid'
 
 const store = usePropertyStore()
 
 const params = ref<PropertyListParams>({ page: 0, size: 20 })
+const propertyTypes = ref<PropertyTypeResponse[]>(DEFAULT_PROPERTY_TYPES)
 const deleteConfirmId = ref<string | null>(null)
 const viewMode = ref<'card' | 'list'>(
   (localStorage.getItem('propertiesViewMode') as 'card' | 'list') ?? 'card',
@@ -17,7 +20,14 @@ function setViewMode(m: 'card' | 'list') {
   localStorage.setItem('propertiesViewMode', m)
 }
 
-onMounted(() => store.fetchProperties(params.value))
+onMounted(async () => {
+  try {
+    propertyTypes.value = await propertyService.listPropertyTypes(true)
+  } catch {
+    propertyTypes.value = DEFAULT_PROPERTY_TYPES
+  }
+  await store.fetchProperties(params.value)
+})
 
 watch(params, () => store.fetchProperties(params.value), { deep: true })
 
@@ -44,8 +54,8 @@ const statusClass: Record<string, string> = {
 const operationLabel: Record<string, string> = {
   SALE: 'Venda', RENT: 'Aluguel', SEASONAL: 'Temporada',
 }
-const typeLabel: Record<string, string> = {
-  HOUSE: 'Casa', APARTMENT: 'Apartamento', LAND: 'Terreno', COMMERCIAL: 'Comercial', RURAL: 'Rural',
+function typeLabel(code: string) {
+  return propertyTypeLabel(code, propertyTypes.value)
 }
 </script>
 
@@ -117,7 +127,7 @@ const typeLabel: Record<string, string> = {
           class="col-span-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
         >
           <option value="">Tipo</option>
-          <option v-for="(label, val) in typeLabel" :key="val" :value="val">{{ label }}</option>
+          <option v-for="type in propertyTypes" :key="type.code" :value="type.code">{{ type.label }}</option>
         </select>
 
         <input
@@ -202,7 +212,7 @@ const typeLabel: Record<string, string> = {
             </span>
           </div>
 
-          <p class="text-xs text-slate-400 dark:text-slate-500 mb-2">{{ typeLabel[p.propertyType] }}</p>
+          <p class="text-xs text-slate-400 dark:text-slate-500 mb-2">{{ typeLabel(p.propertyType) }}</p>
 
           <p class="text-base font-bold text-slate-900 dark:text-white mb-2">{{ formatPrice(p.price, p.currency) }}</p>
 
@@ -299,7 +309,7 @@ const typeLabel: Record<string, string> = {
 
             <!-- Tipo / Operação -->
             <td class="px-4 py-3 hidden md:table-cell">
-              <p class="text-slate-700 dark:text-slate-300">{{ typeLabel[p.propertyType] }}</p>
+              <p class="text-slate-700 dark:text-slate-300">{{ typeLabel(p.propertyType) }}</p>
               <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300">{{ operationLabel[p.operation] }}</span>
             </td>
 

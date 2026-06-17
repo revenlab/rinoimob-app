@@ -137,6 +137,11 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
 
 ## Last Changes
 
+- **Tipos de imóveis gerenciáveis pelo tenant (#40)**:
+  - `propertyService` expõe `listPropertyTypes(activeOnly?)` e `updatePropertyType(code, payload)` para `/property-types`.
+  - `src/types/property.ts` centraliza `PropertyTypeResponse`, fallbacks e `propertyTypeLabel`.
+  - `CategoriesManagement.vue` ganhou seção "Tipos de imóveis" para editar rótulo, posição e ativo.
+  - `PropertyForm.vue`, `PropertiesList.vue` e `PropertyDetail.vue` usam labels/tipos do tenant com fallback local.
 - **Regras granulares para corretores (#38)**:
   - `src/types/role.ts` inclui permissões explícitas de tarefas `tasks:read_all`, `tasks:write_all`, `tasks:read_own` e `tasks:write_own`.
   - A matriz de funções exibe essas permissões para montar papéis de corretores com escopo próprio ou amplo.

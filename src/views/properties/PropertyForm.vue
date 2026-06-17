@@ -6,7 +6,8 @@ import { usePropertyStore } from '@/stores/property'
 import { useCategoryStore } from '@/stores/category'
 import propertyService from '@/services/property'
 import { usePropertyAiGeneration } from '@/composables/usePropertyAiGeneration'
-import type { CreatePropertyRequest, PropertyCondition, PropertyStatus } from '@/types/property'
+import type { CreatePropertyRequest, PropertyCondition, PropertyStatus, PropertyTypeResponse } from '@/types/property'
+import { DEFAULT_PROPERTY_TYPES, propertyTypeLabel } from '@/types/property'
 
 const router = useRouter()
 const route = useRoute()
@@ -78,6 +79,7 @@ type ViaCepResponse = {
 const propertyPhotos = ref<PropertyPhotoDraft[]>([])
 const floorPlansDraft = ref<FloorPlanDraft[]>([])
 const videosDraft = ref<PropertyVideoDraft[]>([])
+const propertyTypes = ref<PropertyTypeResponse[]>(DEFAULT_PROPERTY_TYPES)
 const youtubeVideoUrl = ref('')
 const youtubeVideoTitle = ref('')
 const cepStatus = ref<CepStatus>('idle')
@@ -318,7 +320,15 @@ onBeforeUnmount(() => {
 })
 
 onMounted(async () => {
-  catStore.fetchCategories()
+  void catStore.fetchCategories()
+  try {
+    propertyTypes.value = await propertyService.listPropertyTypes(false)
+  } catch {
+    propertyTypes.value = DEFAULT_PROPERTY_TYPES
+  }
+  if (!isEdit.value && !propertyTypes.value.some(type => type.code === form.value.propertyType && type.active)) {
+    form.value.propertyType = propertyTypes.value.find(type => type.active)?.code ?? DEFAULT_PROPERTY_TYPES[0].code
+  }
   if (isEdit.value && propertyId.value) {
     await store.fetchProperty(propertyId.value)
     const p = store.currentProperty
@@ -393,14 +403,7 @@ const generatedTitle = computed(() => {
   }
   
   if (form.value.propertyType) {
-    const typeMap: Record<string, string> = {
-      'HOUSE': 'Casa',
-      'APARTMENT': 'Apartamento',
-      'LAND': 'Terreno',
-      'COMMERCIAL': 'Comercial',
-      'RURAL': 'Rural'
-    }
-    parts.push(typeMap[form.value.propertyType] || form.value.propertyType)
+    parts.push(propertyTypeLabel(form.value.propertyType, propertyTypes.value))
   }
   
   if (form.value.addressCity) {
@@ -791,11 +794,14 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
           <div>
             <label :class="labelClass">Tipo *</label>
             <select v-model="form.propertyType" :class="inputClass" required>
-              <option value="HOUSE">Casa</option>
-              <option value="APARTMENT">Apartamento</option>
-              <option value="LAND">Terreno</option>
-              <option value="COMMERCIAL">Comercial</option>
-              <option value="RURAL">Rural</option>
+              <option
+                v-for="type in propertyTypes"
+                :key="type.code"
+                :value="type.code"
+                :disabled="!type.active && form.propertyType !== type.code"
+              >
+                {{ type.label }}{{ type.active ? '' : ' (inativo)' }}
+              </option>
             </select>
           </div>
           <div>

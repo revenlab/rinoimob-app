@@ -2,11 +2,53 @@
 import { ref, onMounted } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useCategoryStore } from '@/stores/category'
+import propertyService from '@/services/property'
 import type { CreateCategoryRequest, UpdateCategoryRequest } from '@/types/category'
+import type { PropertyTypeResponse } from '@/types/property'
+import { DEFAULT_PROPERTY_TYPES } from '@/types/property'
 
 const store = useCategoryStore()
 
-onMounted(() => store.fetchCategories())
+onMounted(() => {
+  void store.fetchCategories()
+  void fetchPropertyTypes()
+})
+
+const propertyTypes = ref<PropertyTypeResponse[]>(DEFAULT_PROPERTY_TYPES.map(type => ({ ...type })))
+const propertyTypesLoading = ref(false)
+const propertyTypesError = ref<string | null>(null)
+const savingPropertyTypeCode = ref<string | null>(null)
+
+async function fetchPropertyTypes() {
+  propertyTypesLoading.value = true
+  propertyTypesError.value = null
+  try {
+    propertyTypes.value = await propertyService.listPropertyTypes(false)
+  } catch (e: unknown) {
+    propertyTypesError.value = e instanceof Error ? e.message : 'Erro ao carregar tipos de imóveis'
+    propertyTypes.value = DEFAULT_PROPERTY_TYPES.map(type => ({ ...type }))
+  } finally {
+    propertyTypesLoading.value = false
+  }
+}
+
+async function savePropertyType(type: PropertyTypeResponse) {
+  savingPropertyTypeCode.value = type.code
+  propertyTypesError.value = null
+  try {
+    const updated = await propertyService.updatePropertyType(type.code, {
+      label: type.label,
+      position: type.position,
+      active: type.active,
+    })
+    const idx = propertyTypes.value.findIndex(item => item.code === updated.code)
+    if (idx !== -1) propertyTypes.value[idx] = updated
+  } catch (e: unknown) {
+    propertyTypesError.value = e instanceof Error ? e.message : 'Erro ao salvar tipo de imóvel'
+  } finally {
+    savingPropertyTypeCode.value = null
+  }
+}
 
 // Modal state
 const showModal = ref(false)
@@ -75,8 +117,8 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
     <template #header>
       <div class="flex items-center justify-between w-full">
         <div>
-          <h1 class="text-lg font-bold text-slate-900 dark:text-white">Categorias</h1>
-          <p class="text-xs text-slate-400 dark:text-slate-500">Gerencie as categorias de imóveis do seu tenant</p>
+          <h1 class="text-lg font-bold text-slate-900 dark:text-white">Categorias e tipos</h1>
+          <p class="text-xs text-slate-400 dark:text-slate-500">Gerencie categorias e rótulos de tipos de imóveis do tenant</p>
         </div>
         <button
           @click="openCreate"
@@ -89,6 +131,49 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
         </button>
       </div>
     </template>
+
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] overflow-hidden mb-6">
+      <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-3">
+        <div>
+          <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Tipos de imóveis</h2>
+          <p class="text-xs text-slate-400 dark:text-slate-500">Controle o nome, ordem e disponibilidade dos tipos usados no cadastro e no site.</p>
+        </div>
+        <button
+          @click="fetchPropertyTypes"
+          :disabled="propertyTypesLoading"
+          class="text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-60"
+        >
+          {{ propertyTypesLoading ? 'Atualizando...' : 'Atualizar' }}
+        </button>
+      </div>
+      <div v-if="propertyTypesError" class="mx-6 mt-4 bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-sm">
+        {{ propertyTypesError }}
+      </div>
+      <div class="divide-y divide-slate-100 dark:divide-slate-700">
+        <div
+          v-for="type in propertyTypes"
+          :key="type.code"
+          class="grid grid-cols-1 md:grid-cols-[120px_1fr_120px_120px] gap-3 px-6 py-4 items-center"
+        >
+          <div class="font-mono text-xs text-slate-400 dark:text-slate-500">{{ type.code }}</div>
+          <input v-model="type.label" type="text" :class="inputClass" />
+          <input v-model.number="type.position" type="number" :class="inputClass" />
+          <div class="flex items-center justify-between gap-3">
+            <label class="inline-flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+              <input v-model="type.active" type="checkbox" class="accent-indigo-600" />
+              Ativo
+            </label>
+            <button
+              @click="savePropertyType(type)"
+              :disabled="savingPropertyTypeCode === type.code || !type.label.trim()"
+              class="text-xs font-semibold px-3 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60"
+            >
+              {{ savingPropertyTypeCode === type.code ? 'Salvando...' : 'Salvar' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Loading -->
     <div v-if="store.isLoading" class="flex justify-center py-20">
