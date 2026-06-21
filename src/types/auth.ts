@@ -1,4 +1,5 @@
 import type { SystemRole } from './role'
+import type { OnboardingSummary } from './onboarding'
 
 export interface User {
   id: string
@@ -90,4 +91,5 @@ export interface MeResponse {
   tenantId: string | null
   tenantName: string | null
   tenantSubdomain: string | null
+  onboarding: OnboardingSummary | null
 }

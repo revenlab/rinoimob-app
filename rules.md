@@ -196,3 +196,8 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
   - Seleção de corretores: select `ALL_BROKERS` / `SPECIFIC_BROKERS`; quando específico, carrega lista via `userManagementService.list()` e exibe checkboxes.
   - Critérios com **modo duplo**: toggle Básico (campos individuais: source, city, propertyType, minPrice, maxPrice, keywordContains — serializa para JSON automaticamente) / Avançado (textarea JSON raw). Ao editar, tenta parse do JSON para popular modo básico.
   - Hardening #49: `LeadPoolsManager.vue` agora diferencia carregamento, lista vazia e erro; falha ao carregar corretores mostra retry inline; JSON inválido em critérios avançados fica em erro inline sem quebrar o modal.
+- Tutorial guiado no app:
+  - `driver.js` foi adicionado para spotlight/popover, encapsulado em `src/stores/onboarding.ts` com fluxo core `Dashboard -> Leads -> Imóveis -> Tarefas` e reabertura contextual por rota.
+  - `AppLayout.vue` ganhou botão global `Tutorial` no header apenas em rotas com `meta.tutorialRouteKey`, além de `data-tour-id` estáveis no menu lateral para passos finais de Site/WhatsApp.
+  - `authStore` agora mantém `onboarding` vindo de `/auth/me`; Dashboard, Leads, PropertiesList e TasksManagement receberam anchors `data-tour-id` para tours resilientes.
+  - Os tours contextuais também cobrem `WebsiteConfig.vue` e `WhatsappSettings.vue`, com `meta.tutorialRouteKey` nas rotas e anchors estáveis para domínio/abas/prévia do site e para visão geral/lista/ações das instâncias de WhatsApp.

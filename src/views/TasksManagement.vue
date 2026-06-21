@@ -1,7 +1,7 @@
 <template>
   <AppLayout>
     <template #header>
-      <div class="flex items-center justify-between w-full">
+      <div data-tour-id="tasks-overview" class="flex items-center justify-between w-full">
         <div>
           <h1 class="text-lg font-bold text-slate-900 dark:text-white">Tarefas</h1>
           <p class="text-xs text-slate-400">Gerencie atividades e compromissos</p>
@@ -33,6 +33,7 @@
 
           <button
             @click="openCreateModal"
+            data-tour-id="tasks-create"
             class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-medium text-sm shadow-[0_4px_12px_rgba(79,70,229,0.3)] hover:translate-y-[-1px] transition-all duration-200"
           >
             <PlusIcon class="w-4 h-4" />
@@ -93,7 +94,7 @@
     </div>
 
     <!-- Task list -->
-    <div v-else class="space-y-2">
+    <div v-else data-tour-id="tasks-board" class="space-y-2">
       <div
         v-for="task in filteredTasks"
         :key="task.id"
@@ -192,7 +193,7 @@
     <template v-if="viewMode === 'calendar'">
 
       <!-- Banner: tasks without due date -->
-      <div v-if="tasksWithoutDueDate > 0" class="flex items-center gap-2 mb-4 px-4 py-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-xl text-xs text-amber-700 dark:text-amber-300">
+      <div v-if="tasksWithoutDueDate > 0" data-tour-id="tasks-board" class="flex items-center gap-2 mb-4 px-4 py-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-xl text-xs text-amber-700 dark:text-amber-300">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 flex-shrink-0">
           <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
         </svg>
@@ -234,7 +235,7 @@
       </div>
 
       <!-- Calendar grid -->
-      <div class="grid grid-cols-7 gap-px bg-slate-200 dark:bg-slate-700 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+      <div data-tour-id="tasks-board" class="grid grid-cols-7 gap-px bg-slate-200 dark:bg-slate-700 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
         <div
           v-for="(day, idx) in calendarDays"
           :key="idx"

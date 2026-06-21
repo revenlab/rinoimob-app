@@ -1,3 +1,45 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.rino-onboarding-popover {
+  border-radius: 1.25rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+  background:
+    radial-gradient(circle at top left, rgba(224, 231, 255, 0.95), rgba(255, 255, 255, 0.98) 42%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.96));
+  backdrop-filter: blur(18px);
+}
+
+.rino-onboarding-popover .driver-popover-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.rino-onboarding-popover .driver-popover-description {
+  color: #334155;
+}
+
+.rino-onboarding-popover .driver-popover-progress-text {
+  color: #64748b;
+}
+
+.rino-onboarding-popover .driver-popover-footer button {
+  border-radius: 999px;
+  border-color: rgba(99, 102, 241, 0.2);
+  padding: 0.4rem 0.85rem;
+  text-shadow: none;
+}
+
+.rino-onboarding-popover .driver-popover-next-btn {
+  background: linear-gradient(135deg, #4338ca, #7c3aed);
+  color: #fff;
+  border-color: transparent;
+}
+
+.rino-onboarding-popover .driver-popover-next-btn:hover,
+.rino-onboarding-popover .driver-popover-next-btn:focus {
+  background: linear-gradient(135deg, #3730a3, #6d28d9);
+}

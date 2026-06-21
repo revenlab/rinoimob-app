@@ -4,6 +4,7 @@ import App from './App.vue'
 import router from './router'
 import { useAuthStore } from '@/stores/auth'
 import { setLogoutHandler, resetLogoutFlag } from '@/lib/api'
+import 'driver.js/dist/driver.css'
 import './index.css'
 
 // Apply theme before mount to prevent flash

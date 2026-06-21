@@ -14,7 +14,7 @@
 
       <div v-else class="grid gap-6 xl:grid-cols-3">
         <form class="space-y-6 xl:col-span-2" @submit.prevent="saveConfig">
-          <section class="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.16),_transparent_34%),linear-gradient(135deg,_#fffdf8_0%,_#f8fafc_48%,_#eaf1ff_100%)] text-slate-900 shadow-sm dark:bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_34%),linear-gradient(135deg,_#0f172a_0%,_#172033_48%,_#111827_100%)] dark:text-white">
+          <section data-tour-id="website-domain" class="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.16),_transparent_34%),linear-gradient(135deg,_#fffdf8_0%,_#f8fafc_48%,_#eaf1ff_100%)] text-slate-900 shadow-sm dark:bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_34%),linear-gradient(135deg,_#0f172a_0%,_#172033_48%,_#111827_100%)] dark:text-white">
             <div class="p-5 sm:p-6">
               <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                 <div class="max-w-2xl">
@@ -76,7 +76,7 @@
             </div>
           </section>
 
-          <div class="flex flex-wrap gap-2">
+          <div data-tour-id="website-tabs" class="flex flex-wrap gap-2">
             <button
               type="button"
               @click="siteTab = 'visual'"
@@ -119,7 +119,7 @@
             </button>
           </div>
 
-          <section v-if="siteTab === 'visual'" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-5">
+          <section v-if="siteTab === 'visual'" data-tour-id="website-editor" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-5">
             <div>
               <h2 class="text-base font-semibold text-slate-900 dark:text-white">Identidade Visual</h2>
               <p class="text-sm text-slate-500 dark:text-slate-400">Atualize logotipo, favicon e paleta do site.</p>
@@ -242,7 +242,7 @@
           </section>
 
           <section v-else-if="siteTab === 'content'" class="space-y-6">
-            <section class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
+            <section data-tour-id="website-editor" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
               <div>
                 <h2 class="text-base font-semibold text-slate-900 dark:text-white">Conteúdo da Home</h2>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Edite os textos principais exibidos no site público.</p>
@@ -346,7 +346,7 @@
 
           <BlogPostsManager v-else-if="siteTab === 'blog'" />
 
-          <section v-else-if="siteTab === 'about'" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-5">
+          <section v-else-if="siteTab === 'about'" data-tour-id="website-editor" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-5">
             <div>
               <h2 class="text-base font-semibold text-slate-900 dark:text-white">Página Sobre</h2>
               <p class="text-sm text-slate-500 dark:text-slate-400">Conte a história da sua imobiliária para os visitantes do site.</p>
@@ -434,7 +434,7 @@
             </div>
           </section>
 
-          <section v-else class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
+          <section v-else data-tour-id="website-editor" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
             <div>
               <h2 class="text-base font-semibold text-slate-900 dark:text-white">Contato e redes</h2>
               <p class="text-sm text-slate-500 dark:text-slate-400">Atualize os dados de contato exibidos no site.</p>
@@ -481,7 +481,7 @@
         </form>
 
         <aside class="space-y-6">
-          <section class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-4 sticky top-6">
+          <section data-tour-id="website-preview" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-4 sticky top-6">
             <div class="flex items-center justify-between gap-3">
               <div>
                 <h2 class="text-base font-semibold text-slate-900 dark:text-white">Prévia do Site</h2>

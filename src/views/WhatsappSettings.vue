@@ -134,10 +134,11 @@
 
     <!-- Main content -->
     <div class="space-y-6">
-      <div class="flex items-center justify-between">
+      <div data-tour-id="whatsapp-overview" class="flex items-center justify-between">
         <h2 class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400">Números Cadastrados</h2>
         <button
           @click="openAddModal"
+          data-tour-id="whatsapp-add"
           class="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl text-sm font-semibold shadow-sm hover:shadow-md transition-all"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
@@ -154,7 +155,7 @@
         </svg>
       </div>
 
-      <div v-else-if="instances.length === 0" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-12 text-center">
+      <div v-else-if="instances.length === 0" data-tour-id="whatsapp-list" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-12 text-center">
         <div class="w-14 h-14 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 text-slate-400">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z" />
@@ -164,7 +165,7 @@
         <p class="text-xs text-slate-400 dark:text-slate-500">Adicione um número para começar a enviar mensagens</p>
       </div>
 
-      <div v-else class="space-y-3">
+      <div v-else data-tour-id="whatsapp-list" class="space-y-3">
         <div
           v-for="instance in instances"
           :key="instance.id"
@@ -192,7 +193,7 @@
           </span>
 
           <!-- Actions -->
-          <div class="flex items-center gap-2 flex-shrink-0">
+          <div data-tour-id="whatsapp-actions" class="flex items-center gap-2 flex-shrink-0">
             <button
               @click="openConfigModal(instance)"
               class="px-3 py-1.5 text-xs font-medium border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"

@@ -48,7 +48,7 @@ const router = createRouter({
       path: '/dashboard',
       name: 'Dashboard',
       component: () => import('@/views/Dashboard.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, tutorialRouteKey: 'dashboard' }
     },
     {
       path: '/profile',
@@ -60,7 +60,7 @@ const router = createRouter({
       path: '/imoveis',
       name: 'PropertiesList',
       component: () => import('@/views/properties/PropertiesList.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, tutorialRouteKey: 'properties' }
     },
     {
       path: '/imoveis/novo',
@@ -96,7 +96,7 @@ const router = createRouter({
       path: '/leads',
       name: 'LeadsManagement',
       component: () => import('@/views/LeadsManagement.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, tutorialRouteKey: 'leads' }
     },
     {
       path: '/leads/:id',
@@ -108,13 +108,13 @@ const router = createRouter({
       path: '/tarefas',
       name: 'TasksManagement',
       component: () => import('@/views/TasksManagement.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, tutorialRouteKey: 'tasks' }
     },
     {
       path: '/whatsapp',
       name: 'WhatsappSettings',
       component: () => import('@/views/WhatsappSettings.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, tutorialRouteKey: 'whatsapp' }
     },
     {
       path: '/email-sender',
@@ -162,7 +162,7 @@ const router = createRouter({
       path: '/website-config',
       name: 'WebsiteConfig',
       component: () => import('@/views/WebsiteConfig.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, tutorialRouteKey: 'website' }
     },
     {
       path: '/website-domain',

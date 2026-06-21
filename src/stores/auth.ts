@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User, TenantInfo, LoginRequest, RegisterRequest, TenantRegistrationRequest, LoginResponse, MeResponse } from '@/types/auth'
+import type { OnboardingSummary } from '@/types/onboarding'
 import { isInternalSystemRole } from '@/types/role'
 import authService from '@/services/auth'
 import { connectWebSocket } from '@/services/websocket'
@@ -16,6 +17,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const forcePasswordReset = ref(false)
+  const onboarding = ref<OnboardingSummary | null>(null)
 
   // Workspace-selector state
   const availableTenants = ref<TenantInfo[]>([])
@@ -165,6 +167,7 @@ export const useAuthStore = defineStore('auth', () => {
     currentTenantId.value = null
     currentTenantName.value = null
     currentTenantSubdomain.value = null
+    onboarding.value = null
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(REFRESH_TOKEN_KEY)
     localStorage.removeItem(USER_KEY)
@@ -233,6 +236,7 @@ export const useAuthStore = defineStore('auth', () => {
       currentTenantId.value = me.tenantId
       currentTenantName.value = me.tenantName
       currentTenantSubdomain.value = me.tenantSubdomain
+      onboarding.value = me.onboarding
       localStorage.setItem(USER_KEY, JSON.stringify(user.value))
       return me
     } catch {
@@ -276,6 +280,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const clearError = () => { error.value = null }
   const setError = (message: string | null) => { error.value = message }
+  const setOnboarding = (summary: OnboardingSummary | null) => { onboarding.value = summary }
 
   function _applyLoginResponse(response: LoginResponse) {
     accessToken.value = response.accessToken
@@ -299,6 +304,7 @@ export const useAuthStore = defineStore('auth', () => {
     isLoading,
     error,
     forcePasswordReset,
+    onboarding,
     availableTenants,
     preAuthToken,
     currentTenantId,
@@ -331,6 +337,7 @@ export const useAuthStore = defineStore('auth', () => {
     updateProfile,
     changePassword,
     clearError,
-    setError
+    setError,
+    setOnboarding
   }
 })

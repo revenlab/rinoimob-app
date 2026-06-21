@@ -94,6 +94,7 @@ function typeLabel(code: string) {
 
         <RouterLink
           to="/imoveis/novo"
+          data-tour-id="properties-create"
           class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-700 to-indigo-700 text-white rounded-xl font-medium text-sm shadow-[0_4px_12px_rgba(79,70,229,0.25)] hover:-translate-y-px transition-all duration-200"
         >
           <PlusIcon class="w-4 h-4" />
@@ -104,7 +105,7 @@ function typeLabel(code: string) {
     </template>
 
     <!-- Filters -->
-    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-4 mb-6">
+    <div data-tour-id="properties-filters" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-4 mb-6">
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <select
           v-model="params.status"
@@ -180,7 +181,7 @@ function typeLabel(code: string) {
     </div>
 
     <!-- Card Grid -->
-    <div v-else-if="viewMode === 'card'" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+    <div v-else-if="viewMode === 'card'" data-tour-id="properties-list" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
       <div
         v-for="p in store.properties!.content"
         :key="p.id"

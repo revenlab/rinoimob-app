@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { RouterLink, useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useOnboardingStore } from '@/stores/onboarding'
 import { useTheme } from '@/composables/useTheme'
 import { useWebSocketStore } from '@/stores/websocket'
 import { useNotificationStore } from '@/stores/notification'
 import NotificationBell from '@/components/NotificationBell.vue'
-import { ChatBubbleLeftRightIcon } from '@heroicons/vue/20/solid'
+import { ChatBubbleLeftRightIcon, QuestionMarkCircleIcon } from '@heroicons/vue/20/solid'
 
 const authStore = useAuthStore()
+const onboardingStore = useOnboardingStore()
 const router = useRouter()
 const route = useRoute()
 const { isDark, toggle } = useTheme()
@@ -88,12 +90,14 @@ const navItems = [
   {
     label: 'Dashboard',
     to: '/dashboard',
+    tourNavId: 'nav-dashboard',
     icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>`,
   },
   {
     label: 'Imóveis',
     to: '/imoveis',
     clientOnly: true,
+    tourNavId: 'nav-properties',
     icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>`,
   },
   {
@@ -112,12 +116,14 @@ const navItems = [
     label: 'Leads',
     to: '/leads',
     clientOnly: true,
+    tourNavId: 'nav-leads',
     icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>`,
   },
   {
     label: 'Tarefas',
     to: '/tarefas',
     clientOnly: true,
+    tourNavId: 'nav-tasks',
     icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
   },
   {
@@ -125,6 +131,7 @@ const navItems = [
     to: '/whatsapp',
     clientOnly: true,
     section: 'settings',
+    tourNavId: 'nav-whatsapp',
     icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z" /></svg>`,
   },
   {
@@ -137,6 +144,7 @@ const navItems = [
     label: 'Site',
     to: '/website-config',
     clientOnly: true,
+    tourNavId: 'nav-site',
     icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253M3 12c0 .778.099 1.533.284 2.253" /></svg>`,
   },
   {
@@ -187,6 +195,7 @@ const visibleNavItems = computed(() =>
 )
 const mainNavItems = computed(() => visibleNavItems.value.filter(item => item.section !== 'settings'))
 const settingsNavItems = computed(() => visibleNavItems.value.filter(item => item.section === 'settings'))
+const showTutorialButton = computed(() => onboardingStore.canOpenCurrentRouteTutorial && !authStore.isInternalStaff)
 
 const isActive = (to: string) => route.path === to || (to !== '/dashboard' && route.path.startsWith(to))
 
@@ -194,6 +203,22 @@ const handleLogout = async () => {
   await authStore.logout()
   router.push({ name: 'Login' })
 }
+
+const handleOpenTutorial = async () => {
+  await onboardingStore.startContextualTourForCurrentRoute()
+}
+
+onMounted(() => {
+  onboardingStore.initialize()
+})
+
+watch(
+  () => [route.fullPath, authStore.currentUser?.id, authStore.onboarding?.status],
+  () => {
+    void onboardingStore.handleRouteChange()
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -246,6 +271,7 @@ const handleLogout = async () => {
               collapsed ? 'justify-center' : '',
             ]"
             :title="collapsed ? item.label : undefined"
+            :data-tour-id="item.tourNavId"
           >
             <span v-html="item.icon" class="shrink-0" />
             <span v-if="!collapsed" class="flex-1 truncate">{{ item.label }}</span>
@@ -274,6 +300,7 @@ const handleLogout = async () => {
                 collapsed ? 'justify-center' : '',
               ]"
               :title="collapsed ? item.label : undefined"
+              :data-tour-id="item.tourNavId"
             >
               <span v-html="item.icon" class="shrink-0" />
               <span v-if="!collapsed" class="flex-1 truncate">{{ item.label }}</span>
@@ -359,6 +386,16 @@ const handleLogout = async () => {
             <h1 class="text-lg font-bold text-slate-900 dark:text-white">{{ $route.meta.title as string ?? '' }}</h1>
           </slot>
         </div>
+        <button
+          v-if="showTutorialButton"
+          type="button"
+          data-tour-id="header-tutorial-button"
+          class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-indigo-800 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-300"
+          @click="handleOpenTutorial"
+        >
+          <QuestionMarkCircleIcon class="h-4 w-4" />
+          Tutorial
+        </button>
         <!-- Notification Bell -->
         <NotificationBell />
         <!-- Theme toggle -->

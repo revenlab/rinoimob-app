@@ -8,7 +8,7 @@
         </template>
 
         <template v-if="!authStore.isInternalStaff">
-            <div class="grid grid-cols-2 gap-4 mb-4 lg:grid-cols-4">
+            <div data-tour-id="dashboard-overview" class="grid grid-cols-2 gap-4 mb-4 lg:grid-cols-4">
                 <RouterLink
                     to="/leads"
                     class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow hover:shadow-md transition-shadow"
@@ -46,7 +46,7 @@
                 </RouterLink>
             </div>
 
-            <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 mb-6 shadow">
+            <div data-tour-id="dashboard-pipeline" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 mb-6 shadow">
                 <div class="flex items-center justify-between mb-4">
                     <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400">Pipeline de Vendas</p>
                     <RouterLink to="/leads" class="text-xs text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400">
@@ -97,7 +97,7 @@
             </div>
 
             <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-                <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow flex flex-col">
+                <div data-tour-id="dashboard-tasks" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow flex flex-col">
                     <div class="flex items-center justify-between mb-4">
                         <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400">Tarefas Pendentes</p>
                         <RouterLink to="/tarefas" class="text-xs text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400">
