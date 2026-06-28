@@ -13,11 +13,11 @@ export type SystemRole =
   | 'SUPPORT_MANAGER'
   | 'SUPPORT_AGENT'
 
-export const INTERNAL_SYSTEM_ROLES = ['TENANT_ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_AGENT'] as const
+export const INTERNAL_SYSTEM_ROLES = ['SUPPORT_MANAGER', 'SUPPORT_AGENT'] as const
 
 export const SYSTEM_ROLE_LABELS: Record<SystemRole, string> = {
   TENANT_OWNER: 'Proprietário',
-  TENANT_ADMIN: 'Administrador de tenants',
+  TENANT_ADMIN: 'Administrador do tenant',
   SUPPORT_MANAGER: 'Gerente interno',
   SUPPORT_AGENT: 'Operador interno',
 }
@@ -32,8 +32,8 @@ export const INTERNAL_SYSTEM_ROLE_OPTIONS: SystemRoleOption[] = INTERNAL_SYSTEM_
   label: SYSTEM_ROLE_LABELS[value],
 }))
 
-export function isInternalSystemRole(role: SystemRole | null | undefined): role is Exclude<SystemRole, 'TENANT_OWNER'> {
-  return !!role && INTERNAL_SYSTEM_ROLES.includes(role as Exclude<SystemRole, 'TENANT_OWNER'>)
+export function isInternalSystemRole(role: SystemRole | null | undefined): role is typeof INTERNAL_SYSTEM_ROLES[number] {
+  return !!role && INTERNAL_SYSTEM_ROLES.includes(role as typeof INTERNAL_SYSTEM_ROLES[number])
 }
 
 export function systemRoleLabel(role: SystemRole | null | undefined) {

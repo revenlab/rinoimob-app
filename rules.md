@@ -137,6 +137,12 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
 
 ## Last Changes
 
+- **E2E smoke de produção**:
+  - `npm run test:e2e:prod` executa `node --test e2e/*.test.mjs` contra URLs reais configuradas por `E2E_*`, cobrindo endpoints públicos, login workspace, `/auth/me`, logout/revogação, permissões de `/users`, acesso de suporte e mutações opcionais de lead.
+- **Docker prod**:
+  - `Dockerfile` faz build Vite com `APP_VITE_API_URL`/`APP_VITE_WS_URL` passados como args pelo compose de produção e serve `dist` via Nginx com fallback SPA e `/health`.
+- **Hardening pre-prod de roles internas**:
+  - `src/types/role.ts` mantém `TENANT_ADMIN` como role legada de tenant, mas apenas `SUPPORT_MANAGER` e `SUPPORT_AGENT` contam como staff interno para navegação/permissões do painel de suporte.
 - **Tipos de imóveis desacoplados de categorias**:
   - Nova rota/tela `src/views/PropertyTypesManagement.vue` em `/tipos-de-imoveis`, separada da gestão de categorias.
   - `propertyService` ganhou `uploadPropertyTypeCoverImage()` e `deletePropertyTypeCoverImage()` para a nova API de capa.

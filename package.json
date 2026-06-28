@@ -6,7 +6,9 @@
     "dev": "vite",
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
-    "type-check": "vue-tsc --noEmit"
+    "type-check": "vue-tsc --noEmit",
+    "test:e2e": "node --test e2e/*.test.mjs",
+    "test:e2e:prod": "E2E_TARGET=prod node --test e2e/*.test.mjs"
   },
   "dependencies": {
     "@heroicons/vue": "^2.2.0",
