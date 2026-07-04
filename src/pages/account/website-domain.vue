@@ -72,7 +72,7 @@
             <div>
               <h3 class="text-base font-semibold text-slate-900 dark:text-white">Informar domínio</h3>
               <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Digite o endereço final que seus clientes vão acessar. O formato é ajustado automaticamente antes de salvar.
+                Digite o domínio principal que seus clientes vão acessar. Depois de salvar, copie os dados de DNS exibidos ao lado para o painel onde o domínio foi comprado.
               </p>
             </div>
           </div>
@@ -89,7 +89,7 @@
               :disabled="isLoading"
             />
             <p class="text-xs text-slate-500 dark:text-slate-400">
-              Exemplo aceito: <span class="font-medium text-slate-700 dark:text-slate-300">meusite.com.br</span>. Prefixos como `https://` e `www` são removidos automaticamente.
+              Exemplo aceito: <span class="font-medium text-slate-700 dark:text-slate-300">meusite.com.br</span>. Prefixos como https:// e www são removidos automaticamente.
             </p>
           </div>
 
@@ -139,24 +139,54 @@
         <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <div class="flex items-start justify-between gap-3">
             <div>
-              <h3 class="text-base font-semibold text-slate-900 dark:text-white">Endereço para apontamento</h3>
+              <h3 class="text-base font-semibold text-slate-900 dark:text-white">Dados para colocar no DNS</h3>
               <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Esse é o endereço que deve ser usado na configuração do seu domínio.
+                Crie um registro no painel do provedor do domínio com os campos abaixo.
               </p>
             </div>
-            <button
-              v-if="currentTarget"
-              @click="copyTarget"
-              class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-700"
-            >
-              Copiar
-            </button>
+          </div>
+
+          <div class="mt-5 space-y-3">
+            <div v-for="record in dnsRecords" :key="record.label" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">{{ record.label }}</p>
+                  <p class="mt-2 break-all font-mono text-sm font-semibold text-slate-900 dark:text-white">{{ record.value }}</p>
+                  <p v-if="record.help" class="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">{{ record.help }}</p>
+                </div>
+                <button
+                  @click="copyText(record.value, record.copyMessage)"
+                  :disabled="record.disabled"
+                  :title="`Copiar ${record.label}`"
+                  class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  <ClipboardDocumentIcon class="h-4 w-4" />
+                </button>
+              </div>
+            </div>
           </div>
 
           <div class="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/30">
-            <code class="break-all text-sm font-semibold text-blue-900 dark:text-blue-200">
-              {{ currentTarget || 'Disponível após salvar o domínio' }}
-            </code>
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700 dark:text-blue-200">Linha pronta</p>
+                <code class="mt-2 block break-all text-sm font-semibold text-blue-900 dark:text-blue-100">
+                  {{ dnsRecordLine }}
+                </code>
+              </div>
+              <button
+                @click="copyDnsRecordLine"
+                :disabled="!canCopyDns"
+                title="Copiar linha pronta"
+                class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-blue-200 bg-white text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200 dark:hover:bg-blue-900"
+              >
+                <ClipboardDocumentIcon class="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
+            Use <span class="font-semibold">CNAME</span>. Não use registros A ou AAAA para esse domínio. Se o painel não aceitar CNAME no domínio principal, procure por CNAME flattening, ALIAS ou ANAME; são nomes diferentes para o mesmo tipo de apontamento em alguns provedores.
           </div>
         </section>
 
@@ -184,6 +214,7 @@ import { ref, onMounted, computed } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useNotification } from '@/composables/useNotification'
 import websiteConfigService from '@/services/websiteConfig'
+import { ClipboardDocumentIcon } from '@heroicons/vue/20/solid'
 
 const domainInput = ref('')
 const currentDomain = ref<string | null>(null)
@@ -209,8 +240,9 @@ const domainChanged = computed(() => {
 
 const setupSteps = [
   { number: '1', title: 'Salvar o domínio', description: 'Cadastre o endereço final do site. O sistema salva a versão ajustada automaticamente.' },
-  { number: '2', title: 'Apontar o domínio', description: 'No painel onde o domínio é administrado, use o endereço exibido nesta tela para concluir a conexão.' },
-  { number: '3', title: 'Aguardar ativação', description: 'Depois da atualização do domínio, o acesso seguro é liberado automaticamente.' },
+  { number: '2', title: 'Abrir o painel de DNS', description: 'Entre no painel onde o domínio foi comprado, como Registro.br, GoDaddy, Hostinger ou Cloudflare, e abra a zona DNS.' },
+  { number: '3', title: 'Criar o registro CNAME', description: 'Adicione um registro CNAME usando o nome/host e o valor/destino mostrados nesta tela. O TTL pode ficar automático ou padrão.' },
+  { number: '4', title: 'Aguardar ativação', description: 'Depois de salvar no DNS, a conexão segura é liberada automaticamente quando a propagação terminar.' },
 ]
 
 const statusLabel = computed(() => {
@@ -264,6 +296,50 @@ const httpsMessage = computed(() => {
   if (status === 'ACTIVE') return 'A conexão segura já está ativa para esse domínio.'
   if (status === 'PENDING') return 'A conexão segura será ativada assim que o domínio terminar de apontar corretamente.'
   return 'A conexão segura é liberada automaticamente quando a configuração do domínio for concluída.'
+})
+
+const dnsTargetPlaceholder = 'Disponível após salvar o domínio'
+const canCopyDns = computed(() => Boolean(currentDomain.value && currentTarget.value))
+
+const dnsRecords = computed(() => [
+  {
+    label: 'Tipo',
+    value: 'CNAME',
+    help: 'É o tipo correto para conectar o site. Não preencha como A nem AAAA.',
+    disabled: false,
+    copyMessage: 'Tipo de registro copiado',
+  },
+  {
+    label: 'Nome ou host',
+    value: currentDomain.value ? '@' : 'Disponível após salvar o domínio',
+    help: currentDomain.value
+      ? `Use @ para o domínio principal. Se o provedor pedir o nome completo, use ${currentDomain.value}.`
+      : 'Esse campo aparece depois que o domínio for salvo.',
+    disabled: !currentDomain.value,
+    copyMessage: 'Nome/host copiado',
+  },
+  {
+    label: 'Valor ou destino',
+    value: currentTarget.value || dnsTargetPlaceholder,
+    help: 'Cole exatamente esse endereço no campo valor, destino, alvo ou target.',
+    disabled: !currentTarget.value,
+    copyMessage: 'Valor/destino copiado',
+  },
+  {
+    label: 'TTL',
+    value: 'Automático',
+    help: 'Se não existir automático, use o valor padrão do provedor.',
+    disabled: false,
+    copyMessage: 'TTL copiado',
+  },
+])
+
+const dnsRecordLine = computed(() => {
+  if (!currentDomain.value || !currentTarget.value) {
+    return 'Salve um domínio para gerar a linha pronta do DNS'
+  }
+
+  return `Tipo: CNAME | Nome/Host: @ | Valor/Destino: ${currentTarget.value} | TTL: Automático`
 })
 
 const normalizeDomain = (value: string) => value.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '')
@@ -354,10 +430,15 @@ const cancelEdit = () => {
   domainError.value = ''
 }
 
-const copyTarget = async () => {
-  if (!currentTarget.value || !navigator?.clipboard) return
-  await navigator.clipboard.writeText(currentTarget.value)
-  showSuccess('Endereço copiado')
+const copyText = async (value: string, message = 'Copiado') => {
+  if (!value || !navigator?.clipboard) return
+  await navigator.clipboard.writeText(value)
+  showSuccess(message)
+}
+
+const copyDnsRecordLine = async () => {
+  if (!canCopyDns.value) return
+  await copyText(dnsRecordLine.value, 'Configuração de DNS copiada')
 }
 
 const reloadSavedDomain = async () => {
