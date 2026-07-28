@@ -748,7 +748,8 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
           </div>
           <div>
             <label :class="labelClass">Código de referência</label>
-            <input v-model="form.referenceCode" type="text" :class="inputClass" placeholder="Ex.: AP-001" />
+            <input v-model="form.referenceCode" type="text" :class="inputClass" placeholder="Gerado automaticamente se vazio" />
+            <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">Opcional. O sistema gera um código único ao salvar.</p>
           </div>
         </div>
       </div>

@@ -137,6 +137,8 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
 
 ## Last Changes
 
+- **Referência automática (#61)**: o campo de referência no cadastro passou a indicar que é opcional; quando vazio, o backend gera e persiste um código único.
+
 - **Destaques de imóveis (#50)**: `PropertyForm.vue` agora permite marcar “Exibir em destaques”; o valor é persistido no contrato de imóvel e controla a seção correspondente no site público.
 
 - **E2E smoke de produção**:
