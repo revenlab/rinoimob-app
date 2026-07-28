@@ -342,6 +342,7 @@ onMounted(async () => {
         status: p.status,
         condition: p.condition ?? undefined,
         referenceCode: p.referenceCode ?? '',
+        featured: p.featured,
         price: p.price ?? undefined,
         currency: p.currency,
         taxes: p.taxes ?? undefined,
@@ -814,6 +815,10 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
               <option value="ARCHIVED">Arquivado</option>
             </select>
           </div>
+          <label class="flex items-center gap-3 self-end min-h-[42px] px-3 rounded-lg border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
+            <input v-model="form.featured" type="checkbox" class="w-4 h-4 accent-indigo-600 rounded" />
+            <span class="text-sm font-medium text-slate-700 dark:text-slate-200">Exibir em destaques</span>
+          </label>
         </div>
         <div v-if="generatedTitle" class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <p class="text-xs text-blue-900 dark:text-blue-300">

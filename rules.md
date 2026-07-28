@@ -137,6 +137,8 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
 
 ## Last Changes
 
+- **Destaques de imóveis (#50)**: `PropertyForm.vue` agora permite marcar “Exibir em destaques”; o valor é persistido no contrato de imóvel e controla a seção correspondente no site público.
+
 - **E2E smoke de produção**:
   - `npm run test:e2e:prod` executa `node --test e2e/*.test.mjs` contra URLs reais configuradas por `E2E_*`, cobrindo endpoints públicos, login workspace, `/auth/me`, logout/revogação, permissões de `/users`, acesso de suporte e mutações opcionais de lead.
 - **Docker prod**:

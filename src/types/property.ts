@@ -89,6 +89,7 @@ export interface PropertySummaryResponse {
   status: PropertyStatus
   condition: PropertyCondition | null
   referenceCode: string | null
+  featured: boolean
   price: number | null
   currency: string
   areaTotal: number | null
@@ -113,6 +114,7 @@ export interface PropertyResponse {
   status: PropertyStatus
   condition: PropertyCondition | null
   referenceCode: string | null
+  featured: boolean
   price: number | null
   currency: string
   taxes: number | null
@@ -154,6 +156,7 @@ export interface CreatePropertyRequest {
   status?: PropertyStatus
   condition?: PropertyCondition
   referenceCode?: string
+  featured?: boolean
   price?: number
   currency?: string
   taxes?: number
