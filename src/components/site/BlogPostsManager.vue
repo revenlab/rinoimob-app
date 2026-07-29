@@ -117,6 +117,26 @@
               class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm"
             >
           </label>
+          <div class="flex flex-col gap-2 text-xs text-slate-500">
+            <span>Ou envie uma imagem de capa</span>
+            <label class="flex items-center justify-center gap-2 min-h-[42px] px-3 py-2 rounded-lg border border-dashed border-blue-300 text-blue-600 hover:bg-blue-50 cursor-pointer">
+              <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="selectCoverImage" />
+              {{ coverFile ? coverFile.name : 'Selecionar imagem (JPG, PNG ou WEBP)' }}
+            </label>
+            <p class="text-[11px] text-slate-400">Máximo de 5 MB. O upload também funciona ao criar um novo post.</p>
+          </div>
+          <div v-if="form.coverImageUrl" class="flex items-center gap-2 md:col-span-2">
+            <img :src="form.coverImageUrl" alt="Prévia da capa" class="w-20 h-12 object-cover rounded-lg border border-slate-200" />
+            <button
+              v-if="editingPostId"
+              type="button"
+              :disabled="removingCover"
+              class="text-xs font-medium text-red-600 hover:underline disabled:opacity-50"
+              @click="removeCoverImage"
+            >
+              {{ removingCover ? 'Removendo...' : 'Remover capa' }}
+            </button>
+          </div>
           <label class="flex flex-col gap-1 text-xs text-slate-500">
             Data de Publicação (opcional)
             <input
@@ -198,6 +218,8 @@ const saving = ref(false)
 const deletingId = ref<string | null>(null)
 const statusChangingId = ref<string | null>(null)
 const editingPostId = ref<string | null>(null)
+const coverFile = ref<File | null>(null)
+const removingCover = ref(false)
 
 const form = ref<BlogPostFormInput>({
   title: '',
@@ -241,6 +263,41 @@ const resetForm = () => {
     coverImageUrl: '',
     status: 'DRAFT',
     publishedAt: null,
+  }
+  coverFile.value = null
+}
+
+const selectCoverImage = (event: Event) => {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  if (file.size > 5 * 1024 * 1024) {
+    showError('A imagem de capa deve ter no máximo 5 MB')
+    return
+  }
+  coverFile.value = file
+}
+
+const uploadSelectedCover = async (post: BlogPost) => {
+  if (!coverFile.value) return post
+  return isSupportMode()
+    ? blogPostsService.uploadCoverImageSupport(props.tenantId!, post.id, coverFile.value)
+    : blogPostsService.uploadCoverImage(post.id, coverFile.value)
+}
+
+const removeCoverImage = async () => {
+  if (!editingPostId.value) return
+  removingCover.value = true
+  try {
+    const post = isSupportMode()
+      ? await blogPostsService.deleteCoverImageSupport(props.tenantId!, editingPostId.value)
+      : await blogPostsService.deleteCoverImage(editingPostId.value)
+    form.value.coverImageUrl = post.coverImageUrl || ''
+    coverFile.value = null
+    showSuccess('Capa removida com sucesso!')
+  } catch (error: unknown) {
+    showError(error instanceof Error ? error.message : 'Erro ao remover capa')
+  } finally {
+    removingCover.value = false
   }
 }
 
@@ -307,16 +364,20 @@ const save = async (status: BlogPostStatus) => {
     const payload = normalizeForm(status)
     if (editingPostId.value) {
       if (isSupportMode()) {
-        await blogPostsService.updateSupport(props.tenantId!, editingPostId.value, payload)
+        const post = await blogPostsService.updateSupport(props.tenantId!, editingPostId.value, payload)
+        await uploadSelectedCover(post)
       } else {
-        await blogPostsService.update(editingPostId.value, payload)
+        const post = await blogPostsService.update(editingPostId.value, payload)
+        await uploadSelectedCover(post)
       }
       showSuccess('Post atualizado com sucesso!')
     } else {
       if (isSupportMode()) {
-        await blogPostsService.createSupport(props.tenantId!, payload)
+        const post = await blogPostsService.createSupport(props.tenantId!, payload)
+        await uploadSelectedCover(post)
       } else {
-        await blogPostsService.create(payload)
+        const post = await blogPostsService.create(payload)
+        await uploadSelectedCover(post)
       }
       showSuccess('Post criado com sucesso!')
     }

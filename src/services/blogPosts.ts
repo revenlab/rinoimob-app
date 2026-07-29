@@ -37,6 +37,16 @@ class BlogPostsService {
     return apiFetch<void>(`${BASE}/${id}`, { method: 'DELETE' })
   }
 
+  async uploadCoverImage(id: string, file: File): Promise<BlogPost> {
+    const formData = new FormData()
+    formData.append('file', file)
+    return apiFetch<BlogPost>(`${BASE}/${id}/cover-image`, { method: 'POST', body: formData })
+  }
+
+  async deleteCoverImage(id: string): Promise<BlogPost> {
+    return apiFetch<BlogPost>(`${BASE}/${id}/cover-image`, { method: 'DELETE' })
+  }
+
   async listSupport(tenantId: string, page = 0, size = 20): Promise<PageResponse<BlogPost>> {
     return apiFetch<PageResponse<BlogPost>>(`${SUPPORT_BASE}/tenants/${tenantId}/blog-posts?page=${page}&size=${size}`)
   }
@@ -67,6 +77,16 @@ class BlogPostsService {
 
   async deleteSupport(tenantId: string, id: string): Promise<void> {
     return apiFetch<void>(`${SUPPORT_BASE}/tenants/${tenantId}/blog-posts/${id}`, { method: 'DELETE' })
+  }
+
+  async uploadCoverImageSupport(tenantId: string, id: string, file: File): Promise<BlogPost> {
+    const formData = new FormData()
+    formData.append('file', file)
+    return apiFetch<BlogPost>(`${SUPPORT_BASE}/tenants/${tenantId}/blog-posts/${id}/cover-image`, { method: 'POST', body: formData })
+  }
+
+  async deleteCoverImageSupport(tenantId: string, id: string): Promise<BlogPost> {
+    return apiFetch<BlogPost>(`${SUPPORT_BASE}/tenants/${tenantId}/blog-posts/${id}/cover-image`, { method: 'DELETE' })
   }
 }
 
