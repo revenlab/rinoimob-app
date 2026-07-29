@@ -137,6 +137,7 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
 
 ## Last Changes
 
+- **Máscara monetária (#59)**: valores de imóvel, IPTU, condomínio e preços por planta mostram moeda enquanto o formulário conserva números para a API.
 - **Detalhes comerciais da planta**: o cadastro permite informar e salvar preço inicial/final, quartos, suítes, banheiros e vagas em cada planta, inclusive após ela já estar salva.
 
 - **Referência automática (#61)**: o campo de referência no cadastro passou a indicar que é opcional; quando vazio, o backend gera e persiste um código único.

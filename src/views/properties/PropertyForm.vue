@@ -558,6 +558,30 @@ function onlyDigits(value: string | undefined) {
   return (value ?? '').replace(/\D/g, '')
 }
 
+type MonetaryPropertyField = 'price' | 'taxes' | 'condoFee'
+type FloorPlanPriceField = 'priceFrom' | 'priceTo'
+
+function formatCurrencyInput(value: number | undefined) {
+  if (value == null) return ''
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: form.value.currency || 'BRL',
+  }).format(value)
+}
+
+function parseCurrencyInput(value: string) {
+  const digits = onlyDigits(value)
+  return digits ? Number(digits) / 100 : undefined
+}
+
+function updatePropertyCurrency(field: MonetaryPropertyField, event: Event) {
+  form.value[field] = parseCurrencyInput((event.target as HTMLInputElement).value)
+}
+
+function updateFloorPlanCurrency(plan: FloorPlanDraft, field: FloorPlanPriceField, event: Event) {
+  plan[field] = parseCurrencyInput((event.target as HTMLInputElement).value)
+}
+
 function formatCep(value: string | undefined) {
   const digits = onlyDigits(value).slice(0, 8)
   if (digits.length <= 5) {
@@ -810,7 +834,7 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div>
             <label :class="labelClass">Preço</label>
-            <input v-model.number="form.price" type="number" min="0" step="0.01" :class="inputClass" placeholder="0,00" />
+            <input :value="formatCurrencyInput(form.price)" type="text" inputmode="numeric" :class="inputClass" placeholder="R$ 0,00" @input="event => updatePropertyCurrency('price', event)" />
           </div>
           <div>
             <label :class="labelClass">Moeda</label>
@@ -822,11 +846,11 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
           </div>
           <div>
             <label :class="labelClass">IPTU/mês</label>
-            <input v-model.number="form.taxes" type="number" min="0" step="0.01" :class="inputClass" placeholder="0,00" />
+            <input :value="formatCurrencyInput(form.taxes)" type="text" inputmode="numeric" :class="inputClass" placeholder="R$ 0,00" @input="event => updatePropertyCurrency('taxes', event)" />
           </div>
           <div>
             <label :class="labelClass">Condomínio</label>
-            <input v-model.number="form.condoFee" type="number" min="0" step="0.01" :class="inputClass" placeholder="0,00" />
+            <input :value="formatCurrencyInput(form.condoFee)" type="text" inputmode="numeric" :class="inputClass" placeholder="R$ 0,00" @input="event => updatePropertyCurrency('condoFee', event)" />
           </div>
         </div>
       </div>
@@ -1113,8 +1137,8 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
               </div>
 
               <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <input v-model.number="plan.priceFrom" type="number" min="0" step="0.01" :class="inputClass" placeholder="Preço a partir de" />
-                <input v-model.number="plan.priceTo" type="number" min="0" step="0.01" :class="inputClass" placeholder="Preço até" />
+                <input :value="formatCurrencyInput(plan.priceFrom)" type="text" inputmode="numeric" :class="inputClass" placeholder="Preço a partir de" @input="event => updateFloorPlanCurrency(plan, 'priceFrom', event)" />
+                <input :value="formatCurrencyInput(plan.priceTo)" type="text" inputmode="numeric" :class="inputClass" placeholder="Preço até" @input="event => updateFloorPlanCurrency(plan, 'priceTo', event)" />
                 <input v-model.number="plan.bedrooms" type="number" min="0" :class="inputClass" placeholder="Quartos" />
                 <input v-model.number="plan.suites" type="number" min="0" :class="inputClass" placeholder="Suítes" />
                 <input v-model.number="plan.bathrooms" type="number" min="0" :class="inputClass" placeholder="Banheiros" />
