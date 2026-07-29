@@ -138,6 +138,14 @@ class PropertyService {
     })
   }
 
+  async updateFloorPlan(propertyId: string, planId: string, data: CreateFloorPlanRequest): Promise<FloorPlanResponse> {
+    return this.request<FloorPlanResponse>(`/${propertyId}/floor-plans/${planId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+  }
+
   async deleteFloorPlan(propertyId: string, planId: string): Promise<void> {
     return this.request<void>(`/${propertyId}/floor-plans/${planId}`, { method: 'DELETE' })
   }

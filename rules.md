@@ -137,6 +137,8 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
 
 ## Last Changes
 
+- **Detalhes comerciais da planta**: o cadastro permite informar e salvar preço inicial/final, quartos, suítes, banheiros e vagas em cada planta, inclusive após ela já estar salva.
+
 - **Referência automática (#61)**: o campo de referência no cadastro passou a indicar que é opcional; quando vazio, o backend gera e persiste um código único.
 
 - **Destaques de imóveis (#50)**: `PropertyForm.vue` agora permite marcar “Exibir em destaques”; o valor é persistido no contrato de imóvel e controla a seção correspondente no site público.
@@ -212,3 +214,4 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
   - `AppLayout.vue` ganhou botão global `Tutorial` no header apenas em rotas com `meta.tutorialRouteKey`, além de `data-tour-id` estáveis no menu lateral para passos finais de Site/WhatsApp.
   - `authStore` agora mantém `onboarding` vindo de `/auth/me`; Dashboard, Leads, PropertiesList e TasksManagement receberam anchors `data-tour-id` para tours resilientes.
   - Os tours contextuais também cobrem `WebsiteConfig.vue` e `WhatsappSettings.vue`, com `meta.tutorialRouteKey` nas rotas e anchors estáveis para domínio/abas/prévia do site e para visão geral/lista/ações das instâncias de WhatsApp.
+- Plantas de imóveis agora permitem salvar preço inicial/final e cômodos individualmente em `PropertyForm.vue`, sem alterar as fotos já cadastradas.

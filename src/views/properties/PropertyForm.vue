@@ -53,6 +53,12 @@ type FloorPlanDraft = {
   persistedId?: string
   name: string
   area?: number
+  priceFrom?: number
+  priceTo?: number
+  bedrooms?: number
+  suites?: number
+  bathrooms?: number
+  parking?: number
   photos: FloorPlanPhotoDraft[]
 }
 
@@ -205,6 +211,12 @@ function addFloorPlan() {
       persistedId: undefined,
       name: '',
       area: undefined,
+      priceFrom: undefined,
+      priceTo: undefined,
+      bedrooms: undefined,
+      suites: undefined,
+      bathrooms: undefined,
+      parking: undefined,
       photos: [],
     },
   ]
@@ -223,6 +235,32 @@ async function removeFloorPlan(id: string) {
     }
   }
   floorPlansDraft.value = floorPlansDraft.value.filter(item => item.id !== id)
+}
+
+async function saveFloorPlan(plan: FloorPlanDraft) {
+  if (!plan.persistedId || !propertyId.value || !plan.name.trim()) return
+  if (plan.priceFrom != null && plan.priceTo != null && plan.priceTo < plan.priceFrom) {
+    formError.value = 'O preço máximo da planta não pode ser menor que o preço inicial'
+    return
+  }
+  try {
+    const saved = await propertyService.updateFloorPlan(propertyId.value, plan.persistedId, {
+      name: plan.name.trim(), area: plan.area, priceFrom: plan.priceFrom, priceTo: plan.priceTo,
+      bedrooms: plan.bedrooms, suites: plan.suites, bathrooms: plan.bathrooms, parking: plan.parking,
+    })
+    Object.assign(plan, {
+      name: saved.name,
+      area: saved.area,
+      priceFrom: saved.priceFrom,
+      priceTo: saved.priceTo,
+      bedrooms: saved.bedrooms,
+      suites: saved.suites,
+      bathrooms: saved.bathrooms,
+      parking: saved.parking,
+    })
+  } catch (e: unknown) {
+    formError.value = e instanceof Error ? e.message : 'Erro ao salvar planta'
+  }
 }
 
 function addFloorPlanPhotos(planId: string, files: FileList | null) {
@@ -373,6 +411,12 @@ onMounted(async () => {
         persistedId: plan.id,
         name: plan.name,
         area: plan.area ?? undefined,
+        priceFrom: plan.priceFrom ?? undefined,
+        priceTo: plan.priceTo ?? undefined,
+        bedrooms: plan.bedrooms ?? undefined,
+        suites: plan.suites ?? undefined,
+        bathrooms: plan.bathrooms ?? undefined,
+        parking: plan.parking ?? undefined,
         photos: plan.photos.map(photo => ({
           id: photo.id,
           url: photo.url,
@@ -656,6 +700,12 @@ async function uploadPropertyMedia(id: string) {
     const plan = await propertyService.addFloorPlan(id, {
       name: planDraft.name.trim(),
       area: planDraft.area,
+      priceFrom: planDraft.priceFrom,
+      priceTo: planDraft.priceTo,
+      bedrooms: planDraft.bedrooms,
+      suites: planDraft.suites,
+      bathrooms: planDraft.bathrooms,
+      parking: planDraft.parking,
     })
 
     for (const photoDraft of planDraft.photos) {
@@ -1044,7 +1094,6 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
                   <input
                     v-model="plan.name"
                     type="text"
-                    :disabled="!!plan.persistedId"
                     :class="inputClass"
                     placeholder="Nome da planta"
                   />
@@ -1053,18 +1102,23 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
                     type="number"
                     min="0"
                     step="0.01"
-                    :disabled="!!plan.persistedId"
                     :class="inputClass"
                     placeholder="Área (m²)"
                   />
                 </div>
-                <button
-                  type="button"
-                  @click="removeFloorPlan(plan.id)"
-                  class="px-3 py-2 rounded-xl text-xs font-semibold text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30"
-                >
-                  Remover planta
-                </button>
+                <div class="flex gap-2">
+                  <button v-if="plan.persistedId" type="button" @click="saveFloorPlan(plan)" class="px-3 py-2 rounded-xl text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30">Salvar</button>
+                  <button type="button" @click="removeFloorPlan(plan.id)" class="px-3 py-2 rounded-xl text-xs font-semibold text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30">Remover</button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <input v-model.number="plan.priceFrom" type="number" min="0" step="0.01" :class="inputClass" placeholder="Preço a partir de" />
+                <input v-model.number="plan.priceTo" type="number" min="0" step="0.01" :class="inputClass" placeholder="Preço até" />
+                <input v-model.number="plan.bedrooms" type="number" min="0" :class="inputClass" placeholder="Quartos" />
+                <input v-model.number="plan.suites" type="number" min="0" :class="inputClass" placeholder="Suítes" />
+                <input v-model.number="plan.bathrooms" type="number" min="0" :class="inputClass" placeholder="Banheiros" />
+                <input v-model.number="plan.parking" type="number" min="0" :class="inputClass" placeholder="Vagas" />
               </div>
 
               <div class="flex items-center justify-between gap-3">

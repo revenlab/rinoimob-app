@@ -28,6 +28,12 @@ export interface FloorPlanResponse {
   id: string
   name: string
   area: number | null
+  priceFrom: number | null
+  priceTo: number | null
+  bedrooms: number | null
+  suites: number | null
+  bathrooms: number | null
+  parking: number | null
   createdAt: string
   photos: FloorPlanPhotoResponse[]
 }
@@ -187,6 +193,12 @@ export type UpdatePropertyRequest = Partial<CreatePropertyRequest & { status: Pr
 export interface CreateFloorPlanRequest {
   name: string
   area?: number
+  priceFrom?: number
+  priceTo?: number
+  bedrooms?: number
+  suites?: number
+  bathrooms?: number
+  parking?: number
 }
 
 export interface CreateYoutubeVideoRequest {
