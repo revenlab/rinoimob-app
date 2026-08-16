@@ -217,3 +217,4 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
   - `authStore` agora mantém `onboarding` vindo de `/auth/me`; Dashboard, Leads, PropertiesList e TasksManagement receberam anchors `data-tour-id` para tours resilientes.
   - Os tours contextuais também cobrem `WebsiteConfig.vue` e `WhatsappSettings.vue`, com `meta.tutorialRouteKey` nas rotas e anchors estáveis para domínio/abas/prévia do site e para visão geral/lista/ações das instâncias de WhatsApp.
 - Plantas de imóveis agora permitem salvar preço inicial/final e cômodos individualmente em `PropertyForm.vue`, sem alterar as fotos já cadastradas.
+- **Troca de e-mail com confirmação (#13)**: `Profile.vue` solicita novo e-mail e senha atual; `ConfirmEmailChange.vue` consome o token do link e orienta novo login depois que todas as sessões são revogadas.

@@ -187,6 +187,34 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const confirmEmailChange = async (token: string) => {
+    try {
+      isLoading.value = true
+      error.value = null
+      await authService.confirmEmailChange(token)
+      return true
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Falha ao confirmar a alteração de e-mail'
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const requestEmailChange = async (newEmail: string, currentPassword: string) => {
+    try {
+      isLoading.value = true
+      error.value = null
+      await authService.requestEmailChange(newEmail, currentPassword)
+      return true
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Falha ao solicitar a alteração de e-mail'
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   const requestPasswordReset = async (email: string) => {
     try {
       isLoading.value = true
@@ -332,6 +360,8 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     verifyEmail,
+    confirmEmailChange,
+    requestEmailChange,
     requestPasswordReset,
     resetPassword,
     updateProfile,

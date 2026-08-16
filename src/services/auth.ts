@@ -66,6 +66,20 @@ class AuthService {
     }
   }
 
+  async confirmEmailChange(token: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/auth/confirm-email-change?token=${encodeURIComponent(token)}`, {
+      method: 'POST'
+    })
+    if (!response.ok) {
+      let message = 'Não foi possível confirmar a alteração de e-mail'
+      try {
+        const error = await response.json()
+        message = error.message || message
+      } catch { /* non-JSON */ }
+      throw new Error(message)
+    }
+  }
+
   async forgotPassword(data: ForgotPasswordRequest): Promise<void> {
     return this.post('/auth/forgot-password', data)
   }
@@ -99,10 +113,17 @@ class AuthService {
     })
   }
 
+  async requestEmailChange(newEmail: string, currentPassword: string): Promise<void> {
+    return apiFetch<void>(`${API_BASE}/users/request-email-change`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ newEmail, currentPassword }),
+    })
+  }
+
   async logout(): Promise<void> {
     return apiFetch<void>(`${API_BASE}/auth/logout`, { method: 'POST' })
   }
 }
 
 export default new AuthService()
-

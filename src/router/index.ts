@@ -39,6 +39,12 @@ const router = createRouter({
       meta: { public: true }
     },
     {
+      path: '/confirm-email-change',
+      name: 'ConfirmEmailChange',
+      component: () => import('@/views/ConfirmEmailChange.vue'),
+      meta: { public: true }
+    },
+    {
       path: '/verification-pending',
       name: 'VerificationPending',
       component: () => import('@/views/VerificationPending.vue'),

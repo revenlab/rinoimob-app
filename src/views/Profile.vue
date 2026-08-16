@@ -38,13 +38,8 @@
         </div>
 
         <div>
-          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Email (somente leitura)</label>
-          <input
-            :value="authStore.currentUser?.email"
-            type="email"
-            disabled
-            class="w-full h-14 px-4 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-400 dark:text-slate-500 cursor-not-allowed"
-          />
+          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">E-mail atual</label>
+          <input :value="authStore.currentUser?.email" type="email" disabled class="w-full h-14 px-4 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-400 dark:text-slate-500 cursor-not-allowed" />
         </div>
 
         <div v-if="profileError" class="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
@@ -61,6 +56,18 @@
         >
           {{ profileLoading ? 'Salvando...' : 'Salvar alterações' }}
         </button>
+      </form>
+
+      <form @submit.prevent="handleEmailChange" class="bg-white/75 dark:bg-slate-800/75 border border-slate-200 dark:border-slate-700 rounded-[2rem] shadow-[0_20px_40px_rgba(15,23,42,0.08)] p-8 space-y-5">
+        <div class="pb-1 border-b border-slate-100 dark:border-slate-700">
+          <p class="text-xs font-semibold tracking-[0.2em] uppercase text-slate-400 dark:text-slate-500">Alterar e-mail</p>
+          <p class="mt-2 text-sm text-slate-500">Enviaremos uma confirmação para o novo endereço antes de alterar seu acesso.</p>
+        </div>
+        <input v-model="newEmail" type="email" required placeholder="novo@email.com" :disabled="emailLoading" class="w-full h-14 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-violet-300" />
+        <input v-model="emailCurrentPassword" type="password" required placeholder="Senha atual" :disabled="emailLoading" class="w-full h-14 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-violet-300" />
+        <p v-if="emailError" class="text-sm text-red-600">{{ emailError }}</p>
+        <p v-if="emailSuccess" class="text-sm text-emerald-700">{{ emailSuccess }}</p>
+        <button type="submit" :disabled="emailLoading" class="w-full h-14 bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 text-lg font-semibold rounded-2xl disabled:opacity-50">{{ emailLoading ? 'Enviando...' : 'Enviar confirmação' }}</button>
       </form>
 
       <!-- Change password -->
@@ -150,6 +157,11 @@ const lastName = ref('')
 const profileLoading = ref(false)
 const profileSuccess = ref('')
 const profileError = ref('')
+const newEmail = ref('')
+const emailCurrentPassword = ref('')
+const emailLoading = ref(false)
+const emailSuccess = ref('')
+const emailError = ref('')
 
 onMounted(() => {
   if (authStore.currentUser) {
@@ -172,6 +184,21 @@ async function handleUpdateProfile() {
   }
 
   profileLoading.value = false
+}
+
+async function handleEmailChange() {
+  emailLoading.value = true
+  emailSuccess.value = ''
+  emailError.value = ''
+  const success = await authStore.requestEmailChange(newEmail.value, emailCurrentPassword.value)
+  if (success) {
+    emailSuccess.value = 'Enviamos um link de confirmação para o novo e-mail.'
+    newEmail.value = ''
+    emailCurrentPassword.value = ''
+  } else {
+    emailError.value = authStore.error ?? 'Erro ao solicitar alteração de e-mail.'
+  }
+  emailLoading.value = false
 }
 
 // --- Change password ---
@@ -212,4 +239,3 @@ async function handleChangePassword() {
   pwLoading.value = false
 }
 </script>
-
