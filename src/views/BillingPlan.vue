@@ -28,6 +28,10 @@ function isCurrentPlan(plan: TenantBillingPlanOption) {
   return billing.value?.currentPlanCode === plan.code
 }
 
+function canRegularizePlan(plan: TenantBillingPlanOption) {
+  return billing.value?.subscriptionStatus === 'PAST_DUE' && isCurrentPlan(plan)
+}
+
 async function loadBilling() {
   loading.value = true
   error.value = null
@@ -140,12 +144,14 @@ onMounted(loadBilling)
             <button
               class="mt-4 w-full rounded-lg px-3 py-2 text-sm font-semibold"
               :class="isCurrentPlan(plan)
-                ? 'bg-slate-100 text-slate-500 cursor-not-allowed'
+                ? canRegularizePlan(plan)
+                  ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                  : 'bg-slate-100 text-slate-500 cursor-not-allowed'
                 : 'bg-indigo-600 hover:bg-indigo-700 text-white'"
-              :disabled="isCurrentPlan(plan) || startingCheckoutFor === plan.code"
+              :disabled="(isCurrentPlan(plan) && !canRegularizePlan(plan)) || startingCheckoutFor === plan.code"
               @click="startUpgrade(plan.code)"
             >
-              {{ startingCheckoutFor === plan.code ? 'Redirecionando...' : (isCurrentPlan(plan) ? 'Plano atual' : 'Fazer upgrade') }}
+              {{ startingCheckoutFor === plan.code ? 'Redirecionando...' : (canRegularizePlan(plan) ? 'Regularizar pagamento' : (isCurrentPlan(plan) ? 'Plano atual' : 'Fazer upgrade')) }}
             </button>
           </article>
         </section>

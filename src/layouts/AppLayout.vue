@@ -6,6 +6,7 @@ import { useOnboardingStore } from '@/stores/onboarding'
 import { useTheme } from '@/composables/useTheme'
 import { useWebSocketStore } from '@/stores/websocket'
 import { useNotificationStore } from '@/stores/notification'
+import billingService from '@/services/billing'
 import NotificationBell from '@/components/NotificationBell.vue'
 import { ChatBubbleLeftRightIcon, QuestionMarkCircleIcon } from '@heroicons/vue/20/solid'
 
@@ -16,6 +17,24 @@ const route = useRoute()
 const { isDark, toggle } = useTheme()
 const notificationStore = useNotificationStore()
 const isInternalStaff = computed(() => authStore.isInternalStaff)
+const hasOverdueSubscription = ref(false)
+
+async function loadBillingAlert() {
+  if (isInternalStaff.value) {
+    hasOverdueSubscription.value = false
+    return
+  }
+  try {
+    const billing = await billingService.getMyBilling()
+    hasOverdueSubscription.value = billing.subscriptionStatus === 'PAST_DUE'
+  } catch {
+    hasOverdueSubscription.value = false
+  }
+}
+
+function goToPayment() {
+  router.push({ path: '/meu-plano', query: { billing: 'overdue' } })
+}
 
 // ── Notifications ─────────────────────────────────────────────────────────
 interface AppNotification {
@@ -77,6 +96,7 @@ onMounted(() => {
   waitAndSub()
   // Fetch initial notification count
   notificationStore.fetchStats()
+  void loadBillingAlert()
 })
 
 onUnmounted(() => {
@@ -219,6 +239,8 @@ watch(
   },
   { immediate: true },
 )
+
+watch(() => authStore.currentTenantId, () => void loadBillingAlert())
 </script>
 
 <template>
@@ -411,8 +433,27 @@ watch(
         </button>
       </header>
 
+      <aside
+        v-if="hasOverdueSubscription"
+        class="fixed top-[68px] right-0 z-20 flex items-center justify-between gap-4 border-b border-amber-300 bg-amber-50 px-6 py-3 text-amber-950 shadow-sm dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100"
+        :style="{ left: collapsed ? '72px' : '240px' }"
+        role="alert"
+      >
+        <div class="min-w-0">
+          <p class="text-sm font-bold">Pagamento em atraso</p>
+          <p class="text-xs text-amber-800 dark:text-amber-200">Regularize sua assinatura para manter os recursos do seu plano.</p>
+        </div>
+        <button
+          type="button"
+          class="shrink-0 rounded-lg bg-amber-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-amber-700"
+          @click="goToPayment"
+        >
+          Pagar agora
+        </button>
+      </aside>
+
       <!-- Page content -->
-      <main class="flex-1 p-6 lg:p-8">
+      <main class="flex-1 p-6 lg:p-8" :class="hasOverdueSubscription ? 'pt-24 lg:pt-24' : ''">
         <slot />
       </main>
     </div>
