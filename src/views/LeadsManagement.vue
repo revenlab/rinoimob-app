@@ -7,6 +7,9 @@
           <p class="text-xs text-slate-400">Gerencie o funil de atendimento</p>
         </div>
         <div class="flex items-center gap-3">
+          <select v-model="selectedPipelineId" @change="reloadForPipeline" class="px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200">
+            <option v-for="pipeline in pipelines" :key="pipeline.id" :value="pipeline.id">{{ pipeline.name }}</option>
+          </select>
           <!-- View toggle -->
           <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1 gap-1">
             <button
@@ -47,6 +50,7 @@
             Novo lead
           </button>
           <LeadPoolsManager @updated="loadLeadPools" />
+          <LeadPipelinesManager @updated="reloadPipelines" />
         </div>
       </div>
     </template>
@@ -189,23 +193,23 @@
       <div v-else data-tour-id="leads-board" class="flex gap-4 overflow-x-auto pb-4">
         <div
           v-for="col in kanbanColumns"
-          :key="col.status"
+          :key="col.id"
           class="flex-shrink-0 min-w-[240px] w-[240px]"
           @dragover.prevent
-          @drop="onDrop(col.status)"
+          @drop="onDrop(col.id)"
         >
           <!-- Column header -->
           <div class="flex items-center gap-2 mb-3 px-1">
             <span :class="['w-2.5 h-2.5 rounded-full flex-shrink-0', col.dotColor]"></span>
             <span class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{{ col.label }}</span>
             <span class="ml-2 px-1.5 py-0.5 rounded-full text-xs font-bold bg-white/30 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-              {{ kanbanLeads(col.status).length }}
+              {{ kanbanLeads(col.id).length }}
             </span>
           </div>
           <!-- Drop zone -->
           <div class="bg-slate-100 dark:bg-slate-900/50 rounded-2xl p-3 min-h-[120px]">
             <div
-              v-for="lead in kanbanLeads(col.status)"
+              v-for="lead in kanbanLeads(col.id)"
               :key="lead.id"
               draggable="true"
               @dragstart="onDragStart(lead)"
@@ -226,7 +230,7 @@
               </div>
               <p class="text-xs text-slate-300 dark:text-slate-600 mt-2">{{ formatDate(lead.createdAt) }}</p>
             </div>
-            <p v-if="!kanbanLeads(col.status).length" class="text-xs text-slate-400 italic text-center py-4">Sem leads</p>
+            <p v-if="!kanbanLeads(col.id).length" class="text-xs text-slate-400 italic text-center py-4">Sem leads</p>
           </div>
         </div>
       </div>
@@ -320,11 +324,12 @@ import { useLeadStore } from '@/stores/lead'
 import { useAuthStore } from '@/stores/auth'
 import { useWebSocketStore } from '@/stores/websocket'
 import PhoneInput from '@/components/ui/PhoneInput.vue'
-import leadService from '@/services/lead'
+import leadService, { leadPipelineService } from '@/services/lead'
 import leadPoolsService from '@/services/leadPools'
 import LeadPoolsManager from '@/components/LeadPoolsManager.vue'
+import LeadPipelinesManager from '@/components/LeadPipelinesManager.vue'
 import userService from '@/services/user'
-import type { LeadResponse, LeadStatus, CreateLeadRequest, UserSummary, LeadWsEvent, LeadPoolResponse } from '@/types/lead'
+import type { LeadResponse, LeadStatus, CreateLeadRequest, UserSummary, LeadWsEvent, LeadPoolResponse, LeadPipeline } from '@/types/lead'
 import { PlusIcon, UserCircleIcon } from '@heroicons/vue/20/solid'
 
 const leadStore = useLeadStore()
@@ -339,16 +344,13 @@ const viewMode = ref<'table' | 'kanban'>(
 )
 const kanbanLoading = ref(false)
 const kanbanAllLeads = ref<LeadResponse[]>([])
+const pipelines = ref<LeadPipeline[]>([])
+const selectedPipelineId = ref<string>('')
+const selectedPipeline = computed(() => pipelines.value.find(p => p.id === selectedPipelineId.value))
 
-const kanbanColumns = [
-  { status: 'NEW' as LeadStatus, label: 'Novo', dotColor: 'bg-blue-500' },
-  { status: 'CONTACTED' as LeadStatus, label: 'Em contato', dotColor: 'bg-amber-500' },
-  { status: 'QUALIFIED' as LeadStatus, label: 'Qualificado', dotColor: 'bg-violet-500' },
-  { status: 'WON' as LeadStatus, label: 'Ganho', dotColor: 'bg-emerald-500' },
-  { status: 'LOST' as LeadStatus, label: 'Perdido', dotColor: 'bg-red-500' },
-]
+const kanbanColumns = computed(() => (selectedPipeline.value?.stages ?? []).map((stage, index) => ({ id: stage.id, label: stage.name, dotColor: stage.kind === 'WON' ? 'bg-emerald-500' : stage.kind === 'LOST' ? 'bg-red-500' : ['bg-blue-500', 'bg-amber-500', 'bg-violet-500'][index % 3] })))
 
-const kanbanLeads = (status: LeadStatus) => kanbanAllLeads.value.filter(l => l.status === status)
+const kanbanLeads = (stageId: string) => kanbanAllLeads.value.filter(l => l.pipelineId === selectedPipelineId.value && l.pipelineStageId === stageId)
 
 const switchView = async (mode: 'table' | 'kanban') => {
   viewMode.value = mode
@@ -375,21 +377,24 @@ const onDragStart = (lead: LeadResponse) => {
   draggedLeadId.value = lead.id
 }
 
-const onDrop = async (status: LeadStatus) => {
+const onDrop = async (stageId: string) => {
   if (!draggedLeadId.value) return
   const lead = kanbanAllLeads.value.find(l => l.id === draggedLeadId.value)
-  if (!lead || lead.status === status) {
+  if (!lead || lead.pipelineStageId === stageId) {
     draggedLeadId.value = null
     return
   }
   try {
-    const updated = await leadStore.updateLead(draggedLeadId.value, { status })
+    const updated = await leadService.moveToPipeline(draggedLeadId.value, selectedPipelineId.value, stageId)
     const idx = kanbanAllLeads.value.findIndex(l => l.id === updated.id)
     if (idx !== -1) kanbanAllLeads.value[idx] = updated
   } finally {
     draggedLeadId.value = null
   }
 }
+
+async function reloadForPipeline() { if (viewMode.value === 'kanban') await loadKanban(); else loadLeads() }
+async function reloadPipelines() { pipelines.value = await leadPipelineService.list(); if (!pipelines.value.some(p => p.id === selectedPipelineId.value)) selectedPipelineId.value = pipelines.value[0]?.id ?? ''; await reloadForPipeline() }
 
 // ── Brokers ─────────────────────────────────────────────────────────────
 const brokers = ref<UserSummary[]>([])
@@ -408,9 +413,10 @@ const currentPage = ref(0)
 const search = ref('')
 const leads = computed(() => leadStore.leads?.content ?? [])
 const filteredLeads = computed(() => {
-  if (!search.value) return leads.value
+  const pipelineLeads = selectedPipelineId.value ? leads.value.filter(l => l.pipelineId === selectedPipelineId.value) : leads.value
+  if (!search.value) return pipelineLeads
   const q = search.value.toLowerCase()
-  return leads.value.filter(
+  return pipelineLeads.filter(
     l => l.name.toLowerCase().includes(q) || l.email?.toLowerCase().includes(q)
   )
 })
@@ -542,6 +548,7 @@ function setupLeadRealtimeSubscription() {
 }
 
 onMounted(async () => {
+  try { pipelines.value = await leadPipelineService.list(); selectedPipelineId.value = pipelines.value.find(p => p.defaultPipeline)?.id ?? pipelines.value[0]?.id ?? '' } catch { pipelines.value = [] }
   if (viewMode.value === 'kanban') {
     loadKanban()
   } else {

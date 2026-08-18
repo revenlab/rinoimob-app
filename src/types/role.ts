@@ -107,6 +107,7 @@ export const ALL_PERMISSIONS: PermissionDef[] = [
   { value: 'users:write',       label: 'Convidar / Gerenciar', module: 'Equipe' },
   { value: 'roles:read',        label: 'Ver funções',          module: 'Equipe' },
   { value: 'roles:write',       label: 'Criar / Editar funções', module: 'Equipe' },
+  { value: 'pipelines:manage',  label: 'Gerenciar funis', module: 'Leads' },
   { value: 'settings:manage',   label: 'Configurações gerais', module: 'Sistema' },
   { value: 'reports:read',      label: 'Ver relatórios',       module: 'Sistema' },
 ]

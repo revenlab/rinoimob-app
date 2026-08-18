@@ -1,5 +1,6 @@
 export type LeadStatus = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'LOST' | 'WON'
 export type LeadEventType = 'CREATED' | 'STATUS_CHANGED' | 'ASSIGNED' | 'UNASSIGNED' | 'NOTE_ADDED' | 'PROPERTY_LINKED' | 'PROPERTY_UNLINKED'
+export type LeadPipelineStageKind = 'OPEN' | 'WON' | 'LOST'
 
 export type InterestLevel = 'UNDEFINED' | 'LOW' | 'MEDIUM' | 'HIGH'
 
@@ -93,6 +94,9 @@ export interface LeadResponse {
   tenantId: string
   propertyId: string | null
   poolId?: string | null
+  pipelineId: string
+  pipelineStageId: string
+  duplicatedFromLeadId: string | null
   name: string
   email: string | null
   phone: string | null
@@ -106,6 +110,11 @@ export interface LeadResponse {
   notes: LeadNoteResponse[]
   properties: LeadPropertyResponse[]
 }
+
+export interface LeadPipelineStage { id: string; name: string; position: number; kind: LeadPipelineStageKind }
+export interface LeadPipeline { id: string; name: string; description: string | null; defaultPipeline: boolean; archived: boolean; stages: LeadPipelineStage[]; sources: string[] }
+export interface CreateLeadPipelineRequest { name: string; description?: string; stages: Array<{ name: string }>; sources?: string[] }
+export interface UpdateLeadPipelineRequest { name?: string; description?: string; stages?: Array<{ name: string }>; sources?: string[] }
 
 export interface CreateLeadRequest {
   name: string

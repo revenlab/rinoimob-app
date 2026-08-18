@@ -11,6 +11,9 @@ import type {
   LeadListParams,
   LeadStatsResponse,
   PageResponse,
+  LeadPipeline,
+  CreateLeadPipelineRequest,
+  UpdateLeadPipelineRequest,
 } from '@/types/lead'
 import { apiFetch, API_BASE } from '@/lib/api'
 
@@ -54,6 +57,14 @@ class LeadService {
     return this.request<void>(`/${id}`, { method: 'DELETE' })
   }
 
+  async moveToPipeline(id: string, pipelineId: string, stageId: string): Promise<LeadResponse> {
+    return this.request<LeadResponse>(`/${id}/move-pipeline`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pipelineId, stageId }) })
+  }
+
+  async duplicateToPipeline(id: string, pipelineId: string, stageId: string): Promise<LeadResponse> {
+    return this.request<LeadResponse>(`/${id}/duplicate-pipeline`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pipelineId, stageId }) })
+  }
+
   async addNote(leadId: string, data: LeadNoteRequest): Promise<LeadNoteResponse> {
     return this.request<LeadNoteResponse>(`/${leadId}/notes`, {
       method: 'POST',
@@ -92,3 +103,13 @@ class LeadService {
 }
 
 export default new LeadService()
+
+class LeadPipelineService {
+  private readonly base = `${API_BASE}/lead-pipelines`
+  list(): Promise<LeadPipeline[]> { return apiFetch<LeadPipeline[]>(this.base) }
+  create(data: CreateLeadPipelineRequest): Promise<LeadPipeline> { return apiFetch<LeadPipeline>(this.base, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }) }
+  update(id: string, data: UpdateLeadPipelineRequest): Promise<LeadPipeline> { return apiFetch<LeadPipeline>(`${this.base}/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }) }
+  archive(id: string): Promise<void> { return apiFetch<void>(`${this.base}/${id}`, { method: 'DELETE' }) }
+}
+
+export const leadPipelineService = new LeadPipelineService()
