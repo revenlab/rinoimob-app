@@ -308,6 +308,32 @@
                   Serviços - subtítulo
                   <input v-model="config.servicesSectionSubtitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
                 </label>
+                <div class="space-y-3 md:col-span-2">
+                  <div class="flex items-center justify-between gap-3">
+                    <div>
+                      <p class="text-xs text-slate-500">Serviços exibidos</p>
+                      <p class="text-[11px] text-slate-400">Defina textos, ícone ou imagem e a ordem em que os serviços aparecem no site.</p>
+                    </div>
+                    <button type="button" @click="addServiceItem" class="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700">Adicionar serviço</button>
+                  </div>
+                  <p v-if="!serviceItems.length" class="rounded-lg border border-dashed border-slate-300 px-3 py-3 text-xs text-slate-500 dark:border-slate-600">Nenhum serviço personalizado. O site exibe os serviços padrão até você adicionar um item.</p>
+                  <div v-for="(item, index) in serviceItems" :key="index" class="rounded-xl border border-slate-200 p-3 dark:border-slate-700">
+                    <div class="mb-3 flex items-center justify-between">
+                      <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">Serviço {{ index + 1 }}</p>
+                      <div class="flex gap-1">
+                        <button type="button" @click="moveServiceItem(index, -1)" :disabled="index === 0" class="rounded px-2 py-1 text-xs text-slate-500 hover:bg-slate-100 disabled:opacity-40 dark:hover:bg-slate-700">↑</button>
+                        <button type="button" @click="moveServiceItem(index, 1)" :disabled="index === serviceItems.length - 1" class="rounded px-2 py-1 text-xs text-slate-500 hover:bg-slate-100 disabled:opacity-40 dark:hover:bg-slate-700">↓</button>
+                        <button type="button" @click="removeServiceItem(index)" class="rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">Remover</button>
+                      </div>
+                    </div>
+                    <div class="grid gap-3 md:grid-cols-2">
+                      <label class="flex flex-col gap-1 text-xs text-slate-500">Título<input v-model="item.title" type="text" maxlength="120" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"></label>
+                      <label class="flex flex-col gap-1 text-xs text-slate-500">Ícone (emoji opcional)<input v-model="item.icon" type="text" maxlength="16" placeholder="Ex.: 🔑" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"></label>
+                      <label class="flex flex-col gap-1 text-xs text-slate-500 md:col-span-2">Descrição<textarea v-model="item.description" rows="2" maxlength="400" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"></textarea></label>
+                      <label class="flex flex-col gap-1 text-xs text-slate-500 md:col-span-2">URL da imagem (opcional; prevalece sobre o ícone)<input v-model="item.imageUrl" type="url" placeholder="https://..." class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"></label>
+                    </div>
+                  </div>
+                </div>
                 <label class="flex flex-col gap-1 text-xs text-slate-500">
                   Formulário - título
                   <input v-model="config.servicesFormTitle" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm">
@@ -555,6 +581,14 @@ const authStore = useAuthStore()
 const { showError, showSuccess } = useNotification()
 
 const config = ref<Partial<TenantWebsiteConfig>>({})
+interface ServiceItem {
+  title: string
+  description: string
+  icon: string
+  imageUrl: string
+}
+
+const serviceItems = ref<ServiceItem[]>([])
 const domainSummary = ref<{
   customDomain: string | null
   customDomainStatus: string | null
@@ -645,6 +679,43 @@ function buildWebsiteUrl(subdomain: string | null): string | null {
 
 function applyConfig(data: TenantWebsiteConfig) {
   config.value = { ...data }
+  serviceItems.value = parseServiceItems(data.servicesItems)
+}
+
+function parseServiceItems(value?: string | null): ServiceItem[] {
+  if (!value) return []
+  try {
+    const parsed: unknown = JSON.parse(value)
+    if (!Array.isArray(parsed)) return []
+    return parsed.flatMap((item): ServiceItem[] => {
+      if (!item || typeof item !== 'object') return []
+      const candidate = item as Partial<ServiceItem>
+      if (typeof candidate.title !== 'string' || typeof candidate.description !== 'string') return []
+      return [{
+        title: candidate.title,
+        description: candidate.description,
+        icon: typeof candidate.icon === 'string' ? candidate.icon : '',
+        imageUrl: typeof candidate.imageUrl === 'string' ? candidate.imageUrl : '',
+      }]
+    })
+  } catch {
+    return []
+  }
+}
+
+function addServiceItem() {
+  serviceItems.value.push({ title: '', description: '', icon: '', imageUrl: '' })
+}
+
+function removeServiceItem(index: number) {
+  serviceItems.value.splice(index, 1)
+}
+
+function moveServiceItem(index: number, direction: -1 | 1) {
+  const targetIndex = index + direction
+  if (targetIndex < 0 || targetIndex >= serviceItems.value.length) return
+  const [item] = serviceItems.value.splice(index, 1)
+  serviceItems.value.splice(targetIndex, 0, item)
 }
 
 function applyDomainSummary(data: { customDomain: string | null; customDomainStatus?: string | null; customDomainTarget?: string | null }) {
@@ -693,6 +764,15 @@ async function saveConfig() {
   try {
     normalizeColor('primaryColor')
     normalizeColor('secondaryColor')
+    const validServiceItems = serviceItems.value
+      .map(item => ({
+        title: item.title.trim(),
+        description: item.description.trim(),
+        icon: item.icon.trim(),
+        imageUrl: item.imageUrl.trim(),
+      }))
+      .filter(item => item.title && item.description)
+    config.value.servicesItems = JSON.stringify(validServiceItems)
     const response = await websiteConfigService.updateConfig(config.value)
     applyConfig(response)
     showSuccess('Configurações salvas!')
