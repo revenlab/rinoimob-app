@@ -6,7 +6,7 @@ import { useOnboardingStore } from '@/stores/onboarding'
 import { useTheme } from '@/composables/useTheme'
 import { useWebSocketStore } from '@/stores/websocket'
 import { useNotificationStore } from '@/stores/notification'
-import billingService from '@/services/billing'
+import { useBillingAccessStore } from '@/stores/billingAccess'
 import NotificationBell from '@/components/NotificationBell.vue'
 import { ChatBubbleLeftRightIcon, QuestionMarkCircleIcon } from '@heroicons/vue/20/solid'
 
@@ -16,20 +16,19 @@ const router = useRouter()
 const route = useRoute()
 const { isDark, toggle } = useTheme()
 const notificationStore = useNotificationStore()
+const billingAccessStore = useBillingAccessStore()
 const isInternalStaff = computed(() => authStore.isInternalStaff)
-const hasOverdueSubscription = ref(false)
+const canManageBilling = computed(() => ['TENANT_OWNER', 'TENANT_ADMIN'].includes(authStore.currentUser?.systemRole ?? ''))
+const billingAlert = computed(() => billingAccessStore.status)
+const hasBillingAlert = computed(() => ['PAST_DUE', 'SUSPENDED'].includes(billingAlert.value?.subscriptionStatus ?? ''))
+const isBillingSuspended = computed(() => billingAlert.value?.subscriptionStatus === 'SUSPENDED')
 
 async function loadBillingAlert() {
   if (isInternalStaff.value) {
-    hasOverdueSubscription.value = false
+    billingAccessStore.reset()
     return
   }
-  try {
-    const billing = await billingService.getMyBilling()
-    hasOverdueSubscription.value = billing.subscriptionStatus === 'PAST_DUE'
-  } catch {
-    hasOverdueSubscription.value = false
-  }
+  await billingAccessStore.load(authStore.currentTenantId)
 }
 
 function goToPayment() {
@@ -171,6 +170,7 @@ const navItems = [
     label: 'Meu Plano',
     to: '/meu-plano',
     clientOnly: true,
+    billingAdminOnly: true,
     section: 'settings',
     icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.5h16.5m-16.5 0A2.25 2.25 0 001.5 6.75v10.5A2.25 2.25 0 003.75 19.5h16.5a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0020.25 4.5m-16.5 0l2.25 3h12l2.25-3M9 12h6m-6 3h3" /></svg>`,
   },
@@ -211,7 +211,11 @@ const accountItems = [
 ]
 
 const visibleNavItems = computed(() =>
-  navItems.filter(item => (!item.internalOnly || isInternalStaff.value) && (!item.clientOnly || !isInternalStaff.value))
+  navItems.filter(item =>
+    (!item.internalOnly || isInternalStaff.value)
+    && (!item.clientOnly || !isInternalStaff.value)
+    && (!item.billingAdminOnly || canManageBilling.value),
+  )
 )
 const mainNavItems = computed(() => visibleNavItems.value.filter(item => item.section !== 'settings'))
 const settingsNavItems = computed(() => visibleNavItems.value.filter(item => item.section === 'settings'))
@@ -434,18 +438,26 @@ watch(() => authStore.currentTenantId, () => void loadBillingAlert())
       </header>
 
       <aside
-        v-if="hasOverdueSubscription"
-        class="fixed top-[68px] right-0 z-20 flex items-center justify-between gap-4 border-b border-amber-300 bg-amber-50 px-6 py-3 text-amber-950 shadow-sm dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100"
+        v-if="hasBillingAlert"
+        class="fixed top-[68px] right-0 z-20 flex items-center justify-between gap-4 border-b px-6 py-3 shadow-sm"
+        :class="isBillingSuspended
+          ? 'border-red-300 bg-red-50 text-red-950 dark:border-red-800 dark:bg-red-950 dark:text-red-100'
+          : 'border-amber-300 bg-amber-50 text-amber-950 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100'"
         :style="{ left: collapsed ? '72px' : '240px' }"
         role="alert"
       >
         <div class="min-w-0">
-          <p class="text-sm font-bold">Pagamento em atraso</p>
-          <p class="text-xs text-amber-800 dark:text-amber-200">Regularize sua assinatura para manter os recursos do seu plano.</p>
+          <p class="text-sm font-bold">{{ isBillingSuspended ? 'Assinatura suspensa' : 'Pagamento em atraso' }}</p>
+          <p class="text-xs opacity-80">
+            {{ isBillingSuspended
+              ? 'Os limites do plano Free foram aplicados até a confirmação do pagamento.'
+              : 'Regularize sua assinatura para manter os recursos do seu plano.' }}
+          </p>
         </div>
         <button
           type="button"
-          class="shrink-0 rounded-lg bg-amber-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-amber-700"
+          v-if="canManageBilling"
+          class="shrink-0 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-800"
           @click="goToPayment"
         >
           Pagar agora
@@ -453,7 +465,7 @@ watch(() => authStore.currentTenantId, () => void loadBillingAlert())
       </aside>
 
       <!-- Page content -->
-      <main class="flex-1 p-6 lg:p-8" :class="hasOverdueSubscription ? 'pt-24 lg:pt-24' : ''">
+      <main class="flex-1 p-6 lg:p-8" :class="hasBillingAlert ? 'pt-24 lg:pt-24' : ''">
         <slot />
       </main>
     </div>

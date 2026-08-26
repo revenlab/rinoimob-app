@@ -218,3 +218,21 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
   - Os tours contextuais também cobrem `WebsiteConfig.vue` e `WhatsappSettings.vue`, com `meta.tutorialRouteKey` nas rotas e anchors estáveis para domínio/abas/prévia do site e para visão geral/lista/ações das instâncias de WhatsApp.
 - Plantas de imóveis agora permitem salvar preço inicial/final e cômodos individualmente em `PropertyForm.vue`, sem alterar as fotos já cadastradas.
 - **Troca de e-mail com confirmação (#13)**: `Profile.vue` solicita novo e-mail e senha atual; `ConfirmEmailChange.vue` consome o token do link e orienta novo login depois que todas as sessões são revogadas.
+- Checkout Asaas: `BillingPlan.vue` envia apenas o plano; o backend cria callbacks HTTPS configurados para impedir URLs locais ou redirecionamento controlado pelo navegador.
+- Billing Asaas: a tela Meu Plano coleta e salva CPF/CNPJ, telefone e endereço antes de iniciar o checkout recorrente; o backend é a fonte de verdade desse cadastro do tenant.
+- Fatura vencida: `BillingPlan.vue` exibe um alerta destacado para `PAST_DUE` e usa somente `overdueInvoiceUrl` para abrir a fatura existente no Asaas; o plano atual não inicia outra assinatura para regularização.
+- **Área de assinatura Asaas robusta**:
+  - `BillingPlan.vue` mostra troca pendente, próxima cobrança, ledger paginado, fatura/recibo, cancelamento no fim do ciclo, reativação e suspensão com restauração automática após pagamento.
+  - O retorno do checkout diferencia redirecionamento de upgrade (`requiresCheckout`) de downgrade agendado; a tela faz polling curto após callback de sucesso sem presumir pagamento pela volta do navegador.
+  - `AppLayout.vue` usa `/billing/status` para avisar todos os usuários sobre `PAST_DUE`/`SUSPENDED`; menu, rota e APIs financeiras completas ficam restritos a `TENANT_OWNER`/`TENANT_ADMIN`.
+  - Atualização de cartão só aparece quando `cardUpdateAvailable` estiver habilitado e envia exclusivamente token seguro, nunca número ou CVV.
+- **Gatilhos de upgrade por recurso**:
+  - `stores/billingAccess.ts` compartilha e cacheia o `/billing/status` do tenant; falha de carregamento mantém navegação fail-open e o backend continua sendo a autoridade.
+  - Rotas de domínio e automações usam `meta.requiredBillingFeature`; tenants sem acesso são enviados para `UpgradeRequired.vue` com CTA contextual para Starter ou Prime.
+  - `WebsiteConfig.vue` mostra `UpgradeGate.vue` dentro da aba Blog e converte a ação de domínio em desbloqueio quando necessário.
+  - `BillingPlan.vue` exibe a matriz completa de recursos e destaca o plano recomendado recebido pelo gatilho de upgrade.
+- **CTA e confiabilidade do domínio customizado**:
+  - `WebsiteConfig.vue` mostra uma oferta específica do Starter para tenants bloqueados e leva owner/admin diretamente ao plano recomendado; tenants habilitados continuam no fluxo de configuração.
+  - O guard força uma nova leitura de `/billing/status` antes de confirmar um bloqueio, evitando cache antigo após upgrade; flags ausentes em backends antigos são tratadas como desconhecidas e não como bloqueio.
+  - `website-domain.vue` normaliza URL, caminho, porta e ponto final, preserva mensagens reais da API e corrige estados de carregamento/cópia.
+- **CTA de upgrade no Dashboard**: clientes no plano `FREE` veem um resumo dos ganhos de Starter, Prime e Ultimate; somente `TENANT_OWNER` e `TENANT_ADMIN` recebem o acesso direto a `/meu-plano` com Starter recomendado.

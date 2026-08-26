@@ -15,65 +15,118 @@
       <div v-else class="grid gap-6 xl:grid-cols-3">
         <form class="space-y-6 xl:col-span-2" @submit.prevent="saveConfig">
           <section data-tour-id="website-domain" class="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.16),_transparent_34%),linear-gradient(135deg,_#fffdf8_0%,_#f8fafc_48%,_#eaf1ff_100%)] text-slate-900 shadow-sm dark:bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_34%),linear-gradient(135deg,_#0f172a_0%,_#172033_48%,_#111827_100%)] dark:text-white">
-            <div class="p-5 sm:p-6">
-              <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-                <div class="max-w-2xl">
-                  <p class="text-xs uppercase tracking-[0.25em] text-blue-700/80 dark:text-blue-200/80">Domínio do site</p>
-                  <h2 class="mt-2 text-xl font-semibold text-slate-900 dark:text-white">Use um domínio próprio com ativação simples</h2>
-                  <p class="mt-2 text-sm text-slate-600 dark:text-slate-200">
-                    Veja o andamento da configuração por aqui e abra a tela detalhada apenas quando precisar editar.
-                  </p>
-                </div>
-                <div class="flex flex-wrap gap-3">
-                  <RouterLink
-                    to="/website-domain"
-                    class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
-                  >
-                    Abrir domínio
-                  </RouterLink>
-                </div>
-              </div>
+            <div
+              v-if="billingAccessStore.loading && !billingAccessStore.isLoaded"
+              class="flex min-h-52 items-center justify-center p-6 text-sm text-slate-500 dark:text-slate-300"
+            >
+              Verificando os recursos do seu plano...
+            </div>
 
-              <div class="mt-6 grid gap-3 md:grid-cols-3">
-                <div class="rounded-2xl border border-slate-200/80 bg-white/80 p-4 backdrop-blur dark:border-white/10 dark:bg-white/10">
-                  <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-blue-100/80">Domínio atual</p>
-                  <p class="mt-2 break-all text-sm font-semibold text-slate-900 dark:text-white">
-                    {{ domainSummary.customDomain || 'Nenhum domínio configurado' }}
+            <div v-else-if="isDomainLocked" class="relative p-6 sm:p-8">
+              <div class="pointer-events-none absolute -right-12 -top-16 h-52 w-52 rounded-full bg-blue-300/30 blur-3xl dark:bg-blue-500/20" />
+              <div class="relative flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between">
+                <div class="max-w-2xl">
+                  <span class="inline-flex items-center rounded-full border border-blue-200 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700 backdrop-blur dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
+                    Incluído no Starter
+                  </span>
+                  <h2 class="mt-4 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    Coloque sua marca no endereço do seu site
+                  </h2>
+                  <p class="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-200">
+                    Troque o endereço padrão por um domínio como
+                    <strong class="text-slate-900 dark:text-white">www.suaimobiliaria.com.br</strong>
+                    e transmita mais confiança em cada anúncio compartilhado.
                   </p>
-                </div>
-                <div class="rounded-2xl border border-slate-200/80 bg-white/80 p-4 backdrop-blur dark:border-white/10 dark:bg-white/10">
-                  <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-blue-100/80">Status</p>
-                  <div class="mt-2">
-                    <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold" :class="domainStatusBadgeClass">
-                      {{ domainStatusLabel }}
-                    </span>
+
+                  <div class="mt-5 flex flex-wrap gap-2 text-xs font-medium text-slate-700 dark:text-slate-200">
+                    <span class="rounded-full border border-white/80 bg-white/70 px-3 py-1.5 backdrop-blur dark:border-white/10 dark:bg-white/10">Sua marca em destaque</span>
+                    <span class="rounded-full border border-white/80 bg-white/70 px-3 py-1.5 backdrop-blur dark:border-white/10 dark:bg-white/10">Conexão segura automática</span>
+                    <span class="rounded-full border border-white/80 bg-white/70 px-3 py-1.5 backdrop-blur dark:border-white/10 dark:bg-white/10">Configuração guiada</span>
                   </div>
-                  <p class="mt-2 text-xs text-slate-600 dark:text-slate-200">
-                    {{ domainStatusDescription }}
-                  </p>
                 </div>
-                <div class="rounded-2xl border border-slate-200/80 bg-white/80 p-4 backdrop-blur dark:border-white/10 dark:bg-white/10">
-                  <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-blue-100/80">Endereço para conexão</p>
-                  <p class="mt-2 break-all font-mono text-xs text-slate-700 dark:text-blue-100">
-                    {{ domainSummary.customDomainTarget || 'Disponível após salvar o domínio' }}
+
+                <div class="flex shrink-0 flex-col items-stretch gap-2 lg:min-w-64">
+                  <RouterLink
+                    v-if="canManageBilling"
+                    :to="{
+                      path: '/meu-plano',
+                      query: { upgrade: 'STARTER', feature: 'customDomainEnabled' },
+                    }"
+                    class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-blue-600/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-white dark:text-slate-900 dark:hover:bg-blue-50"
+                  >
+                    Ativar domínio com o Starter
+                  </RouterLink>
+                  <p v-if="canManageBilling" class="text-center text-xs text-slate-500 dark:text-slate-300">
+                    Veja os benefícios e conclua o upgrade com segurança.
+                  </p>
+                  <p v-else class="rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-center text-xs font-medium text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+                    Peça a um administrador do workspace para ativar o plano Starter.
                   </p>
                 </div>
               </div>
             </div>
-            <div class="grid gap-px border-t border-slate-200/80 bg-slate-200/80 dark:border-white/10 dark:bg-white/10 sm:grid-cols-3">
-              <div class="bg-white/85 p-4 dark:bg-slate-950/20">
-                <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-blue-100/80">1. Salvar</p>
-                <p class="mt-1 text-sm text-slate-700 dark:text-slate-200">Informe o domínio do site e salve a configuração.</p>
+
+            <template v-else>
+              <div class="p-5 sm:p-6">
+                <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                  <div class="max-w-2xl">
+                    <p class="text-xs uppercase tracking-[0.25em] text-blue-700/80 dark:text-blue-200/80">Domínio do site</p>
+                    <h2 class="mt-2 text-xl font-semibold text-slate-900 dark:text-white">Use um domínio próprio com ativação simples</h2>
+                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-200">
+                      Veja o andamento da configuração por aqui e abra a tela detalhada apenas quando precisar editar.
+                    </p>
+                  </div>
+                  <div class="flex flex-wrap gap-3">
+                    <RouterLink
+                      to="/website-domain"
+                      class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                    >
+                      {{ domainSummary.customDomain ? 'Gerenciar domínio' : 'Configurar meu domínio' }}
+                    </RouterLink>
+                  </div>
+                </div>
+
+                <div class="mt-6 grid gap-3 md:grid-cols-3">
+                  <div class="rounded-2xl border border-slate-200/80 bg-white/80 p-4 backdrop-blur dark:border-white/10 dark:bg-white/10">
+                    <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-blue-100/80">Domínio atual</p>
+                    <p class="mt-2 break-all text-sm font-semibold text-slate-900 dark:text-white">
+                      {{ domainSummary.customDomain || 'Nenhum domínio configurado' }}
+                    </p>
+                  </div>
+                  <div class="rounded-2xl border border-slate-200/80 bg-white/80 p-4 backdrop-blur dark:border-white/10 dark:bg-white/10">
+                    <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-blue-100/80">Status</p>
+                    <div class="mt-2">
+                      <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold" :class="domainStatusBadgeClass">
+                        {{ domainStatusLabel }}
+                      </span>
+                    </div>
+                    <p class="mt-2 text-xs text-slate-600 dark:text-slate-200">
+                      {{ domainStatusDescription }}
+                    </p>
+                  </div>
+                  <div class="rounded-2xl border border-slate-200/80 bg-white/80 p-4 backdrop-blur dark:border-white/10 dark:bg-white/10">
+                    <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-blue-100/80">Endereço para conexão</p>
+                    <p class="mt-2 break-all font-mono text-xs text-slate-700 dark:text-blue-100">
+                      {{ domainSummary.customDomainTarget || 'Disponível após salvar o domínio' }}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div class="bg-white/85 p-4 dark:bg-slate-950/20">
-                <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-blue-100/80">2. Apontar</p>
-                <p class="mt-1 text-sm text-slate-700 dark:text-slate-200">Use o endereço de conexão no painel onde o domínio é administrado.</p>
+              <div class="grid gap-px border-t border-slate-200/80 bg-slate-200/80 dark:border-white/10 dark:bg-white/10 sm:grid-cols-3">
+                <div class="bg-white/85 p-4 dark:bg-slate-950/20">
+                  <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-blue-100/80">1. Salvar</p>
+                  <p class="mt-1 text-sm text-slate-700 dark:text-slate-200">Informe o domínio do site e salve a configuração.</p>
+                </div>
+                <div class="bg-white/85 p-4 dark:bg-slate-950/20">
+                  <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-blue-100/80">2. Apontar</p>
+                  <p class="mt-1 text-sm text-slate-700 dark:text-slate-200">Use o endereço de conexão no painel onde o domínio é administrado.</p>
+                </div>
+                <div class="bg-white/85 p-4 dark:bg-slate-950/20">
+                  <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-blue-100/80">3. Ativar</p>
+                  <p class="mt-1 text-sm text-slate-700 dark:text-slate-200">Aguarde a ativação e depois teste o acesso ao site.</p>
+                </div>
               </div>
-              <div class="bg-white/85 p-4 dark:bg-slate-950/20">
-                <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-blue-100/80">3. Ativar</p>
-                <p class="mt-1 text-sm text-slate-700 dark:text-slate-200">Aguarde a ativação e depois teste o acesso ao site.</p>
-              </div>
-            </div>
+            </template>
           </section>
 
           <div data-tour-id="website-tabs" class="flex flex-wrap gap-2">
@@ -344,6 +397,18 @@
             </section>
           </section>
 
+          <section
+            v-else-if="siteTab === 'blog' && billingAccessStore.loading"
+            class="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+          >
+            Verificando os recursos do seu plano...
+          </section>
+
+          <UpgradeGate
+            v-else-if="siteTab === 'blog' && billingAccessStore.isLoaded && !billingAccessStore.canUse('blogEnabled')"
+            feature="blogEnabled"
+          />
+
           <BlogPostsManager v-else-if="siteTab === 'blog'" />
 
           <section v-else-if="siteTab === 'about'" data-tour-id="website-editor" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-5">
@@ -540,11 +605,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
+import UpgradeGate from '@/components/billing/UpgradeGate.vue'
 import BlogPostsManager from '@/components/site/BlogPostsManager.vue'
 import PhoneInput from '@/components/ui/PhoneInput.vue'
 import { useNotification } from '@/composables/useNotification'
 import websiteConfigService from '@/services/websiteConfig'
 import { useAuthStore } from '@/stores/auth'
+import { useBillingAccessStore } from '@/stores/billingAccess'
 import type { TenantWebsiteConfig } from '@/types/tenantsAdmin'
 
 const DEFAULT_PRIMARY_COLOR = '#0066FF'
@@ -552,6 +619,7 @@ const DEFAULT_SECONDARY_COLOR = '#FF6B35'
 const HEX_COLOR_REGEX = /^#([0-9a-fA-F]{6})$/
 
 const authStore = useAuthStore()
+const billingAccessStore = useBillingAccessStore()
 const { showError, showSuccess } = useNotification()
 
 const config = ref<Partial<TenantWebsiteConfig>>({})
@@ -598,6 +666,12 @@ const previewPrimaryColor = computed(() => normalizeHexColor(config.value.primar
 const previewSecondaryColor = computed(() => normalizeHexColor(config.value.secondaryColor) ?? DEFAULT_SECONDARY_COLOR)
 const previewCompanyInitial = computed(() => (config.value.companyName?.trim().charAt(0) || 'R').toUpperCase())
 const publicWebsiteUrl = computed(() => buildWebsiteUrl(authStore.currentTenantSubdomain))
+const isDomainLocked = computed(() =>
+  billingAccessStore.isLoaded && !billingAccessStore.canUse('customDomainEnabled'),
+)
+const canManageBilling = computed(() =>
+  ['TENANT_OWNER', 'TENANT_ADMIN'].includes(authStore.currentUser?.systemRole ?? ''),
+)
 const domainStatusLabel = computed(() => {
   const status = (domainSummary.value.customDomainStatus || '').toUpperCase()
   if (!domainSummary.value.customDomain) return 'Não configurado'
@@ -837,5 +911,6 @@ async function removeAboutImage() {
 
 onMounted(() => {
   loadConfig()
+  void billingAccessStore.load(authStore.currentTenantId, true)
 })
 </script>
