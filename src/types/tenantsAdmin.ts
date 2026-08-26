@@ -157,7 +157,7 @@ export interface TenantBilling {
   planCode: BillingPlanOption['code']
   planName: string
   subscriptionStatus: 'PENDING' | 'ACTIVE' | 'PAST_DUE' | 'CANCELED' | 'TRIAL'
-  provider: 'ABACATEPAY' | 'MANUAL'
+  provider: 'ASAAS' | 'MANUAL'
   providerCustomerId: string | null
   providerSubscriptionId: string | null
   providerCheckoutId: string | null

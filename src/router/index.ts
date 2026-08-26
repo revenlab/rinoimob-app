@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useBillingAccessStore } from '@/stores/billingAccess'
+import type { BillingFeatureKey } from '@/utils/billingFeatures'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -138,19 +140,19 @@ const router = createRouter({
       path: '/automations',
       name: 'Automations',
       component: () => import('@/views/Automations.vue'),
-      meta: { requiresAuth: true, title: 'Automações' }
+      meta: { requiresAuth: true, title: 'Automações', requiredBillingFeature: 'automationCrmEnabled' }
     },
     {
       path: '/automations/new',
       name: 'AutomationNew',
       component: () => import('@/views/AutomationEditor.vue'),
-      meta: { requiresAuth: true, title: 'New Automation' }
+      meta: { requiresAuth: true, title: 'New Automation', requiredBillingFeature: 'automationCrmEnabled' }
     },
     {
       path: '/automations/:id/edit',
       name: 'AutomationEdit',
       component: () => import('@/views/AutomationEditor.vue'),
-      meta: { requiresAuth: true, title: 'Edit Automation' }
+      meta: { requiresAuth: true, title: 'Edit Automation', requiredBillingFeature: 'automationCrmEnabled' }
     },
     {
       path: '/notifications',
@@ -174,13 +176,19 @@ const router = createRouter({
       path: '/website-domain',
       name: 'WebsiteDomain',
       component: () => import('@/pages/account/website-domain.vue'),
+      meta: { requiresAuth: true, requiredBillingFeature: 'customDomainEnabled' }
+    },
+    {
+      path: '/upgrade-required',
+      name: 'UpgradeRequired',
+      component: () => import('@/views/UpgradeRequired.vue'),
       meta: { requiresAuth: true }
     },
     {
       path: '/meu-plano',
       name: 'BillingPlan',
       component: () => import('@/views/BillingPlan.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, billingAdminOnly: true }
     },
     {
       path: '/force-password-reset',
@@ -198,10 +206,14 @@ router.beforeEach(async (to, from, next) => {
   const isPublic = to.meta.public
   const requiresAuth = to.meta.requiresAuth
   const internalOnly = to.meta.internalOnly
+  const billingAdminOnly = to.meta.billingAdminOnly
+  const requiredBillingFeature = to.meta.requiredBillingFeature as BillingFeatureKey | undefined
 
   if (authStore.isAuthenticated && !authStore.currentUser) {
     await authStore.fetchMe()
   }
+
+  const canManageBilling = ['TENANT_OWNER', 'TENANT_ADMIN'].includes(authStore.currentUser?.systemRole ?? '')
 
   if (requiresAuth && !authStore.isAuthenticated) {
     next({ name: 'Login', query: { redirect: to.fullPath } })
@@ -209,8 +221,24 @@ router.beforeEach(async (to, from, next) => {
     next({ name: 'ForcePasswordReset' })
   } else if (internalOnly && !authStore.isInternalStaff) {
     next({ name: 'Dashboard' })
+  } else if (billingAdminOnly && !canManageBilling) {
+    next({ name: 'Dashboard' })
   } else if (isPublic && authStore.isAuthenticated && (to.name === 'Login' || to.name === 'Register')) {
     next({ name: 'Dashboard' })
+  } else if (requiredBillingFeature && !authStore.isInternalStaff && authStore.currentTenantId) {
+    const billingAccessStore = useBillingAccessStore()
+    let billingStatus = await billingAccessStore.load(authStore.currentTenantId)
+    if (billingStatus?.[requiredBillingFeature] === false) {
+      billingStatus = await billingAccessStore.load(authStore.currentTenantId, true)
+    }
+    if (billingStatus?.[requiredBillingFeature] === false) {
+      next({
+        name: 'UpgradeRequired',
+        query: { feature: requiredBillingFeature, redirect: to.fullPath },
+      })
+    } else {
+      next()
+    }
   } else {
     next()
   }

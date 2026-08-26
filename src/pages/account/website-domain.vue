@@ -27,6 +27,7 @@
               </div>
               <button
                 v-if="currentDomain"
+                type="button"
                 @click="reloadSavedDomain"
                 :disabled="isLoading"
                 class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-700"
@@ -109,6 +110,7 @@
 
           <div class="mt-6 flex flex-col gap-3 sm:flex-row">
             <button
+              type="button"
               @click="saveDomain"
               :disabled="!isValidDomain || isLoading || !domainChanged"
               class="inline-flex flex-1 items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300 dark:bg-blue-600 dark:hover:bg-blue-500 dark:disabled:bg-slate-700"
@@ -117,6 +119,7 @@
             </button>
             <button
               v-if="domainChanged"
+              type="button"
               @click="cancelEdit"
               :disabled="isLoading"
               class="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-700"
@@ -125,6 +128,7 @@
             </button>
             <button
               v-if="currentDomain"
+              type="button"
               @click="removeDomain"
               :disabled="isLoading"
               class="inline-flex items-center justify-center rounded-2xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-medium text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900 dark:bg-red-950/30 dark:text-red-200 dark:hover:bg-red-950/50"
@@ -155,6 +159,7 @@
                   <p v-if="record.help" class="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">{{ record.help }}</p>
                 </div>
                 <button
+                  type="button"
                   @click="copyText(record.value, record.copyMessage)"
                   :disabled="record.disabled"
                   :title="`Copiar ${record.label}`"
@@ -175,6 +180,7 @@
                 </code>
               </div>
               <button
+                type="button"
                 @click="copyDnsRecordLine"
                 :disabled="!canCopyDns"
                 title="Copiar linha pronta"
@@ -257,10 +263,10 @@ const statusLabel = computed(() => {
 
 const statusBadgeClass = computed(() => {
   const status = (currentStatus.value || '').toUpperCase()
-  if (status === 'ACTIVE') return 'bg-emerald-500/15 text-emerald-200 border border-emerald-500/20'
-  if (status === 'FAILED') return 'bg-red-500/15 text-red-200 border border-red-500/20'
-  if (status === 'PENDING') return 'bg-amber-500/15 text-amber-200 border border-amber-500/20'
-  return 'bg-slate-500/15 text-slate-200 border border-slate-500/20'
+  if (status === 'ACTIVE') return 'bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-200 dark:border-emerald-500/20'
+  if (status === 'FAILED') return 'bg-red-100 text-red-700 border border-red-200 dark:bg-red-500/15 dark:text-red-200 dark:border-red-500/20'
+  if (status === 'PENDING') return 'bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-200 dark:border-amber-500/20'
+  return 'bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-500/15 dark:text-slate-200 dark:border-slate-500/20'
 })
 
 const statusMessage = computed(() => {
@@ -342,7 +348,17 @@ const dnsRecordLine = computed(() => {
   return `Tipo: CNAME | Nome/Host: @ | Valor/Destino: ${currentTarget.value} | TTL: Automático`
 })
 
-const normalizeDomain = (value: string) => value.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '')
+const normalizeDomain = (value: string) => value
+  .trim()
+  .toLowerCase()
+  .replace(/^https?:\/\//, '')
+  .replace(/^www\./, '')
+  .split('/')[0]
+  .split(':')[0]
+  .replace(/\.$/, '')
+
+const errorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error && error.message ? error.message : fallback
 
 const validateDomain = () => {
   if (!domainInput.value) {
@@ -366,15 +382,18 @@ const validateDomain = () => {
 }
 
 const loadCurrentDomain = async () => {
+  isLoading.value = true
   try {
     const data = await websiteConfigService.getCustomDomain()
     currentDomain.value = data.customDomain
     currentStatus.value = data.customDomainStatus ?? null
     currentTarget.value = data.customDomainTarget ?? null
     domainInput.value = data.customDomain || ''
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Erro ao carregar domínio:', error)
-    showError('Erro ao carregar configuracao de dominio')
+    showError(errorMessage(error, 'Erro ao carregar configuração de domínio'))
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -394,10 +413,9 @@ const saveDomain = async () => {
     domainInput.value = result.customDomain || ''
     domainError.value = ''
     showSuccess(newDomain ? 'Domínio atualizado com sucesso' : 'Domínio removido com sucesso')
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erro ao salvar domínio:', error)
-    const message = error?.response?.data?.message || 'Erro ao salvar domínio'
-    showError(message)
+    showError(errorMessage(error, 'Erro ao salvar domínio'))
   } finally {
     isLoading.value = false
   }
@@ -417,9 +435,9 @@ const removeDomain = async () => {
     domainInput.value = ''
     domainError.value = ''
     showSuccess('Domínio removido com sucesso')
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erro ao remover domínio:', error)
-    showError('Erro ao remover domínio')
+    showError(errorMessage(error, 'Erro ao remover domínio'))
   } finally {
     isLoading.value = false
   }
@@ -432,8 +450,12 @@ const cancelEdit = () => {
 
 const copyText = async (value: string, message = 'Copiado') => {
   if (!value || !navigator?.clipboard) return
-  await navigator.clipboard.writeText(value)
-  showSuccess(message)
+  try {
+    await navigator.clipboard.writeText(value)
+    showSuccess(message)
+  } catch (error: unknown) {
+    showError(errorMessage(error, 'Não foi possível copiar automaticamente'))
+  }
 }
 
 const copyDnsRecordLine = async () => {

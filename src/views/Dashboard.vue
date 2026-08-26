@@ -46,6 +46,53 @@
                 </RouterLink>
             </div>
 
+            <section
+                v-if="isFreePlan"
+                class="relative mb-6 overflow-hidden rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50 via-white to-violet-50 p-5 shadow-sm dark:border-indigo-500/30 dark:from-indigo-950/50 dark:via-slate-800 dark:to-violet-950/30 sm:p-6"
+            >
+                <div class="pointer-events-none absolute -right-16 -top-20 h-52 w-52 rounded-full bg-violet-300/35 blur-3xl dark:bg-violet-500/20" />
+                <div class="relative">
+                    <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                        <div class="max-w-2xl">
+                            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-300">Plano Free</p>
+                            <h2 class="mt-2 text-xl font-bold text-slate-900 dark:text-white">Sua operação pode ir mais longe</h2>
+                            <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                                Evolua quando precisar de mais alcance, presença online e recursos para sua equipe vender melhor.
+                            </p>
+                        </div>
+
+                        <RouterLink
+                            v-if="canManageBilling"
+                            :to="{ path: '/meu-plano', query: { upgrade: 'STARTER', source: 'dashboard' } }"
+                            class="inline-flex shrink-0 items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
+                        >
+                            Ver planos e fazer upgrade
+                        </RouterLink>
+                        <p v-else class="text-sm font-medium text-amber-700 dark:text-amber-300">
+                            Peça a um administrador do workspace para alterar o plano.
+                        </p>
+                    </div>
+
+                    <div class="mt-5 grid gap-3 md:grid-cols-3">
+                        <div class="rounded-xl border border-white/80 bg-white/75 p-4 backdrop-blur dark:border-slate-700/70 dark:bg-slate-900/40">
+                            <p class="text-sm font-semibold text-indigo-700 dark:text-indigo-300">Starter</p>
+                            <p class="mt-1 text-sm text-slate-700 dark:text-slate-200">Blog e domínio próprio para fortalecer sua marca.</p>
+                            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">5 usuários, 100 imóveis e 500 leads/mês.</p>
+                        </div>
+                        <div class="rounded-xl border border-white/80 bg-white/75 p-4 backdrop-blur dark:border-slate-700/70 dark:bg-slate-900/40">
+                            <p class="text-sm font-semibold text-violet-700 dark:text-violet-300">Prime</p>
+                            <p class="mt-1 text-sm text-slate-700 dark:text-slate-200">Automações de CRM e API pública para ganhar escala.</p>
+                            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">15 usuários, 500 imóveis e 2.000 leads/mês.</p>
+                        </div>
+                        <div class="rounded-xl border border-white/80 bg-white/75 p-4 backdrop-blur dark:border-slate-700/70 dark:bg-slate-900/40">
+                            <p class="text-sm font-semibold text-slate-800 dark:text-slate-100">Ultimate</p>
+                            <p class="mt-1 text-sm text-slate-700 dark:text-slate-200">Limites ilimitados, suporte VIP e implantação personalizada.</p>
+                            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Feito para operações em expansão.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <div data-tour-id="dashboard-pipeline" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 mb-6 shadow">
                 <div class="flex items-center justify-between mb-4">
                     <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400">Pipeline de Vendas</p>
@@ -370,7 +417,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ArrowPathIcon, ChatBubbleLeftRightIcon, CheckCircleIcon, PlusIcon } from '@heroicons/vue/20/solid'
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -378,12 +425,18 @@ import leadService from '@/services/lead'
 import taskService from '@/services/task'
 import tenantsAdminService from '@/services/tenantsAdmin'
 import { useAuthStore } from '@/stores/auth'
+import { useBillingAccessStore } from '@/stores/billingAccess'
 import type { LeadEventResponse } from '@/types/lead'
 import { systemRoleLabel } from '@/types/role'
 import type { TaskResponse } from '@/types/task'
 import type { SupportDashboard } from '@/types/tenantsAdmin'
 
 const authStore = useAuthStore()
+const billingAccessStore = useBillingAccessStore()
+const canManageBilling = computed(() =>
+    ['TENANT_OWNER', 'TENANT_ADMIN'].includes(authStore.currentUser?.systemRole ?? ''),
+)
+const isFreePlan = computed(() => billingAccessStore.status?.currentPlanCode === 'FREE')
 
 const AUDIT_ACTION_LABELS: Record<string, string> = {
     SUPPORT_VIEW_TENANTS: 'Visualizou tenants',
@@ -509,6 +562,8 @@ onMounted(async () => {
         }
         return
     }
+
+    void billingAccessStore.load(authStore.currentTenantId)
 
     try {
         metrics.value = await leadService.getStats()
