@@ -151,6 +151,8 @@ export interface PropertyResponse {
   photos: PropertyPhotoResponse[]
   floorPlans: FloorPlanResponse[]
   videos: PropertyVideoResponse[]
+  availableToAllBrokers: boolean
+  brokerIds: string[]
 }
 
 export interface CreatePropertyRequest {
@@ -186,6 +188,8 @@ export interface CreatePropertyRequest {
   lng?: number
   attributes?: Record<string, unknown>
   categoryIds?: string[]
+  availableToAllBrokers?: boolean
+  brokerIds?: string[]
 }
 
 export type UpdatePropertyRequest = Partial<CreatePropertyRequest & { status: PropertyStatus }>

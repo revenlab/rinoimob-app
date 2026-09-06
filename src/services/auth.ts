@@ -4,6 +4,16 @@ import { apiFetch, API_BASE } from '@/lib/api'
 const API_BASE_URL = import.meta.env.VITE_API_URL || ''
 const API_VERSION = '/api/v1'
 
+export type PublicBrokerProfile = {
+  slug: string | null
+  name: string
+  phone: string | null
+  bio: string | null
+  photoUrl: string | null
+  instagramUrl: string | null
+  creci: string | null
+}
+
 class AuthService {
   private baseUrl: string
 
@@ -103,6 +113,22 @@ class AuthService {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ firstName, lastName }),
     })
+  }
+
+  async getPublicBrokerProfile(): Promise<PublicBrokerProfile> {
+    return apiFetch<PublicBrokerProfile>(`${API_BASE}/users/profile/public`)
+  }
+
+  async updatePublicBrokerProfile(data: { slug: string; bio: string; instagramUrl: string; creci: string }): Promise<PublicBrokerProfile> {
+    return apiFetch<PublicBrokerProfile>(`${API_BASE}/users/profile/public`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
+    })
+  }
+
+  async uploadPublicBrokerPhoto(file: File): Promise<PublicBrokerProfile> {
+    const body = new FormData()
+    body.append('file', file)
+    return apiFetch<PublicBrokerProfile>(`${API_BASE}/users/profile/public/photo`, { method: 'POST', body })
   }
 
   async changePassword(currentPassword: string, newPassword: string, confirmPassword: string): Promise<void> {

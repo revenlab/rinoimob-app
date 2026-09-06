@@ -236,3 +236,9 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
   - O guard força uma nova leitura de `/billing/status` antes de confirmar um bloqueio, evitando cache antigo após upgrade; flags ausentes em backends antigos são tratadas como desconhecidas e não como bloqueio.
   - `website-domain.vue` normaliza URL, caminho, porta e ponto final, preserva mensagens reais da API e corrige estados de carregamento/cópia.
 - **CTA de upgrade no Dashboard**: clientes no plano `FREE` veem um resumo dos ganhos de Starter, Prime e Ultimate; somente `TENANT_OWNER` e `TENANT_ADMIN` recebem o acesso direto a `/meu-plano` com Starter recomendado.
+
+- **Portfólio público de corretores (#63)**: `PropertyForm.vue` permite disponibilizar um imóvel para todos os corretores ativos ou selecionar uma lista explícita, enviada por `availableToAllBrokers` e `brokerIds` no contrato do imóvel.
+
+- **Perfil comercial do corretor (#63)**: `Profile.vue` permite editar slug, apresentação, Instagram e CRECI, além de enviar a foto pública pelo endpoint autenticado do próprio usuário.
+
+- **Compartilhamento do perfil público (#63)**: `Profile.vue` monta `/corretor/{slug}` no host público do tenant, copia a URL e usa Web Share API quando o navegador a oferece.
