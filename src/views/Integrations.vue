@@ -18,8 +18,9 @@ interface ProviderDefinition {
     name: string
     eyebrow: string
     description: string
-    icon: string
-    iconClass: string
+    logo: string
+    logoAlt: string
+    logoClass: string
     accentClass: string
 }
 
@@ -46,8 +47,9 @@ const providerCatalog: ProviderDefinition[] = [
         name: 'Facebook e Instagram',
         eyebrow: 'Meta Lead Ads',
         description: 'Receba leads dos formulários das páginas conectadas e distribua cada origem no funil correto.',
-        icon: 'f',
-        iconClass: 'bg-[#1877F2] text-white',
+        logo: '/integrations/meta.svg',
+        logoAlt: 'Meta',
+        logoClass: 'bg-white ring-blue-100 dark:ring-blue-900/60',
         accentClass: 'from-blue-500/15 to-indigo-500/5',
     },
     {
@@ -55,8 +57,9 @@ const providerCatalog: ProviderDefinition[] = [
         name: 'Grupo OLX',
         eyebrow: 'ZAP · Viva Real · OLX',
         description: 'Homologue entradas de leads e publique o inventário de imóveis com um feed VRSync por conexão.',
-        icon: 'OLX',
-        iconClass: 'bg-violet-600 text-white',
+        logo: '/integrations/grupo-olx.svg',
+        logoAlt: 'Grupo OLX',
+        logoClass: 'bg-white ring-violet-100 dark:ring-violet-900/60',
         accentClass: 'from-violet-500/15 to-fuchsia-500/5',
     },
 ]
@@ -407,8 +410,8 @@ onMounted(() => void loadAll())
                     <div class="relative">
                         <div class="flex items-start justify-between gap-4">
                             <div class="flex items-center gap-4">
-                                <span class="flex h-12 w-12 items-center justify-center rounded-2xl text-lg font-black shadow-sm" :class="provider.iconClass">
-                                    {{ provider.icon }}
+                                <span class="flex h-12 w-12 items-center justify-center rounded-2xl p-2 shadow-sm ring-1" :class="provider.logoClass">
+                                    <img :src="provider.logo" :alt="provider.logoAlt" class="h-full w-full object-contain">
                                 </span>
                                 <div>
                                     <p class="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">{{ provider.eyebrow }}</p>
@@ -488,7 +491,9 @@ onMounted(() => void loadAll())
                 <section class="flex max-h-[94vh] w-full max-w-7xl flex-col overflow-hidden rounded-3xl bg-slate-50 shadow-2xl dark:bg-slate-900">
                     <header class="flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 dark:border-slate-700 dark:bg-slate-800 sm:px-6">
                         <div class="flex min-w-0 items-center gap-3">
-                            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-black" :class="selectedProvider.iconClass">{{ selectedProvider.icon }}</span>
+                            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl p-2 ring-1" :class="selectedProvider.logoClass">
+                                <img :src="selectedProvider.logo" :alt="selectedProvider.logoAlt" class="h-full w-full object-contain">
+                            </span>
                             <div class="min-w-0">
                                 <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ selectedProvider.eyebrow }}</p>
                                 <h2 class="truncate text-lg font-bold text-slate-900 dark:text-white">Gerenciar {{ selectedProvider.name }}</h2>
@@ -549,7 +554,9 @@ onMounted(() => void loadAll())
 
                         <main class="min-h-0 overflow-y-auto p-4 sm:p-6">
                             <div v-if="!selectedConnection" class="flex min-h-[420px] flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-800">
-                                <span class="flex h-16 w-16 items-center justify-center rounded-2xl text-2xl font-black" :class="selectedProvider.iconClass">{{ selectedProvider.icon }}</span>
+                                <span class="flex h-16 w-16 items-center justify-center rounded-2xl p-3 ring-1" :class="selectedProvider.logoClass">
+                                    <img :src="selectedProvider.logo" :alt="selectedProvider.logoAlt" class="h-full w-full object-contain">
+                                </span>
                                 <h3 class="mt-5 text-lg font-bold text-slate-900 dark:text-white">Nenhuma conexão configurada</h3>
                                 <p class="mt-2 max-w-md text-sm text-slate-500">Adicione a primeira conexão para iniciar a homologação e configurar o roteamento de leads.</p>
                             </div>

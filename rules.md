@@ -250,3 +250,4 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
 - **Navegação de Integrações e Aluguéis**: `Integrations.vue` e `RentalManagement.vue` usam `AppLayout`, preservando sidebar, header e navegação ao acessar `/integracoes` e `/alugueis`.
 - **Aluguéis temporariamente indisponível**: o menu mantém “Aluguéis” visível com selo “em breve” e sem ação de clique; o guard redireciona acessos diretos a `/alugueis` para o Dashboard até a liberação do módulo.
 - **Central global de integrações**: `/integracoes` apresenta um card por provedor e concentra, em um modal próprio, a criação, seleção, atualização, homologação, roteamento e eventos de suas múltiplas conexões.
+- **Identidade visual das integrações**: os cards e modais da central usam SVGs locais das marcas Meta e Grupo OLX em `public/integrations`, sem dependência de CDN em runtime.
