@@ -354,6 +354,30 @@
                   <p class="text-sm text-slate-700 dark:text-slate-300">{{ formatDate(store.currentLead.createdAt) }}</p>
                 </div>
               </div>
+              <div v-if="store.currentLead.acquisition" class="rounded-xl border border-indigo-100 bg-indigo-50/70 p-3 dark:border-indigo-900 dark:bg-indigo-950/20">
+                <p class="text-xs font-semibold tracking-[0.15em] uppercase text-indigo-500">Captação automática</p>
+                <div class="mt-2 grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <p class="text-slate-400">Canal</p>
+                    <p class="mt-0.5 font-medium text-slate-700 dark:text-slate-200">{{ store.currentLead.acquisition.provider === 'META_LEAD_ADS' ? 'Meta Lead Ads' : 'ZAP · Viva Real · OLX' }}</p>
+                  </div>
+                  <div v-if="store.currentLead.acquisition.campaignName">
+                    <p class="text-slate-400">Campanha</p>
+                    <p class="mt-0.5 font-medium text-slate-700 dark:text-slate-200">{{ store.currentLead.acquisition.campaignName }}</p>
+                  </div>
+                  <div v-if="store.currentLead.acquisition.adName">
+                    <p class="text-slate-400">Anúncio</p>
+                    <p class="mt-0.5 font-medium text-slate-700 dark:text-slate-200">{{ store.currentLead.acquisition.adName }}</p>
+                  </div>
+                  <div v-if="store.currentLead.acquisition.externalListingId">
+                    <p class="text-slate-400">Referência do anúncio</p>
+                    <p class="mt-0.5 font-medium text-slate-700 dark:text-slate-200">{{ store.currentLead.acquisition.externalListingId }}</p>
+                  </div>
+                </div>
+                <p v-if="store.currentLead.acquisition.propertyMatchStatus === 'NOT_FOUND'" class="mt-3 rounded-lg bg-amber-100 px-3 py-2 text-xs font-medium text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                  O lead foi criado, mas a referência do imóvel enviada pelo portal não foi encontrada no cadastro.
+                </p>
+              </div>
               <div v-if="isEditing || store.currentLead.message" class="pt-2 border-t border-slate-100 dark:border-slate-700">
                 <p class="text-xs font-semibold tracking-[0.15em] uppercase text-slate-400 mb-1">Mensagem inicial</p>
                 <textarea v-if="isEditing" v-model="editForm.message" rows="3"

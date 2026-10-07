@@ -1,6 +1,6 @@
 export type PropertyOperation = 'SALE' | 'RENT' | 'SEASONAL'
 export type PropertyType = 'HOUSE' | 'APARTMENT' | 'LAND' | 'COMMERCIAL' | 'RURAL'
-export type PropertyStatus = 'DRAFT' | 'ACTIVE' | 'RESERVED' | 'SOLD' | 'ARCHIVED'
+export type PropertyStatus = 'DRAFT' | 'ACTIVE' | 'RESERVED' | 'RENTED' | 'SOLD' | 'ARCHIVED'
 export type PropertyCondition = 'NEW' | 'USED' | 'UNDER_CONSTRUCTION'
 export type PropertyVideoSource = 'UPLOAD' | 'YOUTUBE'
 

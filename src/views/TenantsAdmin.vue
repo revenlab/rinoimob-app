@@ -74,6 +74,7 @@ const tenantBillingEditForm = ref({
   customDomainEnabled: false,
   automationCrmEnabled: false,
   publicApiEnabled: false,
+  integrationsEnabled: false,
   vipSupportEnabled: false,
   customImplementationEnabled: false,
   notes: '',
@@ -213,6 +214,7 @@ function resetTenantBillingEditForm(billing: TenantBilling | null = tenantBillin
     customDomainEnabled: billing?.customDomainEnabled ?? false,
     automationCrmEnabled: billing?.automationCrmEnabled ?? false,
     publicApiEnabled: billing?.publicApiEnabled ?? false,
+    integrationsEnabled: billing?.integrationsEnabled ?? false,
     vipSupportEnabled: billing?.vipSupportEnabled ?? false,
     customImplementationEnabled: billing?.customImplementationEnabled ?? false,
     notes: billing?.notes ?? '',
@@ -236,6 +238,7 @@ function applySelectedPlanDefaults(planCode: TenantBilling['planCode']) {
   tenantBillingEditForm.value.customDomainEnabled = selectedPlan.customDomainEnabled
   tenantBillingEditForm.value.automationCrmEnabled = selectedPlan.automationCrmEnabled
   tenantBillingEditForm.value.publicApiEnabled = selectedPlan.publicApiEnabled
+  tenantBillingEditForm.value.integrationsEnabled = selectedPlan.integrationsEnabled
   tenantBillingEditForm.value.vipSupportEnabled = selectedPlan.vipSupportEnabled
   tenantBillingEditForm.value.customImplementationEnabled = selectedPlan.customImplementationEnabled
 }
@@ -470,6 +473,7 @@ async function saveTenantBillingChanges() {
       customDomainEnabled: tenantBillingEditForm.value.customDomainEnabled,
       automationCrmEnabled: tenantBillingEditForm.value.automationCrmEnabled,
       publicApiEnabled: tenantBillingEditForm.value.publicApiEnabled,
+      integrationsEnabled: tenantBillingEditForm.value.integrationsEnabled,
       vipSupportEnabled: tenantBillingEditForm.value.vipSupportEnabled,
       customImplementationEnabled: tenantBillingEditForm.value.customImplementationEnabled,
       notes: tenantBillingEditForm.value.notes?.trim() ? tenantBillingEditForm.value.notes.trim() : null,
@@ -969,6 +973,7 @@ onMounted(async () => {
                     <span class="rounded-full px-2 py-1 text-[10px] font-semibold" :class="tenantBilling.customDomainEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'">Domínio</span>
                     <span class="rounded-full px-2 py-1 text-[10px] font-semibold" :class="tenantBilling.automationCrmEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'">Automações</span>
                     <span class="rounded-full px-2 py-1 text-[10px] font-semibold" :class="tenantBilling.publicApiEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'">API pública</span>
+                    <span class="rounded-full px-2 py-1 text-[10px] font-semibold" :class="tenantBilling.integrationsEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'">Integrações</span>
                     <span class="rounded-full px-2 py-1 text-[10px] font-semibold" :class="tenantBilling.vipSupportEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'">Suporte VIP</span>
                     <span class="rounded-full px-2 py-1 text-[10px] font-semibold" :class="tenantBilling.customImplementationEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'">Implantação</span>
                   </div>
@@ -1008,6 +1013,7 @@ onMounted(async () => {
                   <label class="inline-flex items-center gap-2"><input v-model="tenantBillingEditForm.customDomainEnabled" type="checkbox"> Domínio customizado</label>
                   <label class="inline-flex items-center gap-2"><input v-model="tenantBillingEditForm.automationCrmEnabled" type="checkbox"> Automação CRM</label>
                   <label class="inline-flex items-center gap-2"><input v-model="tenantBillingEditForm.publicApiEnabled" type="checkbox"> API pública</label>
+                  <label class="inline-flex items-center gap-2"><input v-model="tenantBillingEditForm.integrationsEnabled" type="checkbox"> Integrações de leads</label>
                   <label class="inline-flex items-center gap-2"><input v-model="tenantBillingEditForm.vipSupportEnabled" type="checkbox"> Suporte VIP</label>
                   <label class="inline-flex items-center gap-2"><input v-model="tenantBillingEditForm.customImplementationEnabled" type="checkbox"> Implantação personalizada</label>
                 </div>

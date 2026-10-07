@@ -105,6 +105,18 @@ export interface LeadResponse {
   updatedAt: string
   notes: LeadNoteResponse[]
   properties: LeadPropertyResponse[]
+  acquisition: LeadAcquisitionResponse | null
+}
+
+export interface LeadAcquisitionResponse {
+  provider: 'META_LEAD_ADS' | 'GRUPO_OLX'
+  externalLeadId: string
+  externalFormId: string | null
+  externalListingId: string | null
+  campaignName: string | null
+  adName: string | null
+  propertyMatchStatus: string | null
+  providerCreatedAt: string | null
 }
 
 export interface CreateLeadRequest {

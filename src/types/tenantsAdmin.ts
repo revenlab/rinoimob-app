@@ -148,6 +148,7 @@ export interface BillingPlanOption {
   customDomainEnabled: boolean
   automationCrmEnabled: boolean
   publicApiEnabled: boolean
+  integrationsEnabled: boolean
   vipSupportEnabled: boolean
   customImplementationEnabled: boolean
 }
@@ -172,6 +173,7 @@ export interface TenantBilling {
   customDomainEnabled: boolean
   automationCrmEnabled: boolean
   publicApiEnabled: boolean
+  integrationsEnabled: boolean
   vipSupportEnabled: boolean
   customImplementationEnabled: boolean
   notes: string | null
@@ -190,6 +192,7 @@ export interface UpdateTenantBillingPayload {
   customDomainEnabled: boolean
   automationCrmEnabled: boolean
   publicApiEnabled: boolean
+  integrationsEnabled: boolean
   vipSupportEnabled: boolean
   customImplementationEnabled: boolean
   notes?: string | null

@@ -119,6 +119,12 @@ const router = createRouter({
       meta: { requiresAuth: true, tutorialRouteKey: 'tasks' }
     },
     {
+      path: '/alugueis',
+      name: 'RentalManagement',
+      component: () => import('@/views/RentalManagement.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/whatsapp',
       name: 'WhatsappSettings',
       component: () => import('@/views/WhatsappSettings.vue'),
@@ -129,6 +135,12 @@ const router = createRouter({
       name: 'EmailSenderSettings',
       component: () => import('@/views/EmailSenderSettings.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/integracoes',
+      name: 'Integrations',
+      component: () => import('@/views/Integrations.vue'),
+      meta: { requiresAuth: true, billingAdminOnly: true, requiredBillingFeature: 'integrationsEnabled' }
     },
     {
       path: '/equipe',

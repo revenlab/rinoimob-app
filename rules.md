@@ -242,3 +242,8 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
 - **Perfil comercial do corretor (#63)**: `Profile.vue` permite editar slug, apresentação, Instagram e CRECI, além de enviar a foto pública pelo endpoint autenticado do próprio usuário.
 
 - **Compartilhamento do perfil público (#63)**: `Profile.vue` monta `/corretor/{slug}` no host público do tenant, copia a URL e usa Web Share API quando o navegador a oferece.
+
+- **Hub de integrações de leads**: `Integrations.vue` centraliza Meta Lead Ads e Grupo OLX (ZAP, Viva Real e OLX), com seleção tenant-scoped de funil, bolsão/corretor, imóvel padrão, saúde da conexão, eventos recentes e reprocessamento. A rota `/integracoes` é exclusiva de owner/admin e usa o entitlement Starter `integrationsEnabled`.
+- `LeadDetail.vue` exibe a aquisição automática separadamente, incluindo canal, campanha/anúncio e alerta quando a referência de imóvel recebida do portal não for encontrada.
+- **Publicação Grupo OLX**: a conexão em `/integracoes` apresenta a URL VRSync de inventário, contagem de imóveis publicáveis, motivos de exclusão e alertas de contato/configuração antes da homologação; a URL de feed permanece separada da URL que recebe leads.
+- **Gestão de aluguéis**: `RentalManagement.vue` concentra Visão geral, Contratos, Pessoas, Cobranças, Repasses e Asaas em abas nomeadas com tabelas e ações explícitas. `services/rental.ts` consome `/api/v1/rentals/**`; emissão e repasse permanecem ações separadas, e o Pix exige confirmação antes do envio.
