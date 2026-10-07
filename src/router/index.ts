@@ -122,7 +122,7 @@ const router = createRouter({
       path: '/alugueis',
       name: 'RentalManagement',
       component: () => import('@/views/RentalManagement.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, disabled: true }
     },
     {
       path: '/whatsapp',
@@ -219,6 +219,7 @@ router.beforeEach(async (to, from, next) => {
   const requiresAuth = to.meta.requiresAuth
   const internalOnly = to.meta.internalOnly
   const billingAdminOnly = to.meta.billingAdminOnly
+  const disabled = to.meta.disabled
   const requiredBillingFeature = to.meta.requiredBillingFeature as BillingFeatureKey | undefined
 
   if (authStore.isAuthenticated && !authStore.currentUser) {
@@ -231,6 +232,8 @@ router.beforeEach(async (to, from, next) => {
     next({ name: 'Login', query: { redirect: to.fullPath } })
   } else if (authStore.isAuthenticated && authStore.forcePasswordReset && to.name !== 'ForcePasswordReset') {
     next({ name: 'ForcePasswordReset' })
+  } else if (disabled) {
+    next({ name: 'Dashboard' })
   } else if (internalOnly && !authStore.isInternalStaff) {
     next({ name: 'Dashboard' })
   } else if (billingAdminOnly && !canManageBilling) {
