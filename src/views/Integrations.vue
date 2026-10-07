@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import integrationsService from '@/services/integrations'
@@ -363,6 +363,10 @@ function formatDate(value: string | null) {
 }
 
 watch(selectedConnectionId, () => void loadConnectionDetails())
+watch(openProvider, (provider) => {
+    document.body.classList.toggle('overflow-hidden', Boolean(provider))
+})
+onBeforeUnmount(() => document.body.classList.remove('overflow-hidden'))
 onMounted(() => void loadAll())
 </script>
 
@@ -485,10 +489,19 @@ onMounted(() => void loadAll())
         <Teleport to="body">
             <div
                 v-if="openProvider && selectedProvider"
-                class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/65 p-3 backdrop-blur-sm sm:p-6"
+                class="fixed inset-0 isolate z-[10000] flex items-center justify-center p-3 sm:p-6"
+                role="dialog"
+                aria-modal="true"
+                :aria-label="`Gerenciar ${selectedProvider.name}`"
                 @click.self="closeProvider"
             >
-                <section class="flex max-h-[94vh] w-full max-w-7xl flex-col overflow-hidden rounded-3xl bg-slate-50 shadow-2xl dark:bg-slate-900">
+                <button
+                    type="button"
+                    class="absolute inset-0 z-0 cursor-default bg-slate-950/65 backdrop-blur-sm"
+                    aria-label="Fechar integrações"
+                    @click="closeProvider"
+                />
+                <section class="relative z-10 flex max-h-[94vh] w-full max-w-7xl flex-col overflow-hidden rounded-3xl bg-slate-50 shadow-2xl dark:bg-slate-900">
                     <header class="flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 dark:border-slate-700 dark:bg-slate-800 sm:px-6">
                         <div class="flex min-w-0 items-center gap-3">
                             <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl p-2 ring-1" :class="selectedProvider.logoClass">

@@ -251,3 +251,4 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
 - **Aluguéis temporariamente indisponível**: o menu mantém “Aluguéis” visível com selo “em breve” e sem ação de clique; o guard redireciona acessos diretos a `/alugueis` para o Dashboard até a liberação do módulo.
 - **Central global de integrações**: `/integracoes` apresenta um card por provedor e concentra, em um modal próprio, a criação, seleção, atualização, homologação, roteamento e eventos de suas múltiplas conexões.
 - **Identidade visual das integrações**: os cards e modais da central usam SVGs locais das marcas Meta e Grupo OLX em `public/integrations`, sem dependência de CDN em runtime.
+- **Camadas da central de integrações**: o portal de gerenciamento é teleportado para o `body`, cria contexto isolado em `z-[10000]`, separa backdrop e diálogo e bloqueia o scroll da página, mantendo painéis e modais internos acima do menu/header.
