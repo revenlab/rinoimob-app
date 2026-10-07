@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
+import AppLayout from '@/layouts/AppLayout.vue'
 import { rentalService } from '@/services/rental'
 import propertyService from '@/services/property'
 import type { RentalAsaasAccount, RentalCharge, RentalContract, RentalDashboard, RentalParty, RentalPayout } from '@/types/rental'
@@ -46,7 +47,8 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="p-6 lg:p-8 space-y-6">
+  <AppLayout>
+    <div class="p-6 lg:p-8 space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div><p class="text-xs font-bold uppercase tracking-[.2em] text-blue-600">Gestão locatícia</p><h1 class="text-3xl font-bold text-slate-900 dark:text-white">Aluguéis</h1><p class="text-sm text-slate-500 mt-1">Contratos, cobranças, conciliação e repasses em um só lugar.</p></div>
       <button @click="load" class="rounded-xl border px-4 py-2 text-sm font-semibold bg-white dark:bg-slate-800">Atualizar</button>
@@ -101,7 +103,8 @@ onMounted(load)
     <div v-if="showContract" class="modal"><form @submit.prevent="createContract" class="dialog max-w-4xl"><div class="section-head"><h2 class="section-title">Novo contrato</h2><button type="button" @click="showContract=false">✕</button></div><div class="form-grid"><label class="sm:col-span-2">Imóvel<select v-model="contractForm.propertyId" required><option value="">Selecione</option><option v-for="p in properties" :key="p.id" :value="p.id">{{ p.title }} · {{ p.referenceCode }}</option></select></label><label>Proprietário<select v-model="contractForm.ownerId" required><option value="">Selecione</option><option v-for="p in parties" :key="p.id" :value="p.id">{{ p.name }}</option></select></label><label>Locatário responsável<select v-model="contractForm.tenantId" required><option value="">Selecione</option><option v-for="p in parties" :key="p.id" :value="p.id">{{ p.name }}</option></select></label><label>Início<input v-model="contractForm.startDate" type="date" required></label><label>Término<input v-model="contractForm.endDate" type="date" required></label><label>Aluguel<input v-model.number="contractForm.baseRent" type="number" min="0.01" step="0.01" required></label><label>Condomínio<input v-model.number="contractForm.condoAmount" type="number" min="0" step="0.01"></label><label>IPTU<input v-model.number="contractForm.iptuAmount" type="number" min="0" step="0.01"></label><label>Seguro<input v-model.number="contractForm.insuranceAmount" type="number" min="0" step="0.01"></label><label>Dia do vencimento<input v-model.number="contractForm.dueDay" type="number" min="1" max="28"></label><label>Dia do repasse<input v-model.number="contractForm.payoutDay" type="number" min="1" max="28"></label><label>Forma de cobrança<select v-model="contractForm.billingType"><option>BOLETO</option><option>PIX</option></select></label><label>Taxa imobiliária (%)<input v-model.number="contractForm.managementFeeValue" type="number" min="0" step="0.01"></label><label>Garantia<select v-model="contractForm.guaranteeType"><option value="NONE">Sem garantia</option><option value="DEPOSIT">Caução</option><option value="GUARANTOR">Fiador</option><option value="INSURANCE">Seguro-fiança</option><option value="CAPITALIZATION_BOND">Título de capitalização</option></select></label><label>Próximo reajuste<input v-model="contractForm.nextAdjustmentDate" type="date"></label></div><div class="dialog-actions"><button type="button" @click="showContract=false">Cancelar</button><button :disabled="busy" class="primary">Salvar rascunho</button></div></form></div>
 
     <div v-if="showCharge" class="modal"><form @submit.prevent="generateCharge" class="dialog"><div class="section-head"><h2 class="section-title">Gerar cobrança</h2><button type="button" @click="showCharge=false">✕</button></div><div class="form-grid"><label class="sm:col-span-2">Contrato<select v-model="chargeForm.contractId" required><option value="">Selecione</option><option v-for="c in activeContracts" :key="c.id" :value="c.id">{{ properties.find(p=>p.id===c.propertyId)?.title }} · {{ money.format(c.baseRent) }}</option></select></label><label>Competência<input v-model="chargeForm.competence" type="date" required></label><label>Vencimento<input v-model="chargeForm.dueDate" type="date" required></label></div><div class="dialog-actions"><button type="button" @click="showCharge=false">Cancelar</button><button :disabled="busy" class="primary">Gerar rascunho</button></div></form></div>
-  </div>
+    </div>
+  </AppLayout>
 </template>
 
 <style scoped>

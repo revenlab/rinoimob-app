@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import AppLayout from '@/layouts/AppLayout.vue'
 import integrationsService from '@/services/integrations'
 import type {
   IntegrationAsset,
@@ -279,7 +280,8 @@ onMounted(() => void loadAll())
 </script>
 
 <template>
-  <main class="p-6 lg:p-8 space-y-6">
+  <AppLayout>
+    <main class="p-6 lg:p-8 space-y-6">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div>
         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-500">Captação automática</p>
@@ -441,5 +443,6 @@ onMounted(() => void loadAll())
         </div>
       </section>
     </template>
-  </main>
+    </main>
+  </AppLayout>
 </template>
