@@ -37,6 +37,14 @@ class IntegrationsService {
     return apiFetch<{ authorizationUrl: string }>(`${BASE}/meta/oauth/start`, { method: 'POST' })
   }
 
+  reconnectMetaOAuth(connectionId: string): Promise<{ authorizationUrl: string }> {
+    return apiFetch<{ authorizationUrl: string }>(`${BASE}/${connectionId}/meta/oauth/reconnect`, { method: 'POST' })
+  }
+
+  requestMetaSync(connectionId: string): Promise<void> {
+    return apiFetch<void>(`${BASE}/${connectionId}/meta/sync`, { method: 'POST' })
+  }
+
   listMetaPages(connectionId: string): Promise<IntegrationAsset[]> {
     return apiFetch<IntegrationAsset[]>(`${BASE}/${connectionId}/meta/pages`)
   }

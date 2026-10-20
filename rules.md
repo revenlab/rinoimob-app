@@ -252,3 +252,11 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
 - **Central global de integrações**: `/integracoes` apresenta um card por provedor e concentra, em um modal próprio, a criação, seleção, atualização, homologação, roteamento e eventos de suas múltiplas conexões.
 - **Identidade visual das integrações**: os cards e modais da central usam SVGs locais das marcas Meta e Grupo OLX em `public/integrations`, sem dependência de CDN em runtime.
 - **Camadas da central de integrações**: o portal de gerenciamento é teleportado para o `body`, cria contexto isolado em `z-[10000]`, separa backdrop e diálogo e bloqueia o scroll da página, mantendo painéis e modais internos acima do menu/header.
+
+- **Retomada da conexão Meta**: `Integrations.vue` mostra configuração pendente, erro e autorização concluída separadamente; `metaAuthorized` controla a busca de páginas e o botão Reconectar reutiliza a conexão existente. A confirmação da página permanece necessária para exibir a conexão ativa.
+
+- **Falha no retorno OAuth Meta**: `Integrations.vue` trata `meta=error`, abre o provedor Meta e orienta uma nova autorização pelo botão Reconectar quando o callback foi reutilizado ou perdeu o state.
+
+- **Erro de permissão Meta**: falha ao carregar detalhes recarrega os estados das conexões para mostrar o erro persistido e a ação Reconectar, preservando a mensagem original quando a recarga falha.
+
+- **Recuperação de leads Meta**: o gerenciamento da conexão mostra tabela por formulário com última conferência, total recuperado e erro/andamento. As ações Atualizar status e Buscar leads pendentes usam o estado retornado pelos roteamentos e a solicitação assíncrona de recuperação; conexões inativas não permitem disparar uma nova busca.

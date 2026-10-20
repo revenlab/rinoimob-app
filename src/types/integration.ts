@@ -15,6 +15,7 @@ export interface IntegrationConnection {
   lastProcessedAt: string | null
   lastError: string | null
   pendingEvents: number
+  metaAuthorized: boolean
 }
 
 export interface GrupoOlxFeedStatus {
@@ -43,6 +44,12 @@ export interface IntegrationRoute {
   defaultPropertyId: string | null
   fieldMapping: Record<string, string>
   active: boolean
+  lastSyncAt: string | null
+  syncedUntil: string | null
+  nextSyncAt: string | null
+  syncError: string | null
+  recoveredLeads: number
+  syncInProgress: boolean
 }
 
 export interface SaveIntegrationRoute {

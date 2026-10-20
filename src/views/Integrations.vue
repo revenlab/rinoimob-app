@@ -87,7 +87,7 @@ const resources = computed<IntegrationAsset[]>(() => selectedConnection.value?.p
     : [{ id: '*', name: 'Todos os leads do Grupo OLX', type: 'FORM' }])
 
 const statusLabel: Record<string, string> = {
-    CONNECTING: 'Conectando',
+    CONNECTING: 'Configuração pendente',
     ACTIVE: 'Ativa',
     PAUSED: 'Pausada',
     EXPIRED: 'Expirada',
@@ -150,11 +150,18 @@ async function loadAll() {
         options.value = routingOptions
         events.value = eventPage.content
 
+        if (route.query.meta === 'error') {
+            showProvider('META_LEAD_ADS')
+            await loadConnectionDetails()
+            error.value = 'Esta tentativa de autorização expirou ou já foi utilizada. Clique em Reconectar com a Meta para iniciar uma nova tentativa.'
+            await router.replace({ query: {} })
+        }
         const callbackConnection = typeof route.query.connectionId === 'string' ? route.query.connectionId : ''
         const callbackItem = connectionList.find(item => item.id === callbackConnection)
         if (callbackItem) {
             showProvider(callbackItem.provider, callbackItem.id)
-            success.value = 'Conta Meta conectada. Selecione a página que enviará os leads.'
+            if (callbackItem.lastError) error.value = callbackItem.lastError
+            else success.value = 'Autorização recebida. Selecione a página para concluir a conexão.'
             await router.replace({ query: {} })
         }
     } catch (caught) {
@@ -165,10 +172,38 @@ async function loadAll() {
 }
 
 async function startMeta() {
+    await authorizeMeta()
+}
+
+async function reconnectMeta() {
+    if (selectedConnection.value) await authorizeMeta(selectedConnection.value.id)
+}
+
+async function recoverMetaLeads() {
+    const connection = selectedConnection.value
+    if (!connection) return
     actionLoading.value = true
     error.value = ''
+    success.value = ''
     try {
-        const response = await integrationsService.startMetaOAuth()
+        await integrationsService.requestMetaSync(connection.id)
+        await loadConnectionDetails()
+        success.value = 'Busca de leads pendentes solicitada. Os formulários serão conferidos em instantes; atualize o status para acompanhar.'
+    } catch (caught) {
+        error.value = messageFrom(caught, 'Não foi possível solicitar a recuperação dos leads.')
+    } finally {
+        actionLoading.value = false
+    }
+}
+
+async function authorizeMeta(connectionId?: string) {
+    actionLoading.value = true
+    error.value = ''
+    success.value = ''
+    try {
+        const response = connectionId
+            ? await integrationsService.reconnectMetaOAuth(connectionId)
+            : await integrationsService.startMetaOAuth()
         window.location.assign(response.authorizationUrl)
     } catch (caught) {
         error.value = messageFrom(caught, 'Não foi possível iniciar a conexão com o Meta.')
@@ -180,6 +215,7 @@ async function createOlx() {
     if (!olxName.value.trim()) return
     actionLoading.value = true
     error.value = ''
+    success.value = ''
     try {
         const created = await integrationsService.createGrupoOlx(olxName.value.trim())
         connections.value.push(created)
@@ -204,13 +240,16 @@ async function loadConnectionDetails() {
 
     actionLoading.value = true
     error.value = ''
+    success.value = ''
     try {
         routes.value = await integrationsService.listRoutes(connection.id)
         if (connection.provider === 'META_LEAD_ADS') {
-            if (connection.externalAccountId) {
+            if (!connection.metaAuthorized) return
+            if (connection.externalAccountId && ['ACTIVE', 'PAUSED'].includes(connection.status)) {
                 forms.value = await integrationsService.listMetaForms(connection.id)
             } else {
-                pages.value = await integrationsService.listMetaPages(connection.id)
+                pages.value = (await integrationsService.listMetaPages(connection.id))
+                    .filter(page => !connection.externalAccountId || page.id === connection.externalAccountId)
             }
         } else {
             grupoOlxFeed.value = await integrationsService.grupoOlxFeedStatus(connection.id)
@@ -220,6 +259,11 @@ async function loadConnectionDetails() {
         }
     } catch (caught) {
         error.value = messageFrom(caught, 'Não foi possível carregar os detalhes da conexão.')
+        try {
+            connections.value = await integrationsService.listConnections()
+        } catch {
+            // Preserve the original provider error if refreshing also fails.
+        }
     } finally {
         actionLoading.value = false
     }
@@ -230,6 +274,7 @@ async function activatePage(page: IntegrationAsset) {
     if (!connection) return
     actionLoading.value = true
     error.value = ''
+    success.value = ''
     try {
         const updated = await integrationsService.activateMetaPage(connection.id, page)
         replaceConnection(updated)
@@ -238,6 +283,11 @@ async function activatePage(page: IntegrationAsset) {
         success.value = `Página ${page.name} conectada.`
     } catch (caught) {
         error.value = messageFrom(caught, 'Não foi possível conectar a página.')
+        try {
+            connections.value = await integrationsService.listConnections()
+        } catch {
+            // Preserve the original activation error if refreshing also fails.
+        }
     } finally {
         actionLoading.value = false
     }
@@ -276,6 +326,7 @@ async function saveRoute() {
 
     actionLoading.value = true
     error.value = ''
+    success.value = ''
     try {
         const saved = await integrationsService.saveRoute(connection.id, {
             externalResourceId: routeForm.externalResourceId,
@@ -308,6 +359,7 @@ async function toggleConnection() {
     if (!connection || !['ACTIVE', 'PAUSED'].includes(connection.status)) return
     actionLoading.value = true
     error.value = ''
+    success.value = ''
     try {
         const updated = await integrationsService.updateStatus(
             connection.id,
@@ -566,6 +618,8 @@ onMounted(() => void loadAll())
                         </aside>
 
                         <main class="min-h-0 overflow-y-auto p-4 sm:p-6">
+                            <p v-if="error" role="alert" class="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{{ error }}</p>
+                            <p v-if="success" role="status" class="mb-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{{ success }}</p>
                             <div v-if="!selectedConnection" class="flex min-h-[420px] flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-800">
                                 <span class="flex h-16 w-16 items-center justify-center rounded-2xl p-3 ring-1" :class="selectedProvider.logoClass">
                                     <img :src="selectedProvider.logo" :alt="selectedProvider.logoAlt" class="h-full w-full object-contain">
@@ -597,6 +651,49 @@ onMounted(() => void loadAll())
                                     <p v-if="selectedConnection.lastError" class="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{{ selectedConnection.lastError }}</p>
                                 </section>
 
+                                <section v-if="selectedConnection.provider === 'META_LEAD_ADS'" class="rounded-2xl border border-blue-200 bg-blue-50/60 p-5 dark:border-blue-900 dark:bg-blue-950/20">
+                                    <h3 class="font-semibold text-slate-900 dark:text-white">Status da conexão Meta</h3>
+                                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                                        {{ selectedConnection.status === 'ACTIVE' ? 'Página conectada e recebimento de leads autorizado pela Meta.'
+                                            : selectedConnection.status === 'PAUSED' ? 'O recebimento de leads está pausado.'
+                                            : selectedConnection.status === 'ERROR' || selectedConnection.status === 'EXPIRED' ? 'A conexão precisa de atenção. Reconecte para renovar a autorização.'
+                                            : selectedConnection.metaAuthorized ? 'Autorização recebida. Selecione a página abaixo para concluir a conexão.'
+                                            : 'A autorização na Meta ainda não foi concluída. Esta tentativa não está ativa.' }}
+                                    </p>
+                                    <button type="button" class="mt-4 rounded-xl bg-[#1877F2] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50" :disabled="actionLoading" @click="reconnectMeta">
+                                        {{ actionLoading ? 'Aguarde...' : 'Reconectar com a Meta' }}
+                                    </button>
+                                    <p v-if="selectedConnection.metaAuthorized && selectedConnection.status === 'CONNECTING' && !pages.length && !actionLoading" class="mt-3 text-sm text-amber-700">Nenhuma página disponível. Confira suas permissões no Facebook e reconecte.</p>
+                                </section>
+
+                                <section v-if="selectedConnection.provider === 'META_LEAD_ADS' && routes.length" class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                                    <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 p-5 dark:border-slate-700">
+                                        <div>
+                                            <h3 class="font-semibold text-slate-900 dark:text-white">Recuperação de leads</h3>
+                                            <p class="mt-1 max-w-lg text-sm text-slate-500">Os formulários configurados são conferidos periodicamente para recuperar leads que não chegaram. Leads já recebidos não são duplicados.</p>
+                                        </div>
+                                        <div class="flex flex-wrap gap-2">
+                                            <button type="button" class="rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold disabled:opacity-50 dark:border-slate-600" :disabled="actionLoading" @click="loadConnectionDetails">Atualizar status</button>
+                                            <button type="button" class="rounded-xl bg-indigo-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50" :disabled="actionLoading || selectedConnection.status !== 'ACTIVE'" @click="recoverMetaLeads">Buscar leads pendentes</button>
+                                        </div>
+                                    </div>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
+                                            <thead class="bg-slate-50 text-left text-xs uppercase text-slate-400 dark:bg-slate-900/40">
+                                                <tr><th class="px-5 py-3">Formulário</th><th class="px-5 py-3">Última conferência</th><th class="px-5 py-3">Recuperados</th><th class="px-5 py-3">Situação</th></tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                                                <tr v-for="mapping in routes" :key="mapping.id">
+                                                    <td class="px-5 py-3">{{ mapping.externalResourceName || mapping.externalResourceId }}</td>
+                                                    <td class="whitespace-nowrap px-5 py-3">{{ formatDate(mapping.lastSyncAt) }}</td>
+                                                    <td class="px-5 py-3">{{ mapping.recoveredLeads ?? 0 }}</td>
+                                                    <td class="max-w-sm px-5 py-3" :class="mapping.syncError ? 'text-red-600' : 'text-slate-500'">{{ !mapping.active ? 'Pausado' : mapping.syncError || (mapping.syncInProgress ? 'Em andamento' : mapping.lastSyncAt ? 'Atualizado' : 'Aguardando primeira conferência') }}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </section>
+
                                 <section v-if="selectedConnection.inboundUrl" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
                                     <p class="text-xs font-bold uppercase tracking-wide text-slate-400">Entrada de leads</p>
                                     <p class="mt-1 text-sm text-slate-500">Cadastre esta URL no portal durante a homologação.</p>
@@ -625,7 +722,7 @@ onMounted(() => void loadAll())
 
                                 <section v-if="pages.length" class="rounded-2xl border border-blue-200 bg-blue-50/60 p-5 dark:border-blue-900 dark:bg-blue-950/20">
                                     <h3 class="font-semibold text-slate-900 dark:text-white">Escolha a página do Facebook</h3>
-                                    <p class="mt-1 text-sm text-slate-500">Cada página selecionada representa uma conexão independente.</p>
+                                    <p class="mt-1 text-sm text-slate-500">A conexão só ficará ativa após a confirmação da página pela Meta.</p>
                                     <div class="mt-4 flex flex-wrap gap-2">
                                         <button v-for="page in pages" :key="page.id" class="rounded-xl border border-blue-300 bg-white px-3 py-2 text-sm font-semibold text-blue-700 dark:bg-slate-900" :disabled="actionLoading" @click="activatePage(page)">{{ page.name }}</button>
                                     </div>
