@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import integrationsService from '@/services/integrations'
@@ -157,11 +157,20 @@ async function loadAll() {
             await router.replace({ query: {} })
         }
         const callbackConnection = typeof route.query.connectionId === 'string' ? route.query.connectionId : ''
+        if (route.query.olx === 'error') {
+            showProvider('GRUPO_OLX')
+            await loadConnectionDetails()
+            error.value = 'A autorização da OLX expirou ou já foi utilizada. Inicie uma nova conexão com a OLX.'
+            await router.replace({ query: {} })
+        }
         const callbackItem = connectionList.find(item => item.id === callbackConnection)
         if (callbackItem) {
             showProvider(callbackItem.provider, callbackItem.id)
+            await nextTick()
             if (callbackItem.lastError) error.value = callbackItem.lastError
-            else success.value = 'Autorização recebida. Selecione a página para concluir a conexão.'
+            else success.value = callbackItem.provider === 'GRUPO_OLX'
+                ? 'OLX autorizada e recebimento de leads configurado. Configure o roteamento abaixo.'
+                : 'Autorização recebida. Selecione a página para concluir a conexão.'
             await router.replace({ query: {} })
         }
     } catch (caught) {
@@ -229,6 +238,21 @@ async function createOlx() {
     }
 }
 
+async function authorizeOlx(connectionId?: string) {
+    actionLoading.value = true
+    error.value = ''
+    success.value = ''
+    try {
+        const response = connectionId
+            ? await integrationsService.reconnectOlxOAuth(connectionId)
+            : await integrationsService.startOlxOAuth()
+        window.location.assign(response.authorizationUrl)
+    } catch (caught) {
+        error.value = messageFrom(caught, 'Não foi possível iniciar a autorização da OLX.')
+        actionLoading.value = false
+    }
+}
+
 async function loadConnectionDetails() {
     const connection = selectedConnection.value
     pages.value = []
@@ -252,7 +276,7 @@ async function loadConnectionDetails() {
                     .filter(page => !connection.externalAccountId || page.id === connection.externalAccountId)
             }
         } else {
-            grupoOlxFeed.value = await integrationsService.grupoOlxFeedStatus(connection.id)
+            if (!connection.olxOAuth) grupoOlxFeed.value = await integrationsService.grupoOlxFeedStatus(connection.id)
             routeForm.externalResourceId = '*'
             routeForm.externalResourceName = 'Todos os leads do Grupo OLX'
             loadExistingRoute('*')
@@ -610,9 +634,12 @@ onMounted(() => void loadAll())
                                     + Conectar nova conta
                                 </button>
                                 <form v-else class="space-y-2" @submit.prevent="createOlx">
-                                    <label class="text-xs font-semibold text-slate-500">Nova homologação</label>
+                                    <label class="text-xs font-semibold text-slate-500">Canal Pro · Imóveis</label>
                                     <input v-model="olxName" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-slate-600 dark:bg-slate-900" placeholder="Ex.: Canal Pro Matriz">
                                     <button class="w-full rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50" :disabled="actionLoading || !olxName.trim()">+ Adicionar conexão</button>
+                                    <p class="text-xs text-slate-500">Para imóveis, cadastre a URL de leads no Canal Pro após a homologação do CRM.</p>
+                                    <button type="button" class="w-full rounded-xl border border-violet-400 px-4 py-2.5 text-sm font-semibold text-violet-700 disabled:opacity-50 dark:text-violet-300" :disabled="actionLoading" @click="authorizeOlx()">Conectar conta OLX</button>
+                                    <p class="text-xs text-slate-500">A API de leads OLX atende às categorias habilitadas pela OLX. A documentação atual lista veículos.</p>
                                 </form>
                             </div>
                         </aside>
@@ -694,9 +721,15 @@ onMounted(() => void loadAll())
                                     </div>
                                 </section>
 
+                                <section v-if="selectedConnection.olxOAuth" class="rounded-2xl border border-violet-200 bg-violet-50/60 p-5 dark:border-violet-900 dark:bg-violet-950/20">
+                                    <h3 class="font-semibold text-slate-900 dark:text-white">Autorização OLX</h3>
+                                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">{{ selectedConnection.olxAuthorized ? 'Conta autorizada e webhook cadastrado na OLX.' : 'Autorize sua conta para cadastrar o recebimento de leads na OLX.' }}</p>
+                                    <button type="button" class="mt-4 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50" :disabled="actionLoading" @click="authorizeOlx(selectedConnection.id)">Reconectar com a OLX</button>
+                                </section>
+
                                 <section v-if="selectedConnection.inboundUrl" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
                                     <p class="text-xs font-bold uppercase tracking-wide text-slate-400">Entrada de leads</p>
-                                    <p class="mt-1 text-sm text-slate-500">Cadastre esta URL no portal durante a homologação.</p>
+                                    <p class="mt-1 text-sm text-slate-500">{{ selectedConnection.olxOAuth ? 'A URL é cadastrada automaticamente após a autorização da conta OLX.' : 'Cadastre esta URL no Canal Pro durante a homologação.' }}</p>
                                     <div class="mt-3 flex gap-2">
                                         <code class="min-w-0 flex-1 truncate rounded-xl bg-slate-50 px-3 py-2.5 text-xs dark:bg-slate-900">{{ selectedConnection.inboundUrl }}</code>
                                         <button class="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white dark:bg-indigo-600" @click="copyText(selectedConnection.inboundUrl, 'URL')">Copiar</button>

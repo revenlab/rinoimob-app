@@ -37,6 +37,14 @@ class IntegrationsService {
     return apiFetch<{ authorizationUrl: string }>(`${BASE}/meta/oauth/start`, { method: 'POST' })
   }
 
+  startOlxOAuth(): Promise<{ authorizationUrl: string }> {
+    return apiFetch<{ authorizationUrl: string }>(`${BASE}/grupo-olx/oauth/start`, { method: 'POST' })
+  }
+
+  reconnectOlxOAuth(connectionId: string): Promise<{ authorizationUrl: string }> {
+    return apiFetch<{ authorizationUrl: string }>(`${BASE}/${connectionId}/grupo-olx/oauth/reconnect`, { method: 'POST' })
+  }
+
   reconnectMetaOAuth(connectionId: string): Promise<{ authorizationUrl: string }> {
     return apiFetch<{ authorizationUrl: string }>(`${BASE}/${connectionId}/meta/oauth/reconnect`, { method: 'POST' })
   }

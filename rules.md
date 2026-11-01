@@ -137,6 +137,8 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
 
 ## Last Changes
 
+- **Autorização OLX**: `Integrations.vue` oferece conexão/reconexão OAuth OLX, trata o retorno sem expor tokens e mostra o status do webhook cadastrado pelo backend. O cadastro imobiliário Canal Pro/VRSync permanece separado, com orientações de homologação; a API de leads OAuth OLX documenta categorias de veículos.
+
 - **Capa de blog por upload (#57)**: o editor de posts aceita JPG, PNG e WEBP de até 5 MB, inclusive na criação e no modo suporte, sem remover a alternativa de URL externa.
 - **Máscara monetária (#59)**: valores de imóvel, IPTU, condomínio e preços por planta mostram moeda enquanto o formulário conserva números para a API.
 - **Detalhes comerciais da planta**: o cadastro permite informar e salvar preço inicial/final, quartos, suítes, banheiros e vagas em cada planta, inclusive após ela já estar salva.

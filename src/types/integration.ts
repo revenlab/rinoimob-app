@@ -16,6 +16,8 @@ export interface IntegrationConnection {
   lastError: string | null
   pendingEvents: number
   metaAuthorized: boolean
+  olxOAuth: boolean
+  olxAuthorized: boolean
 }
 
 export interface GrupoOlxFeedStatus {
