@@ -1,0 +1,15 @@
+export type RentalPartyType = 'INDIVIDUAL' | 'LEGAL_ENTITY'
+export type RentalPartyRole = 'OWNER' | 'TENANT' | 'GUARANTOR'
+export type RentalContractStatus = 'DRAFT' | 'ACTIVE' | 'EXPIRED' | 'TERMINATED' | 'CANCELLED'
+export type RentalChargeStatus = 'DRAFT' | 'ISSUING' | 'PENDING' | 'RECEIVED' | 'OVERDUE' | 'CANCELLED' | 'REFUNDED' | 'ERROR'
+export type RentalPayoutStatus = 'DRAFT' | 'READY' | 'PROCESSING' | 'PAID' | 'FAILED' | 'CANCELLED'
+export interface RentalParty { id:string; type:RentalPartyType; name:string; cpfCnpj:string|null; email:string|null; phone:string|null; address:string|null; pixKeyMasked:string|null; pixKeyType:string|null }
+export interface RentalPartyInput { type:RentalPartyType; name:string; cpfCnpj?:string; email?:string; phone?:string; address?:string; pixKey?:string; pixKeyType?:string }
+export interface ContractPartyInput { partyId:string; role:RentalPartyRole; ownershipPercent?:number|null; billingResponsible:boolean }
+export interface RentalContractInput { propertyId:string; sourceLeadId?:string|null; startDate:string; endDate:string; dueDay:number; chargeLeadDays:number; payoutDay:number; billingType:'BOLETO'|'PIX'; baseRent:number; condoAmount:number; iptuAmount:number; insuranceAmount:number; discountAmount:number; managementFeeType:'PERCENTAGE'|'FIXED'; managementFeeValue:number; lateFeePercent:number; monthlyInterestPercent:number; guaranteeType:'NONE'|'DEPOSIT'|'GUARANTOR'|'INSURANCE'|'CAPITALIZATION_BOND'; guaranteeDetails?:string; adjustmentIndex:'MANUAL'|'IPCA'|'IGP_M'; nextAdjustmentDate?:string|null; parties:ContractPartyInput[] }
+export interface RentalContract extends RentalContractInput { id:string; status:RentalContractStatus; activatedAt:string|null; endedAt:string|null; parties:Array<ContractPartyInput & {id:string;partyName:string}>; documents:Array<{id:string;name:string;url:string;createdAt:string}> }
+export interface RentalChargeItem { id:string; type:string; description:string; amount:number; payoutTreatment:'OWNER'|'AGENCY'|'EXCLUDED' }
+export interface RentalCharge { id:string; contractId:string; competence:string; dueDate:string; status:RentalChargeStatus; totalAmount:number; baseRentAmount:number; rinoFeePercent:number; rinoFeeAmount:number; invoiceUrl:string|null; receiptUrl:string|null; billingType:string; items:RentalChargeItem[]; receivedAt:string|null; errorMessage:string|null }
+export interface RentalPayout { id:string; contractId:string; chargeId:string; ownerPartyId:string; ownerName:string; status:RentalPayoutStatus; grossOwnerAmount:number; managementFeeAmount:number; netAmount:number; scheduledDate:string|null; approvedAt:string|null; completedAt:string|null; errorMessage:string|null }
+export interface RentalDashboard { activeContracts:number; overdueCharges:number; pendingPayouts:number; receivedThisMonth:number }
+export interface RentalAsaasAccount { status:'NOT_CONFIGURED'|'PENDING'|'ACTIVE'|'REJECTED'|'SUSPENDED'; providerAccountId:string|null; walletId:string|null; rinoFeePercent:number; configured:boolean }

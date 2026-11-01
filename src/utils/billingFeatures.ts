@@ -5,6 +5,7 @@ export type BillingFeatureKey =
   | 'customDomainEnabled'
   | 'automationCrmEnabled'
   | 'publicApiEnabled'
+  | 'integrationsEnabled'
 
 export interface BillingFeatureDefinition {
   key: BillingFeatureKey
@@ -42,6 +43,13 @@ export const BILLING_FEATURES: Record<BillingFeatureKey, BillingFeatureDefinitio
     description: 'Integre o Rinoimob com sistemas externos usando a API pública.',
     requiredPlanCode: 'PRIME',
     requiredPlanName: 'Prime',
+  },
+  integrationsEnabled: {
+    key: 'integrationsEnabled',
+    label: 'Integrações de leads',
+    description: 'Receba automaticamente leads do Meta, ZAP, Viva Real e OLX.',
+    requiredPlanCode: 'STARTER',
+    requiredPlanName: 'Starter',
   },
 }
 

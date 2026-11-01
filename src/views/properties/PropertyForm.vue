@@ -5,9 +5,11 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { usePropertyStore } from '@/stores/property'
 import { useCategoryStore } from '@/stores/category'
 import propertyService from '@/services/property'
+import userManagementService from '@/services/userManagement'
 import { usePropertyAiGeneration } from '@/composables/usePropertyAiGeneration'
 import type { CreatePropertyRequest, PropertyCondition, PropertyStatus, PropertyTypeResponse } from '@/types/property'
 import { DEFAULT_PROPERTY_TYPES, propertyTypeLabel } from '@/types/property'
+import type { UserManagementResponse } from '@/types/role'
 
 const router = useRouter()
 const route = useRoute()
@@ -29,7 +31,11 @@ const form = ref<CreatePropertyRequest & { status?: PropertyStatus; slug?: strin
   addressCountry: 'BR',
   attributes: {},
   categoryIds: [],
+  availableToAllBrokers: true,
+  brokerIds: [],
 })
+
+const brokers = ref<UserManagementResponse[]>([])
 
 type PropertyPhotoDraft = {
   id: string
@@ -364,6 +370,11 @@ onMounted(async () => {
   } catch {
     propertyTypes.value = DEFAULT_PROPERTY_TYPES
   }
+  try {
+    brokers.value = (await userManagementService.list()).filter(user => user.active)
+  } catch {
+    brokers.value = []
+  }
   if (!isEdit.value && !propertyTypes.value.some(type => type.code === form.value.propertyType && type.active)) {
     form.value.propertyType = propertyTypes.value.find(type => type.active)?.code ?? DEFAULT_PROPERTY_TYPES[0].code
   }
@@ -404,6 +415,8 @@ onMounted(async () => {
         lng: p.lng ?? undefined,
         attributes: p.attributes ?? {},
         categoryIds: p.categories?.map(c => c.id) ?? [],
+        availableToAllBrokers: p.availableToAllBrokers ?? true,
+        brokerIds: p.brokerIds ?? [],
       }
 
       floorPlansDraft.value = p.floorPlans.map(plan => ({
@@ -684,6 +697,10 @@ async function generateDescriptionWithAi() {
 
 async function handleSubmit() {
   if (!form.value.title.trim()) { formError.value = 'Título é obrigatório'; return }
+  if (!form.value.availableToAllBrokers && !form.value.brokerIds?.length) {
+    formError.value = 'Selecione ao menos um corretor ou disponibilize o imóvel para todos'
+    return
+  }
   formError.value = null
   isSaving.value = true
   try {
@@ -825,6 +842,22 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
             <input v-model="form.referenceCode" type="text" :class="inputClass" placeholder="Gerado automaticamente se vazio" />
             <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">Opcional. O sistema gera um código único ao salvar.</p>
           </div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
+        <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500 mb-3">Oferta por corretores</h2>
+        <label class="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200">
+          <input v-model="form.availableToAllBrokers" type="checkbox" class="h-4 w-4 accent-indigo-600" />
+          Disponível para todos os corretores ativos
+        </label>
+        <div v-if="!form.availableToAllBrokers" class="mt-4 rounded-xl border border-slate-200 dark:border-slate-700 p-3">
+          <p class="mb-2 text-xs text-slate-500">Selecione quem pode ofertar este imóvel.</p>
+          <label v-for="broker in brokers" :key="broker.id" class="flex items-center gap-2 py-1 text-sm text-slate-700 dark:text-slate-200">
+            <input v-model="form.brokerIds" type="checkbox" :value="broker.id" class="h-4 w-4 accent-indigo-600" />
+            {{ broker.firstName }} {{ broker.lastName }}
+          </label>
+          <p v-if="!brokers.length" class="text-sm text-amber-600">Não foi possível carregar os corretores disponíveis.</p>
         </div>
       </div>
 

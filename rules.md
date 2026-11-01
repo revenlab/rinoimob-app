@@ -236,3 +236,29 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
   - O guard força uma nova leitura de `/billing/status` antes de confirmar um bloqueio, evitando cache antigo após upgrade; flags ausentes em backends antigos são tratadas como desconhecidas e não como bloqueio.
   - `website-domain.vue` normaliza URL, caminho, porta e ponto final, preserva mensagens reais da API e corrige estados de carregamento/cópia.
 - **CTA de upgrade no Dashboard**: clientes no plano `FREE` veem um resumo dos ganhos de Starter, Prime e Ultimate; somente `TENANT_OWNER` e `TENANT_ADMIN` recebem o acesso direto a `/meu-plano` com Starter recomendado.
+
+- **Portfólio público de corretores (#63)**: `PropertyForm.vue` permite disponibilizar um imóvel para todos os corretores ativos ou selecionar uma lista explícita, enviada por `availableToAllBrokers` e `brokerIds` no contrato do imóvel.
+
+- **Perfil comercial do corretor (#63)**: `Profile.vue` permite editar slug, apresentação, Instagram e CRECI, além de enviar a foto pública pelo endpoint autenticado do próprio usuário.
+
+- **Compartilhamento do perfil público (#63)**: `Profile.vue` monta `/corretor/{slug}` no host público do tenant, copia a URL e usa Web Share API quando o navegador a oferece.
+
+- **Hub de integrações de leads**: `Integrations.vue` centraliza Meta Lead Ads e Grupo OLX (ZAP, Viva Real e OLX), com seleção tenant-scoped de funil, bolsão/corretor, imóvel padrão, saúde da conexão, eventos recentes e reprocessamento. A rota `/integracoes` é exclusiva de owner/admin e usa o entitlement Starter `integrationsEnabled`.
+- `LeadDetail.vue` exibe a aquisição automática separadamente, incluindo canal, campanha/anúncio e alerta quando a referência de imóvel recebida do portal não for encontrada.
+- **Publicação Grupo OLX**: a conexão em `/integracoes` apresenta a URL VRSync de inventário, contagem de imóveis publicáveis, motivos de exclusão e alertas de contato/configuração antes da homologação; a URL de feed permanece separada da URL que recebe leads.
+- **Gestão de aluguéis**: `RentalManagement.vue` concentra Visão geral, Contratos, Pessoas, Cobranças, Repasses e Asaas em abas nomeadas com tabelas e ações explícitas. `services/rental.ts` consome `/api/v1/rentals/**`; emissão e repasse permanecem ações separadas, e o Pix exige confirmação antes do envio.
+- **Navegação de Integrações e Aluguéis**: `Integrations.vue` e `RentalManagement.vue` usam `AppLayout`, preservando sidebar, header e navegação ao acessar `/integracoes` e `/alugueis`.
+- **Aluguéis temporariamente indisponível**: o menu mantém “Aluguéis” visível com selo “em breve” e sem ação de clique; o guard redireciona acessos diretos a `/alugueis` para o Dashboard até a liberação do módulo.
+- **Central global de integrações**: `/integracoes` apresenta um card por provedor e concentra, em um modal próprio, a criação, seleção, atualização, homologação, roteamento e eventos de suas múltiplas conexões.
+- **Identidade visual das integrações**: os cards e modais da central usam SVGs locais das marcas Meta e Grupo OLX em `public/integrations`, sem dependência de CDN em runtime.
+- **Camadas da central de integrações**: o portal de gerenciamento é teleportado para o `body`, cria contexto isolado em `z-[10000]`, separa backdrop e diálogo e bloqueia o scroll da página, mantendo painéis e modais internos acima do menu/header.
+
+- **Retomada da conexão Meta**: `Integrations.vue` mostra configuração pendente, erro e autorização concluída separadamente; `metaAuthorized` controla a busca de páginas e o botão Reconectar reutiliza a conexão existente. A confirmação da página permanece necessária para exibir a conexão ativa.
+
+- **Falha no retorno OAuth Meta**: `Integrations.vue` trata `meta=error`, abre o provedor Meta e orienta uma nova autorização pelo botão Reconectar quando o callback foi reutilizado ou perdeu o state.
+
+- **Erro de permissão Meta**: falha ao carregar detalhes recarrega os estados das conexões para mostrar o erro persistido e a ação Reconectar, preservando a mensagem original quando a recarga falha.
+
+- **Recuperação de leads Meta**: o gerenciamento da conexão mostra tabela por formulário com última conferência, total recuperado e erro/andamento. As ações Atualizar status e Buscar leads pendentes usam o estado retornado pelos roteamentos e a solicitação assíncrona de recuperação; conexões inativas não permitem disparar uma nova busca.
+
+- **Integração em main (2026-10-31)**: o merge de `feat/integrations` reúne a central Meta/Grupo OLX, status de recuperação de leads e perfil público de corretores; a interface de Aluguéis permanece com selo “em breve” e acesso direto bloqueado pelo guard.

@@ -1,6 +1,6 @@
 export type PropertyOperation = 'SALE' | 'RENT' | 'SEASONAL'
 export type PropertyType = 'HOUSE' | 'APARTMENT' | 'LAND' | 'COMMERCIAL' | 'RURAL'
-export type PropertyStatus = 'DRAFT' | 'ACTIVE' | 'RESERVED' | 'SOLD' | 'ARCHIVED'
+export type PropertyStatus = 'DRAFT' | 'ACTIVE' | 'RESERVED' | 'RENTED' | 'SOLD' | 'ARCHIVED'
 export type PropertyCondition = 'NEW' | 'USED' | 'UNDER_CONSTRUCTION'
 export type PropertyVideoSource = 'UPLOAD' | 'YOUTUBE'
 
@@ -151,6 +151,8 @@ export interface PropertyResponse {
   photos: PropertyPhotoResponse[]
   floorPlans: FloorPlanResponse[]
   videos: PropertyVideoResponse[]
+  availableToAllBrokers: boolean
+  brokerIds: string[]
 }
 
 export interface CreatePropertyRequest {
@@ -186,6 +188,8 @@ export interface CreatePropertyRequest {
   lng?: number
   attributes?: Record<string, unknown>
   categoryIds?: string[]
+  availableToAllBrokers?: boolean
+  brokerIds?: string[]
 }
 
 export type UpdatePropertyRequest = Partial<CreatePropertyRequest & { status: PropertyStatus }>

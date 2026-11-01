@@ -42,6 +42,26 @@
           <input :value="authStore.currentUser?.email" type="email" disabled class="w-full h-14 px-4 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-slate-400 dark:text-slate-500 cursor-not-allowed" />
         </div>
 
+        <div class="border-t border-slate-100 pt-5 dark:border-slate-700">
+          <p class="mb-4 text-xs font-semibold tracking-[0.2em] uppercase text-slate-400 dark:text-slate-500">Página pública do corretor</p>
+          <div class="mb-4 flex items-center gap-3">
+            <img v-if="publicPhotoUrl" :src="publicPhotoUrl" alt="Foto pública" class="h-14 w-14 rounded-full object-cover" />
+            <input type="file" accept="image/*" class="text-sm" @change="uploadPublicPhoto" />
+          </div>
+          <label class="block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Slug público</label>
+          <input v-model="publicSlug" required pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="nome-do-corretor" class="w-full h-14 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl" />
+          <label class="mt-4 block text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 dark:text-slate-400 mb-2">Apresentação</label>
+          <textarea v-model="publicBio" rows="3" placeholder="Conte brevemente como você atende seus clientes." class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl" />
+          <div class="mt-4 grid gap-4 sm:grid-cols-2">
+            <input v-model="publicInstagramUrl" placeholder="Instagram ou @usuario" class="h-14 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl" />
+            <input v-model="publicCreci" placeholder="CRECI 12345-F" class="h-14 px-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl" />
+          </div>
+          <div v-if="publicProfileUrl" class="mt-4 flex flex-wrap gap-2">
+            <button type="button" @click="copyPublicProfileLink" class="rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-100">{{ linkCopied ? 'Link copiado!' : 'Copiar link público' }}</button>
+            <button v-if="canShare" type="button" @click="sharePublicProfileLink" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-100">Compartilhar</button>
+          </div>
+        </div>
+
         <div v-if="profileError" class="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
           {{ profileError }}
         </div>
@@ -143,11 +163,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import PasswordStrength from '@/components/ui/PasswordStrength.vue'
 import { usePasswordStrength } from '@/composables/usePasswordStrength'
 import { useAuthStore } from '@/stores/auth'
+import authService from '@/services/auth'
 
 const authStore = useAuthStore()
 
@@ -162,12 +183,27 @@ const emailCurrentPassword = ref('')
 const emailLoading = ref(false)
 const emailSuccess = ref('')
 const emailError = ref('')
+const publicSlug = ref('')
+const publicBio = ref('')
+const publicInstagramUrl = ref('')
+const publicCreci = ref('')
+const publicPhotoUrl = ref<string | null>(null)
+const linkCopied = ref(false)
+const publicProfileUrl = computed(() => buildPublicProfileUrl(authStore.currentTenantSubdomain, publicSlug.value))
+const canShare = computed(() => typeof navigator !== 'undefined' && typeof navigator.share === 'function')
 
 onMounted(() => {
   if (authStore.currentUser) {
     firstName.value = authStore.currentUser.firstName
     lastName.value = authStore.currentUser.lastName
   }
+  authService.getPublicBrokerProfile().then(profile => {
+    publicSlug.value = profile.slug ?? ''
+    publicBio.value = profile.bio ?? ''
+    publicInstagramUrl.value = profile.instagramUrl ?? ''
+    publicCreci.value = profile.creci ?? ''
+    publicPhotoUrl.value = profile.photoUrl
+  }).catch(() => undefined)
 })
 
 async function handleUpdateProfile() {
@@ -178,12 +214,52 @@ async function handleUpdateProfile() {
 
   const success = await authStore.updateProfile(firstName.value, lastName.value)
   if (success) {
+    try {
+      const profile = await authService.updatePublicBrokerProfile({ slug: publicSlug.value, bio: publicBio.value, instagramUrl: publicInstagramUrl.value, creci: publicCreci.value })
+      publicPhotoUrl.value = profile.photoUrl
+    } catch (error) {
+      profileError.value = error instanceof Error ? error.message : 'Erro ao atualizar o perfil público.'
+      profileLoading.value = false
+      return
+    }
     profileSuccess.value = 'Perfil atualizado com sucesso!'
   } else {
     profileError.value = authStore.error ?? 'Erro ao atualizar perfil.'
   }
 
   profileLoading.value = false
+}
+
+async function uploadPublicPhoto(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  profileError.value = ''
+  try {
+    const profile = await authService.uploadPublicBrokerPhoto(file)
+    publicPhotoUrl.value = profile.photoUrl
+  } catch (error) {
+    profileError.value = error instanceof Error ? error.message : 'Erro ao enviar a foto pública.'
+  }
+}
+
+function buildPublicProfileUrl(subdomain: string | null, slug: string): string | null {
+  if (!subdomain || !slug || typeof window === 'undefined') return null
+  const baseUrl = window.location.hostname === 'localhost' || window.location.hostname.endsWith('.localhost')
+    ? `http://${subdomain}.localhost:3000`
+    : `${window.location.protocol}//${[subdomain, ...window.location.hostname.split('.').slice(1)].join('.')}`
+  return `${baseUrl}/corretor/${encodeURIComponent(slug)}`
+}
+
+async function copyPublicProfileLink() {
+  if (!publicProfileUrl.value) return
+  await navigator.clipboard.writeText(publicProfileUrl.value)
+  linkCopied.value = true
+  window.setTimeout(() => { linkCopied.value = false }, 2000)
+}
+
+async function sharePublicProfileLink() {
+  if (!publicProfileUrl.value || !navigator.share) return
+  await navigator.share({ title: 'Meu portfólio imobiliário', url: publicProfileUrl.value })
 }
 
 async function handleEmailChange() {

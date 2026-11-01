@@ -119,6 +119,12 @@ const router = createRouter({
       meta: { requiresAuth: true, tutorialRouteKey: 'tasks' }
     },
     {
+      path: '/alugueis',
+      name: 'RentalManagement',
+      component: () => import('@/views/RentalManagement.vue'),
+      meta: { requiresAuth: true, disabled: true }
+    },
+    {
       path: '/whatsapp',
       name: 'WhatsappSettings',
       component: () => import('@/views/WhatsappSettings.vue'),
@@ -129,6 +135,12 @@ const router = createRouter({
       name: 'EmailSenderSettings',
       component: () => import('@/views/EmailSenderSettings.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/integracoes',
+      name: 'Integrations',
+      component: () => import('@/views/Integrations.vue'),
+      meta: { requiresAuth: true, billingAdminOnly: true, requiredBillingFeature: 'integrationsEnabled' }
     },
     {
       path: '/equipe',
@@ -207,6 +219,7 @@ router.beforeEach(async (to, from, next) => {
   const requiresAuth = to.meta.requiresAuth
   const internalOnly = to.meta.internalOnly
   const billingAdminOnly = to.meta.billingAdminOnly
+  const disabled = to.meta.disabled
   const requiredBillingFeature = to.meta.requiredBillingFeature as BillingFeatureKey | undefined
 
   if (authStore.isAuthenticated && !authStore.currentUser) {
@@ -219,6 +232,8 @@ router.beforeEach(async (to, from, next) => {
     next({ name: 'Login', query: { redirect: to.fullPath } })
   } else if (authStore.isAuthenticated && authStore.forcePasswordReset && to.name !== 'ForcePasswordReset') {
     next({ name: 'ForcePasswordReset' })
+  } else if (disabled) {
+    next({ name: 'Dashboard' })
   } else if (internalOnly && !authStore.isInternalStaff) {
     next({ name: 'Dashboard' })
   } else if (billingAdminOnly && !canManageBilling) {

@@ -60,6 +60,7 @@ type PlanFeatureKey =
   | 'customDomainEnabled'
   | 'automationCrmEnabled'
   | 'publicApiEnabled'
+  | 'integrationsEnabled'
   | 'vipSupportEnabled'
   | 'customImplementationEnabled'
 
@@ -68,6 +69,7 @@ const planFeatureRows: Array<{ key: PlanFeatureKey; label: string }> = [
   { key: 'customDomainEnabled', label: 'Domínio customizado' },
   { key: 'automationCrmEnabled', label: 'Automações CRM' },
   { key: 'publicApiEnabled', label: 'API pública' },
+  { key: 'integrationsEnabled', label: 'Integrações de leads' },
   { key: 'vipSupportEnabled', label: 'Suporte VIP' },
   { key: 'customImplementationEnabled', label: 'Implantação personalizada' },
 ]
