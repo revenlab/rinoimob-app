@@ -88,6 +88,7 @@ export function propertyTypeLabel(code: PropertyType | string, types: PropertyTy
 }
 
 export interface PropertySummaryResponse {
+  canEdit?: boolean
   id: string
   title: string
   operation: PropertyOperation

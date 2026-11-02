@@ -5,7 +5,7 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { usePropertyStore } from '@/stores/property'
 import { useCategoryStore } from '@/stores/category'
 import propertyService from '@/services/property'
-import userManagementService from '@/services/userManagement'
+import { useAuthStore } from '@/stores/auth'
 import { usePropertyAiGeneration } from '@/composables/usePropertyAiGeneration'
 import type { CreatePropertyRequest, PropertyCondition, PropertyStatus, PropertyTypeResponse } from '@/types/property'
 import { DEFAULT_PROPERTY_TYPES, propertyTypeLabel } from '@/types/property'
@@ -14,6 +14,9 @@ import type { UserManagementResponse } from '@/types/role'
 const router = useRouter()
 const route = useRoute()
 const store = usePropertyStore()
+const auth = useAuthStore()
+const canSave = ref(false)
+const canOfferToAll = ref(false)
 const catStore = useCategoryStore()
 const { generateTitle: aiGenerateTitle, generateDescription: aiGenerateDescription, isLoadingTitle, isLoadingDescription } = usePropertyAiGeneration()
 
@@ -35,7 +38,7 @@ const form = ref<CreatePropertyRequest & { status?: PropertyStatus; slug?: strin
   brokerIds: [],
 })
 
-const brokers = ref<UserManagementResponse[]>([])
+const brokers = ref<Pick<UserManagementResponse, 'id' | 'firstName' | 'lastName'>[]>([])
 
 type PropertyPhotoDraft = {
   id: string
@@ -364,6 +367,24 @@ onBeforeUnmount(() => {
 })
 
 onMounted(async () => {
+  try {
+    const access = await propertyService.getAccess()
+    canOfferToAll.value = access.canOfferToAll
+    canSave.value = isEdit.value && propertyId.value
+      ? (await propertyService.getPropertyAccess(propertyId.value)).canEdit
+      : access.canCreate
+    if (!canSave.value) {
+      formError.value = 'Você não tem permissão para salvar este imóvel.'
+      return
+    }
+    if (!canOfferToAll.value) {
+      form.value.availableToAllBrokers = false
+      form.value.brokerIds = auth.user?.id ? [auth.user.id] : []
+    }
+  } catch {
+    formError.value = 'Não foi possível verificar suas permissões. Recarregue a página.'
+    return
+  }
   void catStore.fetchCategories()
   try {
     propertyTypes.value = await propertyService.listPropertyTypes(false)
@@ -371,7 +392,7 @@ onMounted(async () => {
     propertyTypes.value = DEFAULT_PROPERTY_TYPES
   }
   try {
-    brokers.value = (await userManagementService.list()).filter(user => user.active)
+    brokers.value = canOfferToAll.value ? await propertyService.listOfferingBrokers() : []
   } catch {
     brokers.value = []
   }
@@ -415,8 +436,8 @@ onMounted(async () => {
         lng: p.lng ?? undefined,
         attributes: p.attributes ?? {},
         categoryIds: p.categories?.map(c => c.id) ?? [],
-        availableToAllBrokers: p.availableToAllBrokers ?? true,
-        brokerIds: p.brokerIds ?? [],
+        availableToAllBrokers: canOfferToAll.value ? (p.availableToAllBrokers ?? true) : false,
+        brokerIds: canOfferToAll.value ? (p.brokerIds ?? []) : (auth.user?.id ? [auth.user.id] : []),
       }
 
       floorPlansDraft.value = p.floorPlans.map(plan => ({
@@ -696,6 +717,7 @@ async function generateDescriptionWithAi() {
 }
 
 async function handleSubmit() {
+  if (!canSave.value) return
   if (!form.value.title.trim()) { formError.value = 'Título é obrigatório'; return }
   if (!form.value.availableToAllBrokers && !form.value.brokerIds?.length) {
     formError.value = 'Selecione ao menos um corretor ou disponibilize o imóvel para todos'
@@ -847,11 +869,12 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
 
       <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
         <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500 mb-3">Oferta por corretores</h2>
-        <label class="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200">
+        <p v-if="!canOfferToAll" class="text-sm text-slate-600 dark:text-slate-300">Você pode cadastrar imóveis para o seu próprio portfólio. A oferta para outros corretores depende de permissão do administrador.</p>
+        <label v-else class="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200">
           <input v-model="form.availableToAllBrokers" type="checkbox" class="h-4 w-4 accent-indigo-600" />
           Disponível para todos os corretores ativos
         </label>
-        <div v-if="!form.availableToAllBrokers" class="mt-4 rounded-xl border border-slate-200 dark:border-slate-700 p-3">
+        <div v-if="canOfferToAll && !form.availableToAllBrokers" class="mt-4 rounded-xl border border-slate-200 dark:border-slate-700 p-3">
           <p class="mb-2 text-xs text-slate-500">Selecione quem pode ofertar este imóvel.</p>
           <label v-for="broker in brokers" :key="broker.id" class="flex items-center gap-2 py-1 text-sm text-slate-700 dark:text-slate-200">
             <input v-model="form.brokerIds" type="checkbox" :value="broker.id" class="h-4 w-4 accent-indigo-600" />
@@ -1391,7 +1414,7 @@ const labelClass = 'block text-xs font-semibold tracking-wide text-slate-500 dar
         </RouterLink>
         <button
           type="submit"
-          :disabled="isSaving"
+          :disabled="isSaving || !canSave"
           class="px-8 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-violet-700 to-indigo-700 shadow-[0_4px_12px_rgba(79,70,229,0.25)] hover:-translate-y-px disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200"
         >
           <span v-if="isSaving" class="flex items-center gap-2">

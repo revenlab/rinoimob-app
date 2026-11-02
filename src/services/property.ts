@@ -43,6 +43,18 @@ class PropertyService {
     return this.request<PropertyResponse>(`/${id}`)
   }
 
+  async getAccess(): Promise<{ canCreate: boolean; canOfferToAll: boolean }> {
+    return this.request('/access')
+  }
+
+  async getPropertyAccess(id: string): Promise<{ canEdit: boolean }> {
+    return this.request(`/${id}/access`)
+  }
+
+  async listOfferingBrokers(): Promise<{ id: string; firstName: string; lastName: string }[]> {
+    return this.request('/brokers')
+  }
+
   async create(data: CreatePropertyRequest): Promise<PropertyResponse> {
     return this.request<PropertyResponse>('', {
       method: 'POST',
