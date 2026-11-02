@@ -264,3 +264,8 @@ Tab `Site` visível quando `canEditTenants`. Permite ao suporte editar `website-
 - **Recuperação de leads Meta**: o gerenciamento da conexão mostra tabela por formulário com última conferência, total recuperado e erro/andamento. As ações Atualizar status e Buscar leads pendentes usam o estado retornado pelos roteamentos e a solicitação assíncrona de recuperação; conexões inativas não permitem disparar uma nova busca.
 
 - **Integração em main (2026-10-31)**: o merge de `feat/integrations` reúne a central Meta/Grupo OLX, status de recuperação de leads e perfil público de corretores; a interface de Aluguéis permanece com selo “em breve” e acesso direto bloqueado pelo guard.
+
+- **Serviços da home (#54, consolidação 2026-11-02)**: `WebsiteConfig.vue` permite adicionar, remover, reordenar e editar título, descrição, emoji e URL de imagem dos serviços. A lista é persistida em `servicesItems`; lista vazia usa os serviços padrão no site.
+
+- **Conclusão de portfólios/permissões (#63, 2026-11-02)**: a configuração de papéis expõe `properties:write_own` e `properties:write_all`, preservando a permissão legada. O formulário consulta o acesso no backend e limita o cadastro próprio à oferta para si; seleção de corretores usa `/properties/brokers`, sem exigir acesso a gestão de usuários.
+- A listagem respeita `canEdit` por imóvel; detalhe e mídias consultam `/{id}/access`. A API continua sendo a autoridade de autorização, inclusive quando o usuário acessa uma rota de edição diretamente.

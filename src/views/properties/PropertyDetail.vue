@@ -10,6 +10,7 @@ import { DEFAULT_PROPERTY_TYPES, propertyTypeLabel } from '@/types/property'
 const route = useRoute()
 const store = usePropertyStore()
 const propertyId = route.params.id as string
+const canEdit = ref(false)
 
 const uploadingPhoto = ref(false)
 const photoError = ref<string | null>(null)
@@ -85,6 +86,11 @@ onMounted(async () => {
     propertyTypes.value = DEFAULT_PROPERTY_TYPES
   }
   await store.fetchProperty(propertyId)
+  try {
+    canEdit.value = (await propertyService.getPropertyAccess(propertyId)).canEdit
+  } catch {
+    canEdit.value = false
+  }
 })
 
 async function handlePhotoUpload(event: Event) {
@@ -236,7 +242,7 @@ async function setFloorPlanCover(planId: string, photoId: string) {
           </div>
         </div>
         <RouterLink
-          v-if="store.currentProperty"
+          v-if="store.currentProperty && canEdit"
           :to="`/imoveis/${propertyId}/editar`"
           class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-100 dark:border-indigo-800 transition"
         >
@@ -379,7 +385,7 @@ async function setFloorPlanCover(planId: string, photoId: string) {
               </svg>
               <span v-if="uploadingPhoto">Enviando...</span>
               <span v-else>Adicionar foto</span>
-              <input type="file" accept="image/*" class="hidden" :disabled="uploadingPhoto" @change="handlePhotoUpload" />
+              <input type="file" accept="image/*" class="hidden" :disabled="uploadingPhoto || !canEdit" @change="handlePhotoUpload" />
             </label>
           </div>
 
@@ -402,7 +408,7 @@ async function setFloorPlanCover(planId: string, photoId: string) {
               <img :src="photo.url" :alt="photo.altText ?? ''" class="w-full h-28 object-cover" />
               <div class="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
                 <button
-                  v-if="!photo.isCover"
+                  v-if="canEdit && (!photo.isCover)"
                   @click="setCover(photo.id)"
                   title="Definir como capa"
                   class="p-1.5 rounded-lg bg-white/20 hover:bg-white/40 text-white transition"
@@ -411,7 +417,7 @@ async function setFloorPlanCover(planId: string, photoId: string) {
                     <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
                   </svg>
                 </button>
-                <button
+                <button v-if="canEdit"
                   @click="deletePhoto(photo.id)"
                   :disabled="deletingPhotoId === photo.id"
                   title="Remover foto"
@@ -438,7 +444,7 @@ async function setFloorPlanCover(planId: string, photoId: string) {
             </div>
             <label class="shrink-0 flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-100 dark:border-indigo-800 cursor-pointer transition">
               <span>{{ uploadingVideo ? 'Enviando...' : 'Enviar vídeo' }}</span>
-              <input type="file" accept="video/*" class="hidden" :disabled="uploadingVideo" @change="handleVideoUpload" />
+              <input type="file" accept="video/*" class="hidden" :disabled="uploadingVideo || !canEdit" @change="handleVideoUpload" />
             </label>
           </div>
 
@@ -458,7 +464,7 @@ async function setFloorPlanCover(planId: string, photoId: string) {
                 placeholder="Título opcional"
               />
             </div>
-            <button
+            <button v-if="canEdit"
               type="button"
               @click="saveYoutubeVideo"
               :disabled="savingYoutubeVideo || !youtubeVideoUrl.trim()"
@@ -502,7 +508,7 @@ async function setFloorPlanCover(planId: string, photoId: string) {
                   <p class="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{{ video.title || (video.source === 'YOUTUBE' ? 'YouTube' : 'Vídeo enviado') }}</p>
                   <p class="text-xs text-slate-400 dark:text-slate-500">{{ video.source === 'YOUTUBE' ? 'YouTube' : 'Arquivo' }}</p>
                 </div>
-                <button
+                <button v-if="canEdit"
                   @click="deleteVideo(video.id)"
                   :disabled="deletingVideoId === video.id"
                   class="px-3 py-2 rounded-xl text-xs font-semibold text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 transition"
@@ -518,7 +524,7 @@ async function setFloorPlanCover(planId: string, photoId: string) {
         <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_4px_20px_rgba(15,23,42,0.06)] p-6">
           <div class="flex items-center justify-between mb-5">
             <h2 class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 dark:text-slate-500">Plantas</h2>
-            <button
+            <button v-if="canEdit"
               @click="showFloorPlanModal = true"
               class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-100 dark:border-indigo-800 transition"
             >
@@ -544,7 +550,7 @@ async function setFloorPlanCover(planId: string, photoId: string) {
                   <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ plan.name }}</p>
                   <p v-if="plan.area" class="text-xs text-slate-400 dark:text-slate-500">{{ plan.area }}m²</p>
                 </div>
-                <button
+                <button v-if="canEdit"
                   @click="deleteFloorPlan(plan.id)"
                   class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
                 >
@@ -557,7 +563,7 @@ async function setFloorPlanCover(planId: string, photoId: string) {
               <div class="flex items-center justify-between gap-3">
                 <label class="px-3 py-2 rounded-xl text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-white dark:bg-slate-800 border border-indigo-100 dark:border-indigo-800 cursor-pointer transition">
                   {{ uploadingFloorPlanPhotoId === plan.id ? 'Enviando...' : 'Adicionar imagens' }}
-                  <input type="file" accept="image/*" multiple class="hidden" @change="event => handleFloorPlanPhotoUpload(plan.id, event)" :disabled="uploadingFloorPlanPhotoId === plan.id" />
+                  <input type="file" accept="image/*" multiple class="hidden" @change="event => handleFloorPlanPhotoUpload(plan.id, event)" :disabled="uploadingFloorPlanPhotoId === plan.id || !canEdit" />
                 </label>
                 <span class="text-xs text-slate-400 dark:text-slate-500">{{ plan.photos.length }} imagem(ns)</span>
               </div>
@@ -577,7 +583,7 @@ async function setFloorPlanCover(planId: string, photoId: string) {
                   />
                   <div class="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/30 transition flex items-end justify-between p-2">
                     <button
-                      v-if="!photo.isCover"
+                      v-if="canEdit && (!photo.isCover)"
                       @click="setFloorPlanCover(plan.id, photo.id)"
                       class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-white/90 text-indigo-700 opacity-0 group-hover:opacity-100 transition"
                     >
@@ -586,7 +592,7 @@ async function setFloorPlanCover(planId: string, photoId: string) {
                     <span v-else class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-white/90 text-indigo-700 opacity-0 group-hover:opacity-100 transition">
                       Destaque
                     </span>
-                    <button
+                    <button v-if="canEdit"
                       @click="deleteFloorPlanPhoto(plan.id, photo.id)"
                       :disabled="deletingFloorPlanPhotoId === photo.id"
                       class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-black/60 text-white opacity-0 group-hover:opacity-100 transition"
@@ -636,13 +642,13 @@ async function setFloorPlanCover(planId: string, photoId: string) {
             </div>
           </div>
           <div class="flex gap-3">
-            <button
+            <button v-if="canEdit"
               @click="showFloorPlanModal = false"
               class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition"
             >
               Cancelar
             </button>
-            <button
+            <button v-if="canEdit"
               @click="saveFloorPlan"
               :disabled="savingFloorPlan || !floorPlanName.trim()"
               class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-violet-700 to-indigo-700 disabled:opacity-50 transition"

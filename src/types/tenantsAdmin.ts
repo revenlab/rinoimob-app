@@ -111,6 +111,7 @@ export interface TenantWebsiteConfig {
   categoriesSectionSubtitle?: string | null
   servicesSectionTitle?: string | null
   servicesSectionSubtitle?: string | null
+  servicesItems?: string | null
   servicesFormTitle?: string | null
   servicesFormSubtitle?: string | null
   statsSectionTitle?: string | null

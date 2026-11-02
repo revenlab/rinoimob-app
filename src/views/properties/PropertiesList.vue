@@ -8,6 +8,7 @@ import { DEFAULT_PROPERTY_TYPES, propertyTypeLabel } from '@/types/property'
 import { ArrowsPointingOutIcon, HomeModernIcon, MapPinIcon, PhotoIcon, PlusIcon, TrashIcon } from '@heroicons/vue/20/solid'
 
 const store = usePropertyStore()
+const canCreate = ref(false)
 
 const params = ref<PropertyListParams>({ page: 0, size: 20 })
 const propertyTypes = ref<PropertyTypeResponse[]>(DEFAULT_PROPERTY_TYPES)
@@ -21,6 +22,7 @@ function setViewMode(m: 'card' | 'list') {
 }
 
 onMounted(async () => {
+  try { canCreate.value = (await propertyService.getAccess()).canCreate } catch { canCreate.value = false }
   try {
     propertyTypes.value = await propertyService.listPropertyTypes(true)
   } catch {
@@ -93,6 +95,7 @@ function typeLabel(code: string) {
         </div>
 
         <RouterLink
+          v-if="canCreate"
           to="/imoveis/novo"
           data-tour-id="properties-create"
           class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-700 to-indigo-700 text-white rounded-xl font-medium text-sm shadow-[0_4px_12px_rgba(79,70,229,0.25)] hover:-translate-y-px transition-all duration-200"
@@ -244,13 +247,14 @@ function typeLabel(code: string) {
               Ver
             </RouterLink>
             <RouterLink
+              v-if="p.canEdit"
               :to="`/imoveis/${p.id}/editar`"
               class="flex-1 text-center py-2 rounded-xl text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-100 dark:border-indigo-800 transition"
             >
               Editar
             </RouterLink>
             <button
-              @click="deleteConfirmId = p.id"
+              v-if="p.canEdit" @click="deleteConfirmId = p.id"
               class="px-3 py-2 rounded-xl text-xs font-semibold text-red-500 bg-red-50 hover:bg-red-100 border border-red-100 transition"
             >
               <TrashIcon class="w-3.5 h-3.5" />
@@ -352,7 +356,8 @@ function typeLabel(code: string) {
                   </svg>
                 </RouterLink>
                 <RouterLink
-                  :to="`/imoveis/${p.id}/editar`"
+                  v-if="p.canEdit"
+              :to="`/imoveis/${p.id}/editar`"
                   class="p-1.5 rounded-lg text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition"
                   title="Editar"
                 >
@@ -361,7 +366,7 @@ function typeLabel(code: string) {
                   </svg>
                 </RouterLink>
                 <button
-                  @click="deleteConfirmId = p.id"
+                  v-if="p.canEdit" @click="deleteConfirmId = p.id"
                   class="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition"
                   title="Remover"
                 >
